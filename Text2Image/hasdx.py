@@ -15,13 +15,35 @@ auth_scheme = HTTPBearer()
 def download_models():
     import os, sys
     sys.path.append("/AITemplate/examples/05_stable_diffusion/")
+    os.chdir("/AITemplate/examples/05_stable_diffusion/")
+    os.system("python3 scripts/download_pipeline.py --model johnslegers/hasdx")
 
     from scripts.compile_alt import compile_diffusers
 
-    compile_diffusers("/AITemplate/examples/05_stable_diffusion/tmp/diffusers-pipeline/stabilityai/stable-diffusion-v2")
+    compile_diffusers("./tmp/diffusers-pipeline/stabilityai/stable-diffusion-v2")
+    class stableDiffusion:   
+        def __init__(self):
+            import sys,os
+            sys.path.append("/AITemplate/examples/05_stable_diffusion/")
+            os.chdir("/AITemplate/examples/05_stable_diffusion/")
+            from aitemplate.utils.import_path import import_parent
+            if __name__ == "__main__":
+                import_parent(filepath=__file__, level=1)
+            from src.pipeline_stable_diffusion_ait_alt import StableDiffusionAITPipeline
+            from diffusers import  EulerDiscreteScheduler
 
+            hf_hub_or_path="johnslegers/hasdx"
+            self.pipe = StableDiffusionAITPipeline(
+                hf_hub_or_path=hf_hub_or_path,
+                ckpt=None,
+            )
+            self.pipe.scheduler = EulerDiscreteScheduler.from_pretrained(
+                "johnslegers/hasdx", subfolder="scheduler"
+            )
+    
+    a=stableDiffusion()
 
-stub = Stub("SD2.1-Aitemplate")
+stub = Stub("hasdx")
 image=Image.from_dockerhub(
     "nvidia/cuda:11.8.0-devel-ubuntu22.04",
     setup_dockerfile_commands=[ 
@@ -45,7 +67,7 @@ image=Image.from_dockerhub(
                                 "RUN pip3 install dist/*.whl --force-reinstall", 
                                 "RUN pip3 install numpy==1.22",
                                 "WORKDIR /AITemplate/examples/05_stable_diffusion/",
-                                "RUN python3 scripts/download_pipeline.py",
+                                
                                ]
 ).run_function(
         download_models,
@@ -54,24 +76,25 @@ image=Image.from_dockerhub(
 
 stub.image = image
 
-@stub.cls(gpu="a10g", container_idle_timeout=1200, memory=10240)
+@stub.cls(gpu="a10g", container_idle_timeout=600, memory=10240)
 class stableDiffusion:   
     def __enter__(self):
-        import sys
+        import sys,os
         sys.path.append("/AITemplate/examples/05_stable_diffusion/")
+        os.chdir("/AITemplate/examples/05_stable_diffusion/")
         from aitemplate.utils.import_path import import_parent
         if __name__ == "__main__":
             import_parent(filepath=__file__, level=1)
         from src.pipeline_stable_diffusion_ait_alt import StableDiffusionAITPipeline
         from diffusers import  EulerDiscreteScheduler
 
-        hf_hub_or_path="stabilityai/stable-diffusion-2-1"
+        hf_hub_or_path="johnslegers/hasdx"
         self.pipe = StableDiffusionAITPipeline(
             hf_hub_or_path=hf_hub_or_path,
             ckpt=None,
         )
         self.pipe.scheduler = EulerDiscreteScheduler.from_pretrained(
-            "stabilityai/stable-diffusion-2-1", subfolder="scheduler"
+            "johnslegers/hasdx", subfolder="scheduler"
         )
 
     @method()
@@ -93,42 +116,3 @@ class stableDiffusion:
 
 
         return image
-
-
-@stub.function(secrets=(Secret.from_name("API_UPSCALING_KEY"), Secret.from_name("cloudinary_url")))
-@web_endpoint(label="stable-diffusion", method="POST")
-def get_image(
-    
-    height: int = Query(default=768,ge=256, le=1024),
-    width: int = Query(default=768,ge=256, le=1024),
-    num_inference_steps: int = Query(default=50,ge=10, le=100),
-    guidance_scale:  float = Query(default=7.5,ge=1, le=25),
-    batch:  int = Query(default=1,ge=1, le=4),
-    prompt: Optional[str] = "Cute dog",
-    negative_prompt: Optional[str] = "ugly",
-    api_key: HTTPAuthorizationCredentials = Depends(auth_scheme)):
-
-    import io,os
-    import requests
-    import base64, json
-
-    if api_key.credentials != os.environ["API_UPSCALING_KEY"]:
-        raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect bearer token",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-    else:
-        image = stableDiffusion().run_inference.call(prompt,height,width,num_inference_steps,guidance_scale,negative_prompt,batch)
-        url = os.environ["cloudinary_url"]
-        image_urls=[]
-        for im in image:
-            filtered_image = io.BytesIO()
-            im.save(filtered_image, "JPEG")
-            myobj = {
-                    "image":"data:image/png;base64,"+(base64.b64encode(filtered_image.getvalue()).decode("utf8"))
-            }
-            rps = requests.post(url, json=myobj, headers={'Content-Type': 'application/json'})
-            im_url=rps.json()["data"]["secure_url"]
-            image_urls.append(im_url)
-        return {"urls":image_urls}

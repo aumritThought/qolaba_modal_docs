@@ -28,7 +28,7 @@ stub.image = image
 
 
 @stub.cls(gpu="t4",container_idle_timeout=1200)
-class Predictor():
+class stableDiffusion():
     def __enter__(self):
         from transformers import AutoModelForCausalLM, AutoTokenizer
 
@@ -42,7 +42,7 @@ class Predictor():
         )
     
     @method()
-    def predict(
+    def run_inference(
         self, 
         prompt= "a beautiful painting",
         num_prompts_to_generate=5, 
@@ -101,33 +101,3 @@ class Predictor():
             generated_prompts.append(text)
 
         return generated_prompts
-
-
-auth_scheme = HTTPBearer()
-
-@stub.function(gpu="a10g",secret=Secret.from_name("API_UPSCALING_KEY"))
-@web_endpoint(label="promptparrot", method="POST")
-def image_upscale(
-        prompt: str = "a beautiful painting",
-        num_prompts_to_generate: int= Query(default=5,ge=1, le=10), 
-        max_prompt_length: int= Query(default=50,ge=40, le=100),
-        min_prompt_length: int= Query(default=30,ge=10, le=40),
-    api_key: HTTPAuthorizationCredentials = Depends(auth_scheme)):
-
-    import os 
-
-    if api_key.credentials != os.environ["API_UPSCALING_KEY"]:
-        raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect bearer token",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-    else:
-        prompts = Predictor().predict.call(prompt, num_prompts_to_generate, max_prompt_length, min_prompt_length)
-
-        return {"generated-prompts":prompts}
-        
-
-
-
-

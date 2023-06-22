@@ -82,8 +82,8 @@ image = (
 
 stub.image = image
 
-@stub.cls(gpu="a100",container_idle_timeout=1200, memory=10240)
-class vd_inference(object):
+@stub.cls(gpu="a100",container_idle_timeout=600, memory=10240)
+class stableDiffusion(object):
     
     class adjust_rank(object):
         
@@ -223,7 +223,7 @@ class vd_inference(object):
         return u, s, v, x_mean, x_remain
     
     @method()
-    def inference_i2i(self, im, fid_lvl=0.1, fcs_lvl=0.1, clr_adj='Simple', seed=1, n_sample_image=1, ns=50):
+    def run_inference(self, im, fid_lvl=0.1, fcs_lvl=0.1, clr_adj='Simple', seed=1, n_sample_image=1, ns=50):
         import torchvision.transforms as tvtrans
         import torch 
         import numpy as np
@@ -289,51 +289,3 @@ class vd_inference(object):
 
         imout = [tvtrans.ToPILImage()(i) for i in imout]
         return imout
-    
-@stub.function(secrets=(Secret.from_name("API_UPSCALING_KEY"), Secret.from_name("cloudinary_url")))
-@web_endpoint(label="versatile-diffusion", method="POST")
-def get_image(
-    file : UploadFile,
-    num_inference_steps: int = Query(default=50,ge=10, le=300),
-    batch:  int = Query(default=1,ge=1, le=4),
-    fid_lvl:float = Query(default=0.1,ge=0, le=1), 
-    fcs_lvl:float = Query(default=0.5,ge=0, le=1), 
-    clr_adj: Optional[str]='Simple',
-    seed: Optional[int]= 1,
-    api_key: HTTPAuthorizationCredentials = Depends(auth_scheme)):
-
-    import io,os
-    import requests
-    import base64, numpy
-    from PIL import Image
-
-    if api_key.credentials != os.environ["API_UPSCALING_KEY"]:
-        raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect bearer token",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-    else:
-        list_img=[".jpg",".png"]
-        if any([x in file.filename for x in list_img]):
-            content=file.file.read()
-            image = Image.open(io.BytesIO(content))
-            # image = numpy.array(image) 
-            # image = image[:, :, ::-1].copy() 
-            # print(image.shape)
-            image = vd_inference().inference_i2i.call(image, fid_lvl, fcs_lvl, clr_adj, seed, batch, num_inference_steps)
-            url = os.environ["cloudinary_url"]
-            image_urls=[]
-            for im in image:
-                filtered_image = io.BytesIO()
-                im.save(filtered_image, "JPEG")
-                myobj = {
-                        "image":"data:image/png;base64,"+(base64.b64encode(filtered_image.getvalue()).decode("utf8"))
-                }
-                rps = requests.post(url, json=myobj, headers={'Content-Type': 'application/json'})
-                im_url=rps.json()["data"]["secure_url"]
-                image_urls.append(im_url)
-            return {"urls":image_urls}
-        else:
-            return "invalid file"
- 

@@ -1,4 +1,4 @@
-from modal import Image, Secret, Stub, web_endpoint
+from modal import Image, Secret, Stub, web_endpoint, method
 
 from fastapi import Depends, HTTPException, UploadFile, status, Request
 from typing import  Optional 
@@ -30,30 +30,19 @@ image = (
 )
 stub.image = image
 
-auth_scheme = HTTPBearer()
+@stub.cls(gpu="a10g", container_idle_timeout=600, memory=10240)
+class stableDiffusion:   
+    def __enter__(self):
+        from diffusers import UnCLIPImageVariationPipeline
+        import torch
+        self.pipe = UnCLIPImageVariationPipeline.from_pretrained(cache_path, torch_dtype=torch.float16)
+        self.pipe = self.pipe.to('cuda')
 
-@stub.function(gpu="a10g",secret=Secret.from_name("API_UPSCALING_KEY"))
-@web_endpoint(label="karlo", method="POST")
-def image_upscale(file : UploadFile,
-    decoder_num_inference_steps : Optional[int]= 30,
-    super_res_num_inference_steps: Optional[int] = 7,
-    decoder_guidance_scale: Optional[int] = 4,
-    num_imgs: Optional[int] = 1,
-    api_key: HTTPAuthorizationCredentials = Depends(auth_scheme)):
 
-    import os
-    from diffusers import UnCLIPImageVariationPipeline
-    import torch
-    import numpy
-    from PIL import Image
-
-    if api_key.credentials != os.environ["API_UPSCALING_KEY"]:
-        raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect bearer token",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-    else:   
+    @method()
+    def run_inference(self,file, decoder_num_inference_steps, super_res_num_inference_steps, decoder_guidance_scale, num_imgs):
+        import numpy
+        from PIL import Image
         list_img=[".jpg",".png"]
         if any([x in file.filename for x in list_img]):
             content=file.file.read()
@@ -61,15 +50,11 @@ def image_upscale(file : UploadFile,
             image = numpy.array(image) 
                 # Convert RGB to BGR 
             image = image[:, :, ::-1].copy() 
-            pipe = UnCLIPImageVariationPipeline.from_pretrained(cache_path, torch_dtype=torch.float16)
-            pipe = pipe.to('cuda')
-            image = pipe([image]*num_imgs, decoder_num_inference_steps=decoder_num_inference_steps,
+
+            image = self.pipe([image]*num_imgs, decoder_num_inference_steps=decoder_num_inference_steps,
                     super_res_num_inference_steps=super_res_num_inference_steps,
                     decoder_guidance_scale=decoder_guidance_scale).images
-            filtered_image = io.BytesIO()
-            image[0].save(filtered_image, "JPEG")
-            filtered_image.seek(0)
-            return StreamingResponse(filtered_image, media_type="image/jpeg")
+            return image
         else:
             return "invalid file"
 
