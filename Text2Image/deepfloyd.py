@@ -49,12 +49,10 @@ class stableDiffusion:
 
         self.stage_2 = DiffusionPipeline.from_pretrained("DeepFloyd/IF-II-L-v1.0", text_encoder=None, variant="fp16", torch_dtype=torch.float16)
         self.stage_2.enable_model_cpu_offload()
-        print("completed")
 
     @method()
     def run_inference(self,prompt,ratio,hrns,imns,guidance_scale,negative_prompt,num_out):
         from diffusers.utils import pt_to_pil
-        print("inside")
 
         if ratio == "1:1":
             height, width = 64, 64

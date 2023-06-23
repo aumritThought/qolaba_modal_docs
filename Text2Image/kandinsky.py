@@ -26,10 +26,10 @@ image = (
         "apt-get update && apt-get install ffmpeg libsm6 libxext6  -y"
                    ])
     .pip_install("opencv-python")
-).run_function(
-        download_models,
-        gpu="a10g"
-    )
+    ).run_function(
+            download_models,
+            gpu="a10g"
+        )
 
 stub.image = image
 
