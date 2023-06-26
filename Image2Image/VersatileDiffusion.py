@@ -9,7 +9,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 auth_scheme = HTTPBearer()
 
-stub = Stub("Versatile-Diffusion")
+stub = Stub("Versatile-Diffusion_image2image")
 
 def download_models():
     class vd_inference(object):

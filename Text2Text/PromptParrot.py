@@ -7,7 +7,7 @@ from fastapi.responses import StreamingResponse
 from starlette.status import HTTP_403_FORBIDDEN
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-stub = Stub("promptparrot")
+stub = Stub("promptparrot_text2text")
 
 image = (
     Image.debian_slim(python_version="3.10")

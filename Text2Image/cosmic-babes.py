@@ -11,6 +11,13 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 auth_scheme = HTTPBearer()
 
+model_schema={
+    "model_id":"stablediffusionapi/cosmic-babes",
+    "memory":10240,
+    "container_idle_timeout":60,
+    "name":"cosmic-babes_text2image",
+    "gpu":"a10g"
+}
 
 def download_models():
     import os, sys
@@ -42,8 +49,14 @@ def download_models():
             )
     
     a=stableDiffusion()
+    
+def download_models1():
+    from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
+    from transformers import CLIPFeatureExtractor
+    safety_checker = StableDiffusionSafetyChecker.from_pretrained("CompVis/stable-diffusion-safety-checker")
+    feature_extractor = CLIPFeatureExtractor()
 
-stub = Stub("cosmic-babes")
+stub = Stub(model_schema["name"])
 image=Image.from_dockerhub(
     "nvidia/cuda:11.8.0-devel-ubuntu22.04",
     setup_dockerfile_commands=[ 
@@ -72,11 +85,13 @@ image=Image.from_dockerhub(
 ).run_function(
         download_models,
         gpu="a10g"
+    ).run_function(
+        download_models1,
     )
 
 stub.image = image
 
-@stub.cls(gpu="a10g", container_idle_timeout=1200, memory=10240)
+@stub.cls(gpu=model_schema["gpu"], memory=model_schema["memory"], container_idle_timeout=model_schema["container_idle_timeout"])
 class stableDiffusion:   
     def __enter__(self):
         import sys,os
@@ -87,21 +102,26 @@ class stableDiffusion:
             import_parent(filepath=__file__, level=1)
         from src.pipeline_stable_diffusion_ait_alt import StableDiffusionAITPipeline
         from diffusers import  EulerDiscreteScheduler
+        from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
+        from transformers import CLIPFeatureExtractor
 
-        hf_hub_or_path="stablediffusionapi/cosmic-babes"
+        hf_hub_or_path=model_schema["model_id"]
         self.pipe = StableDiffusionAITPipeline(
             hf_hub_or_path=hf_hub_or_path,
             ckpt=None,
         )
         self.pipe.scheduler = EulerDiscreteScheduler.from_pretrained(
-            "stablediffusionapi/cosmic-babes", subfolder="scheduler"
+            hf_hub_or_path, subfolder="scheduler"
         )
+        self.safety_checker = StableDiffusionSafetyChecker.from_pretrained("CompVis/stable-diffusion-safety-checker").to("cuda")
+        self.feature_extractor = CLIPFeatureExtractor()
 
     @method()
     def run_inference(self,prompt,height,width,num_inference_steps,guidance_scale,negative_prompt,batch):
 
-        import torch 
-        
+        import torch
+        import numpy as np
+        from PIL import Image
         prompt = [prompt] * batch
         negative_prompt = [negative_prompt] * batch
         with torch.autocast("cuda"):
@@ -114,5 +134,11 @@ class stableDiffusion:
                 guidance_scale=guidance_scale,
             ).images
 
-
+        safety_checker_input = self.feature_extractor(
+                image, return_tensors="pt"
+            ).to("cuda")
+        image, has_nsfw_concept = self.safety_checker(
+                        images=[np.array(i) for i in image], clip_input=safety_checker_input.pixel_values
+                    )
+        image=[ Image.fromarray(np.uint8(i)) for i in image] 
         return image
