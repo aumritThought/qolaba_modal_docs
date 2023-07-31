@@ -1,31 +1,22 @@
-from pathlib import Path
-
-from modal import Image, Secret, Stub, web_endpoint, method
-
-from fastapi import  Depends, HTTPException, status, Query
-from typing import  Optional, Annotated
-import io
-from fastapi.responses import StreamingResponse
-from starlette.status import HTTP_403_FORBIDDEN
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-
-auth_scheme = HTTPBearer()
+from modal import Image, Stub, method
 
 
 def download_models():
-    from kandinsky2 import get_kandinsky2
-    model = get_kandinsky2('cuda', task_type='text2img', cache_dir='/tmp/kandinsky2', model_version='2.1', use_flash_attention=False)
+    from diffusers import DiffusionPipeline
+    import torch
 
-stub = Stub("kandinsky")
+    pipe_prior = DiffusionPipeline.from_pretrained("kandinsky-community/kandinsky-2-1-prior", torch_dtype=torch.float16)
+    pipe_prior.to("cuda")
+
+    t2i_pipe = DiffusionPipeline.from_pretrained("kandinsky-community/kandinsky-2-1", torch_dtype=torch.float16)
+    t2i_pipe.to("cuda")
+
+stub = Stub("kandinsky_text2image")
 image = (
     Image.debian_slim(python_version="3.10")
-    .apt_install(["git"])
     .run_commands([
-        "pip install 'git+https://github.com/ai-forever/Kandinsky-2.git'",
-        "pip install git+https://github.com/openai/CLIP.git",
-        "apt-get update && apt-get install ffmpeg libsm6 libxext6  -y"
+        "pip install diffusers transformers accelerate opencv-python Pillow"
                    ])
-    .pip_install("opencv-python")
     ).run_function(
             download_models,
             gpu="a10g"
@@ -36,16 +27,21 @@ stub.image = image
 @stub.cls(gpu="a10g", container_idle_timeout=600, memory=10240)
 class stableDiffusion:   
     def __enter__(self):
-        from kandinsky2 import get_kandinsky2
-        self.pipe = get_kandinsky2('cuda', task_type='text2img', cache_dir='/tmp/kandinsky2', model_version='2.1', use_flash_attention=False)
+        from diffusers import DiffusionPipeline
+        import torch
+
+        self.pipe_prior = DiffusionPipeline.from_pretrained("kandinsky-community/kandinsky-2-1-prior", torch_dtype=torch.float16)
+        self.pipe_prior.to("cuda")
+
+        self.t2i_pipe = DiffusionPipeline.from_pretrained("kandinsky-community/kandinsky-2-1", torch_dtype=torch.float16)
+        self.t2i_pipe.to("cuda")
 
     @method()
     def run_inference(self,prompt,height,width,num_inference_steps,guidance_scale,negative_prompt,batch):
 
-        images = self.pipe.generate_text2img(prompt, num_steps=num_inference_steps,
-                                batch_size=batch, guidance_scale=guidance_scale,
-                                h=height, w=width, negative_prior_prompt=negative_prompt,sampler='p_sampler', prior_cf_scale=4,
-                                    prior_steps="5")
+        image_embeds, negative_image_embeds = self.pipe_prior(prompt, negative_prompt, guidance_scale=1.0).to_tuple()
+
+        image = self.t2i_pipe(prompt, negative_prompt=negative_prompt, image_embeds=image_embeds, negative_image_embeds=negative_image_embeds, height=height, width=width, num_images_per_prompt=batch).images
 
 
-        return images
+        return {"images":image,  "Has_NSFW_Content":[False]*batch}

@@ -14,7 +14,7 @@ auth_scheme = HTTPBearer()
 model_schema={
     "model_id":"./tmp/diffusers-pipeline/stabilityai/stable-diffusion-v2",
     "memory":10240,
-    "container_idle_timeout":60,
+    "container_idle_timeout":600,
     "name":"Project_AIO_text2image",
     "gpu":"a10g"
 }
@@ -144,4 +144,4 @@ class stableDiffusion:
                         images=[np.array(i) for i in image], clip_input=safety_checker_input.pixel_values
                     )
         image=[ Image.fromarray(np.uint8(i)) for i in image] 
-        return image
+        return {"images":image,  "Has_NSFW_Content":has_nsfw_concept}
