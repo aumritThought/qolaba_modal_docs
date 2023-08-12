@@ -17,15 +17,13 @@ stub.image = image
 class stableDiffusion:
     @method()
     def run_inference(self,prompt,height,width,num_inference_steps,guidance_scale,negative_prompt,batch, style_preset):
-
         from PIL import Image
         import base64, os, requests,io
-        height=1024
-        width=1024
+
         engine_id = "stable-diffusion-xl-1024-v1-0"
         api_host = os.getenv('API_HOST', 'https://api.stability.ai')
         api_key = "sk-q7ueICsPrJJcrYmXV0Ey4Gm7SGirnMyIbXFE6Ndjj1AjJM0i"
-
+        # height, width=1024,1024
         response = requests.post(
             f"{api_host}/v1/generation/{engine_id}/text-to-image",
             headers={

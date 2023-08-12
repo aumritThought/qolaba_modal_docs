@@ -3,7 +3,7 @@ from modal import Image, Secret, Stub, method
 def give_model_schema():
     return {
     "memory":10240,
-    "container_idle_timeout":60,
+    "container_idle_timeout":600,
     "gpu":"a10g"
 }
 

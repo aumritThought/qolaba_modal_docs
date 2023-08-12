@@ -9,7 +9,7 @@ def download_models():
     "lllyasviel/control_v11p_sd15_inpaint", torch_dtype=torch.float16
     )
     pipe = StableDiffusionControlNetInpaintPipeline.from_pretrained(
-        "metobabba/epiCRealism_V3.0_inpainting", controlnet=controlnet, torch_dtype=torch.float16
+        "uf/epicrealism_pureEvolutionV3", controlnet=controlnet, torch_dtype=torch.float16
     )
 
     pipe.scheduler = DDIMScheduler.from_config(pipe.scheduler.config)
@@ -31,7 +31,7 @@ image = (
                    ])
     ).run_function(
             download_models,
-            gpu="a10g"
+            gpu="a10g",
         )
 
 stub.image = image
@@ -48,7 +48,7 @@ class stableDiffusion:
         "lllyasviel/control_v11p_sd15_inpaint", torch_dtype=torch.float16
         )
         self.pipe = StableDiffusionControlNetInpaintPipeline.from_pretrained(
-            "metobabba/epiCRealism_V3.0_inpainting", controlnet=controlnet, torch_dtype=torch.float16
+            "uf/epicrealism_pureEvolutionV3", controlnet=controlnet, torch_dtype=torch.float16
         )
 
         self.pipe.scheduler = DDIMScheduler.from_config(self.pipe.scheduler.config)
@@ -77,21 +77,23 @@ class stableDiffusion:
 
             width, height = image.size
 
-            new_width = width + right + left
+            new_width = width + right + left 
             new_height = height + top + bottom
 
             result = Image.new(image.mode, (new_width, new_height), (0, 0, 0))
             mask_image = Image.new(image.mode, (new_width, new_height), (255, 255, 255))
-            extra_image = Image.new(image.mode, (image.size[0],image.size[1]), (0, 0, 0))
+            extra_image = Image.new(image.mode, (image.size[0]-64,image.size[1]-64), (0, 0, 0))
             result.paste(image, (left, top))
-            mask_image.paste(extra_image, (left, top))
+            mask_image.paste(extra_image, (left+32, top+32))
             return result, mask_image
 
         init_image, mask_image=maskimage(img,  right, left, top, bottom)
         init_image=init_image.resize((64 * round(init_image.size[0] / 64), 64 * round(init_image.size[1] / 64)))
         if(init_image.size[0]>1024 or init_image.size[0]<256 or init_image.size[1]>1024 or init_image.size[1]<256):
-            init_image=init_image.resize((768, int(init_image.size[1]/init_image.size[0])*768))
-            mask_image=mask_image.resize((768, int(mask_image.size[1]/mask_image.size[0])*768))
+            height=768
+            width=((int(init_image.size[1]*768/init_image.size[0]))//64)*64
+            init_image=init_image.resize((height, width))
+            mask_image=mask_image.resize((height, width))
         control_image = make_inpaint_condition(init_image, mask_image)
 
         # generate image

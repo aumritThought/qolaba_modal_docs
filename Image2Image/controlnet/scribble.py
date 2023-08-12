@@ -41,7 +41,7 @@ image = (
 
 stub.image = image
 
-@stub.cls(gpu="a10g", container_idle_timeout=100, memory=10240)
+@stub.cls(gpu="a10g", container_idle_timeout=600, memory=10240)
 class stableDiffusion:  
     def __enter__(self):
         from diffusers import StableDiffusionControlNetPipeline, ControlNetModel, UniPCMultistepScheduler

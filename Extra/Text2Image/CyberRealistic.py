@@ -120,6 +120,7 @@ class stableDiffusion:
 
     @method()
     def run_inference(self,prompt,height,width,num_inference_steps,guidance_scale,negative_prompt,batch):
+        print(negative_prompt)
 
         import torch
         import numpy as np

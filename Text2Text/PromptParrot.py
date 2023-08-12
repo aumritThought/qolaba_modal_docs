@@ -9,6 +9,18 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 stub = Stub("promptparrot_text2text")
 
+def download_models():
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+
+    start_token = "<BOP>"
+    pad_token = "<PAD>"
+    end_token = "<EOP>"
+    model = AutoModelForCausalLM.from_pretrained("/model").to("cuda")
+    tokenizer = AutoTokenizer.from_pretrained(
+            "distilgpt2", cache_dir="./model", bos_token=start_token, eos_token=end_token, pad_token=pad_token
+        )
+
+
 image = (
     Image.debian_slim(python_version="3.10")
     .pip_install(
@@ -23,11 +35,14 @@ image = (
                     "mv config.json model/",
                     "mv pytorch_model.bin model/",
                    ])
-)
+).run_function(
+        download_models,
+        gpu="t4"
+    )
 stub.image = image
 
 
-@stub.cls(gpu="t4",container_idle_timeout=1200)
+@stub.cls(gpu="t4",container_idle_timeout=300)
 class stableDiffusion():
     def __enter__(self):
         from transformers import AutoModelForCausalLM, AutoTokenizer

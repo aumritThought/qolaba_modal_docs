@@ -111,7 +111,7 @@ image=Image.from_dockerhub(
 
 stub.image = image
 
-@stub.cls(gpu="a10g", container_idle_timeout=300)
+@stub.cls(gpu="a10g", container_idle_timeout=600)
 class stableDiffusion:
     def set_realesrgan(self):
         import torch
@@ -195,6 +195,7 @@ class stableDiffusion:
 
     @method()
     def run_inference(self, image, upscale, face_upsample):
+        print(image.size)
         from PIL import Image
         from basicsr.utils import imwrite, img2tensor, tensor2img
         from torchvision.transforms.functional import normalize
@@ -204,6 +205,7 @@ class stableDiffusion:
         import cv2
         import numpy
         image=numpy.array(image)
+        print(face_upsample)
         if face_upsample:
             if self.bg_upsampler is not None:
                 face_upsampler = self.bg_upsampler
@@ -266,4 +268,5 @@ class stableDiffusion:
                 restored_img = self.face_helper.paste_faces_to_input_image(upsample_img=bg_img, draw_box=self.draw_box)
         # restored_img = cv2.cvtColor(restored_img, cv2.COLOR_BGR2RGB)
         restored_img = Image.fromarray(restored_img)
+        print(restored_img.size)
         return {"images":[restored_img],  "Has_NSFW_Content":[False]}
