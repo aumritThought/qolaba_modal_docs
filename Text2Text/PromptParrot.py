@@ -37,7 +37,7 @@ image = (
                    ])
 ).run_function(
         download_models,
-        gpu="t4"
+        gpu="t4",
     )
 stub.image = image
 

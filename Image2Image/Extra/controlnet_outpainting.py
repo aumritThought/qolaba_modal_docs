@@ -105,7 +105,6 @@ class stableDiffusion:
             control_image=control_image,
             guess_mode=True,
             num_images_per_prompt=batch
-        ).images
-
-        
-        return {"images":image,  "Has_NSFW_Content":[False]*batch}
+        )
+        has_nsfw=image.nsfw_content_detected[0]
+        return {"images":image.images,  "Has_NSFW_Content":[has_nsfw]*batch}

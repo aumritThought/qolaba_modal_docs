@@ -23,7 +23,7 @@ class stableDiffusion:
         engine_id = "stable-diffusion-xl-1024-v1-0"
         api_host = os.getenv("API_HOST", "https://api.stability.ai")
         api_key = "sk-q7ueICsPrJJcrYmXV0Ey4Gm7SGirnMyIbXFE6Ndjj1AjJM0i"
-        image=img.resize((int(width),int(height)))
+        image=img.resize((int(width),int(height))).convert('RGB')
         filtered_image = io.BytesIO()
         image.save(filtered_image, "JPEG")
 

@@ -75,6 +75,5 @@ class stableDiffusion:
         
         image = self.hed(img, scribble=True)
         image = image.resize((img.size[0], img.size[1]))
-        image = self.pipe(prompt=prompt, image=image, num_inference_steps=20, guidance_scale=guidance_scale, negative_prompt=negative_prompt).images
-
-        return {"images":image,  "Has_NSFW_Content":[False]*batch}
+        image = self.pipe(prompt=prompt, image=image, num_inference_steps=20, guidance_scale=guidance_scale, negative_prompt=negative_prompt)
+        return {"images":image.images,  "Has_NSFW_Content":[False]*batch}
