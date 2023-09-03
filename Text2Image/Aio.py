@@ -1,15 +1,4 @@
-from pathlib import Path
-
-from modal import Image, Secret, Stub, web_endpoint, method
-
-from fastapi import  Depends, HTTPException, status, Query
-from typing import  Optional, Annotated
-import io
-from fastapi.responses import StreamingResponse
-from starlette.status import HTTP_403_FORBIDDEN
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-
-auth_scheme = HTTPBearer()
+from modal import Image, Stub, method
 
 model_schema={
     "model_id":"./tmp/diffusers-pipeline/stabilityai/stable-diffusion-v2",
@@ -20,115 +9,60 @@ model_schema={
 }
 
 def download_models():
-    import os, sys
-    import subprocess
-
-    # subprocess.run(["pip", "install","OmegaConf"]) 
-    sys.path.append("/AITemplate/examples/05_stable_diffusion/")
-    os.chdir("/AITemplate/examples/05_stable_diffusion/")
-    os.system("python3 scripts/download_pipeline.py --ckpt https://huggingface.co/Schisim/Project_AIO/blob/main/AIO_4.5-fp16.safetensors")
-
-    from scripts.compile_alt import compile_diffusers
-
-    compile_diffusers("./tmp/diffusers-pipeline/stabilityai/stable-diffusion-v2")
-    class stableDiffusion:   
-        def __init__(self):
-            import sys,os
-            sys.path.append("/AITemplate/examples/05_stable_diffusion/")
-            os.chdir("/AITemplate/examples/05_stable_diffusion/")
-            from aitemplate.utils.import_path import import_parent
-            if __name__ == "__main__":
-                import_parent(filepath=__file__, level=1)
-            from src.pipeline_stable_diffusion_ait_alt import StableDiffusionAITPipeline
-            from diffusers import  EulerDiscreteScheduler
-
-            hf_hub_or_path="./tmp/diffusers-pipeline/stabilityai/stable-diffusion-v2"
-            self.pipe = StableDiffusionAITPipeline(
-                hf_hub_or_path=hf_hub_or_path,
-                ckpt=None,
-            )
-            self.pipe.scheduler = EulerDiscreteScheduler.from_pretrained(
-                "./tmp/diffusers-pipeline/stabilityai/stable-diffusion-v2", subfolder="scheduler"
-            )
-    
-    a=stableDiffusion()
-
-    
-def download_models1():
+    from diffusers import StableDiffusionXLPipeline
+    import torch
+    pipe = StableDiffusionXLPipeline.from_single_file("../protovision.safetensors", torch_dtype=torch.float16, use_safetensors=True, variant="fp16")
+    pipe.to("cuda")
+    pipe.enable_xformers_memory_efficient_attention()
     from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
     from transformers import CLIPFeatureExtractor
     safety_checker = StableDiffusionSafetyChecker.from_pretrained("CompVis/stable-diffusion-safety-checker")
     feature_extractor = CLIPFeatureExtractor()
 
+
 stub = Stub(model_schema["name"])
-image=Image.from_dockerhub(
-    "nvidia/cuda:11.8.0-devel-ubuntu22.04",
-    setup_dockerfile_commands=[ 
-                                "RUN apt-get update --fix-missing",
-                                "RUN apt install -y python3 python3-dev python3-pip",
-                                "RUN apt install python-is-python3",
-                                "RUN apt-get -y install git",
-                                "RUN git clone --recursive https://github.com/qolaba/AITemplate.git",
-                                "WORKDIR /AITemplate/docker",
-                                "RUN bash install/install_basic_dep.sh",
-                                "RUN bash install/install_test_dep.sh",
-                                "RUN bash install/install_doc_dep.sh",
-                                "RUN pip3 install torch torchvision torchaudio",
-                                "RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y install tzdata",
-                                "RUN bash install/install_detection_deps.sh",
-                                # "RUN bash install/install_ait.sh",
-                                "RUN pip3 install --upgrade diffusers transformers accelerate scipy click ftfy",
-                                "WORKDIR /AITemplate/python",
-                                "RUN pwd",
-                                "RUN python3 setup.py bdist_wheel",
-                                "RUN pip3 install dist/*.whl --force-reinstall", 
-                                "RUN pip3 install numpy==1.22 OmegaConf",
-                                "WORKDIR /AITemplate/examples/05_stable_diffusion/",                                
-                               ]
-).run_function(
-        download_models,
-        gpu="a10g"
+image = (
+    Image.debian_slim(python_version="3.10")
+    .run_commands([
+        "apt-get update && apt-get install ffmpeg libsm6 libxext6 git -y",
+        "apt-get update && apt-get install wget -y",
+        "wget https://civitai.com/api/download/models/144229",
+        "pip install diffusers --upgrade",
+        "pip install invisible_watermark transformers accelerate safetensors xformers omegaconf",
+        "mv 144229 protovision.safetensors",
+        ])
     ).run_function(
-        download_models1,
-    )
+            download_models,
+            gpu="t4"
+        )
 
 stub.image = image
 
 @stub.cls(gpu=model_schema["gpu"], memory=model_schema["memory"], container_idle_timeout=model_schema["container_idle_timeout"])
 class stableDiffusion:   
     def __enter__(self):
-        import sys,os
-        sys.path.append("/AITemplate/examples/05_stable_diffusion/")
-        os.chdir("/AITemplate/examples/05_stable_diffusion/")
-        from aitemplate.utils.import_path import import_parent
-        if __name__ == "__main__":
-            import_parent(filepath=__file__, level=1)
-        from src.pipeline_stable_diffusion_ait_alt import StableDiffusionAITPipeline
-        from diffusers import  EulerDiscreteScheduler
+        from diffusers import StableDiffusionXLPipeline
+        import torch
         from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
         from transformers import CLIPFeatureExtractor
 
-        hf_hub_or_path=model_schema["model_id"]
-        self.pipe = StableDiffusionAITPipeline(
-            hf_hub_or_path=hf_hub_or_path,
-            ckpt=None,
-        )
-        self.pipe.scheduler = EulerDiscreteScheduler.from_pretrained(
-            hf_hub_or_path, subfolder="scheduler"
-        )
+        self.pipe = StableDiffusionXLPipeline.from_single_file("../protovision.safetensors", torch_dtype=torch.float16, use_safetensors=True, variant="fp16")
+        self.pipe.to("cuda")
+
+        self.pipe.enable_xformers_memory_efficient_attention()     
         self.safety_checker = StableDiffusionSafetyChecker.from_pretrained("CompVis/stable-diffusion-safety-checker").to("cuda")
-        self.feature_extractor = CLIPFeatureExtractor()
+        self.feature_extractor = CLIPFeatureExtractor()   
+        
 
     @method()
     def run_inference(self,prompt,height,width,num_inference_steps,guidance_scale,negative_prompt,batch):
-
         import torch
         import numpy as np
         from PIL import Image
+
         prompt = [prompt] * batch
         negative_prompt = [negative_prompt] * batch
-        with torch.autocast("cuda"):
-            image = self.pipe(
+        image = self.pipe(
                 prompt=prompt,
                 height=height,
                 width=width,
@@ -136,7 +70,6 @@ class stableDiffusion:
                 num_inference_steps=num_inference_steps,
                 guidance_scale=guidance_scale,
             ).images
-
         safety_checker_input = self.feature_extractor(
                 image, return_tensors="pt"
             ).to("cuda")
