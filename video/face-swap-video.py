@@ -70,7 +70,7 @@ def download_models():
             FACE_ENHANCER = GFPGANer(model_path=model_path, upscale=1, device='cuda')
         
         
-stub = Stub("Face_swap"+"_image2image")
+stub = Stub("Face_swap"+"_video")
 image = (
     Image.debian_slim(python_version="3.10")
     .run_commands([
@@ -88,7 +88,7 @@ image = (
 
 stub.image = image
 
-@stub.cls(gpu="a10g", container_idle_timeout=600, memory=10240)
+@stub.cls(gpu="a10g", container_idle_timeout=600, memory=10240, timeout=900)
 class stableDiffusion:  
     def __enter__(self):
         import sys
@@ -149,7 +149,7 @@ class stableDiffusion:
                 self.FACE_ENHANCER = GFPGANer(model_path=model_path, upscale=1, device='cuda')
 
     @method()
-    def run_inference(self, img, bg_img=None):
+    def run_inference(self, video_url, bg_img=None):
         import sys
         sys.path.insert(0, '/roop')
         import sys, threading
@@ -158,11 +158,25 @@ class stableDiffusion:
         import cv2
         import numpy as np
         from PIL import Image
+        import requests, io, imageio, os, time, base64
 
-        import requests, io
+        def write_video(file_path, frames, fps):
+
+            frames = [frame for frame in frames if frame.size == frames[0].size]
+
+            writer = imageio.get_writer(file_path, fps=int(fps), macro_block_size=None)
+
+            for frame in frames:
+                np_frame = np.array(frame)
+                writer.append_data(np_frame)
+
+            writer.close()
+
+
         try:
             response = requests.get(bg_img)
             s_img = Image.open(io.BytesIO(response.content))
+            
         except:
             s_img=None
         if(s_img==None):
@@ -178,42 +192,87 @@ class stableDiffusion:
                     height=((int(s_img.shape[1]*1024/s_img.shape[0]))//64)*64
                 s_img=cv2.resize(s_img, (height, width))
                 source_face = get_one_face(s_img)
-                temp_frame = np.array(img)
-                if(temp_frame.shape[1]>=temp_frame.shape[0]):
-                    height=1024
-                    width=((int(temp_frame.shape[0]*1024/temp_frame.shape[1]))//64)*64
-                else:
-                    width=1024
-                    height=((int(temp_frame.shape[1]*1024/temp_frame.shape[0]))//64)*64
-                temp_frame=cv2.resize(temp_frame, (height, width))
-                reference_face = get_one_face(temp_frame, roop.globals.reference_face_position)
 
-                if roop.globals.many_faces:
-                    roop.globals.many_faces = get_many_faces(temp_frame)
-                    if roop.globals.many_faces:
-                        for target_face in roop.globals.many_faces:
-                            temp_frame = self.FACE_SWAPPER.get(temp_frame, target_face, source_face, paste_back=True)
-                else:
-                    target_face = find_similar_face(temp_frame, reference_face)
-                    if target_face:
-                        temp_frame = self.FACE_SWAPPER.get(temp_frame, target_face, source_face, paste_back=True)
-                start_x, start_y, end_x, end_y = map(int, target_face['bbox'])
-                padding_x = int((end_x - start_x) * 0.5)
-                padding_y = int((end_y - start_y) * 0.5)
-                start_x = max(0, start_x - padding_x)
-                start_y = max(0, start_y - padding_y)
-                end_x = max(0, end_x + padding_x)
-                end_y = max(0, end_y + padding_y)
-                temp_face = temp_frame[start_y:end_y, start_x:end_x]
-                if temp_face.size:
-                    with threading.Semaphore():
-                        _, _, temp_face = self.FACE_ENHANCER.enhance(
-                                temp_face,
-                                paste_back=True
-                            )
-                    temp_frame[start_y:end_y, start_x:end_x] = temp_face
+                vcap = cv2.VideoCapture(video_url)
+                fps = vcap.get(cv2.CAP_PROP_FPS)
+                length = int(vcap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+                if(length>400):
+                    raise Exception("Video is too large for face swapping")
+                
+                all_frames=[]
+
+                while(True):
+                    ret, frame = vcap.read()
+                    if frame is not None:
+                        frame =  cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                        temp_frame = np.array(frame)
+                        if(temp_frame.shape[1]>=temp_frame.shape[0]):
+                            height=1024
+                            width=((int(temp_frame.shape[0]*1024/temp_frame.shape[1]))//64)*64
+                        else:
+                            width=1024
+                            height=((int(temp_frame.shape[1]*1024/temp_frame.shape[0]))//64)*64
+
+                        temp_frame=cv2.resize(temp_frame, (height, width))
+                        try:
+                            reference_face = get_one_face(temp_frame, roop.globals.reference_face_position)
+
+                            if roop.globals.many_faces:
+                                roop.globals.many_faces = get_many_faces(temp_frame)
+                                if roop.globals.many_faces:
+                                    for target_face in roop.globals.many_faces:
+                                        temp_frame = self.FACE_SWAPPER.get(temp_frame, target_face, source_face, paste_back=True)
+                            else:
+                                target_face = find_similar_face(temp_frame, reference_face)
+                                if target_face:
+                                    temp_frame = self.FACE_SWAPPER.get(temp_frame, target_face, source_face, paste_back=True)
+                            start_x, start_y, end_x, end_y = map(int, target_face['bbox'])
+                            padding_x = int((end_x - start_x) * 0.5)
+                            padding_y = int((end_y - start_y) * 0.5)
+                            start_x = max(0, start_x - padding_x)
+                            start_y = max(0, start_y - padding_y)
+                            end_x = max(0, end_x + padding_x)
+                            end_y = max(0, end_y + padding_y)
+                            temp_face = temp_frame[start_y:end_y, start_x:end_x]
+                            if temp_face.size:
+                                with threading.Semaphore():
+                                    _, _, temp_face = self.FACE_ENHANCER.enhance(
+                                            temp_face,
+                                            paste_back=True
+                                        )
+                                temp_frame[start_y:end_y, start_x:end_x] = temp_face
+                        except:
+                            pass
+                        all_frames.append(temp_frame)
+                    else:
+                        print ("Frame is None")
+                        break
+
+                vcap.release()
+                cv2.destroyAllWindows()
+
+
+                if(len(all_frames)==0):
+                    raise Exception("Failed in face swapping")
+                
+                video_file_name = "infinite_zoom_" + str(time.time())
+                save_path = video_file_name + ".mp4"
+
+                write_video(save_path, all_frames, fps)
+
+                with open(save_path, "rb") as f:
+                    url="https://qolaba-server-development-2303.up.railway.app/api/v1/uploadToCloudinary/audiovideo"
+                    byte=f.read()
+                    myobj = {"image":"data:audio/mpeg;base64,"+(base64.b64encode(byte).decode("utf8"))}
                     
-                return {"images":[Image.fromarray(temp_frame)],  "Has_NSFW_Content":[False]*1}
+                    rps = requests.post(url, json=myobj, headers={'Content-Type': 'application/json'})
+                    video_url=rps.json()["data"]["secure_url"]
+                
+
+                os.remove(save_path)
+
+                return {"video_url":video_url}
             except:
                 raise ValueError("Not abled to detect face")
             

@@ -48,7 +48,7 @@ class stableDiffusion:
     
 
     @method()
-    def run_inference(self,file_url, List_of_prompt,zoom,Num_of_sec,height,width,guidance_scale, negative_prompt, frame_numbers):
+    def run_inference(self,file_url, List_of_prompt,zoom,Num_of_sec,height,width,guidance_scale, negative_prompt, frame_numbers, fps):
 
         from PIL import Image
         import numpy as np
@@ -200,7 +200,6 @@ class stableDiffusion:
                 all_frames.append(interpol_image)
             all_frames.append(current_image)
         video_file_name = "infinite_zoom_" + str(time.time())
-        fps = 30
         save_path = video_file_name + ".mp4"
         start_frame_dupe_amount = 15
         last_frame_dupe_amount = 15

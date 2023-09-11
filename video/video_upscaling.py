@@ -47,7 +47,7 @@ def download_models1():
             channel_multiplier=2,
             bg_upsampler=upsampler)
 
-stub = Stub("codeformer_image2image")
+stub = Stub("upscaling_video")
 image = (Image.debian_slim(python_version="3.10")
     .run_commands([
         "apt-get update --fix-missing",
@@ -59,6 +59,7 @@ image = (Image.debian_slim(python_version="3.10")
         "pip install facexlib",
         "pip install gfpgan",
         "pip install -r Real-ESRGAN/requirements.txt",
+        "pip install ffmpeg-python imageio==2.19.3 imageio-ffmpeg==0.4.7",
         ])).run_function(
     download_models,
     gpu="a10g"
@@ -69,7 +70,7 @@ image = (Image.debian_slim(python_version="3.10")
 
 stub.image = image
 
-@stub.cls(gpu="a10g", container_idle_timeout=600)
+@stub.cls(gpu="a10g", container_idle_timeout=600, timeout=900)
 class stableDiffusion:
     def __enter__(self):
         import os 
@@ -107,11 +108,32 @@ class stableDiffusion:
             
 
     @method()
-    def run_inference(self, image, upscale, face_upsample):
+    def run_inference(self, video_url, upscale, face_upsample):
 
         from gfpgan import GFPGANer
         import numpy as np
         from PIL import Image
+        import cv2, imageio, time, base64, requests, os
+
+
+        def write_video(file_path, frames, fps):
+
+            frames = [frame for frame in frames if frame.size == frames[0].size]
+
+            writer = imageio.get_writer(file_path, fps=int(fps), macro_block_size=None)
+
+            for frame in frames:
+                np_frame = np.array(frame)
+                writer.append_data(np_frame)
+
+            writer.close()
+
+        vcap = cv2.VideoCapture(video_url)
+        fps = vcap.get(cv2.CAP_PROP_FPS)
+        length = int(vcap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+        if(length>400):
+            raise Exception("Video is too large for upscaling")
 
         if face_upsample:
             self.face_enhancer = GFPGANer(
@@ -120,8 +142,41 @@ class stableDiffusion:
             arch='clean',
             channel_multiplier=2,
             bg_upsampler=self.upsampler)
-            _, _, output = self.face_enhancer.enhance(np.array(image), has_aligned=False, only_center_face=False, paste_back=True)
-        else:
-            output, _ = self.upsampler.enhance(np.array(image), outscale=upscale)
-        restored_img = Image.fromarray(output)
-        return {"images":[restored_img],  "Has_NSFW_Content":[False]}
+
+        all_frames=[]
+        while(True):
+            ret, frame = vcap.read()
+            if frame is not None:
+                frame =  cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                if face_upsample:
+                    _, _, output = self.face_enhancer.enhance(np.array(frame), has_aligned=False, only_center_face=False, paste_back=True)
+                else:
+                    output, _ = self.upsampler.enhance(np.array(frame), outscale=upscale)
+                all_frames.append(output)
+            else:
+                print ("Frame is None")
+                break
+
+        vcap.release()
+        cv2.destroyAllWindows()
+
+        if(len(all_frames)==0):
+            raise Exception("Failed in Upscaling Video")
+        
+        video_file_name = "infinite_zoom_" + str(time.time())
+        save_path = video_file_name + ".mp4"
+
+        write_video(save_path, all_frames, fps)
+
+        with open(save_path, "rb") as f:
+            url="https://qolaba-server-development-2303.up.railway.app/api/v1/uploadToCloudinary/audiovideo"
+            byte=f.read()
+            myobj = {"image":"data:audio/mpeg;base64,"+(base64.b64encode(byte).decode("utf8"))}
+            
+            rps = requests.post(url, json=myobj, headers={'Content-Type': 'application/json'})
+            video_url=rps.json()["data"]["secure_url"]
+        
+
+        os.remove(save_path)
+
+        return {"video_url":video_url}

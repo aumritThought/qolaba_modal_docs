@@ -2,29 +2,29 @@ from modal import Image, Stub, method
 
 
 def download_models():
-    from diffusers import StableDiffusionControlNetPipeline, ControlNetModel, UniPCMultistepScheduler
     import torch
-    from transformers import pipeline
 
-    depth_estimator = pipeline('depth-estimation')
+    from transformers import DPTFeatureExtractor, DPTForDepthEstimation
+    from diffusers import ControlNetModel, StableDiffusionXLControlNetPipeline, AutoencoderKL
 
+    depth_estimator = DPTForDepthEstimation.from_pretrained("Intel/dpt-hybrid-midas").to("cuda")
+    feature_extractor = DPTFeatureExtractor.from_pretrained("Intel/dpt-hybrid-midas")
     controlnet = ControlNetModel.from_pretrained(
-            "lllyasviel/sd-controlnet-depth", torch_dtype=torch.float16
-        )
+        "diffusers/controlnet-depth-sdxl-1.0",
+        variant="fp16",
+        use_safetensors=True,
+        torch_dtype=torch.float16,
+    ).to("cuda")
+    vae = AutoencoderKL.from_pretrained("madebyollin/sdxl-vae-fp16-fix", torch_dtype=torch.float16).to("cuda")
+    pipe = StableDiffusionXLControlNetPipeline.from_pretrained(
+        "stabilityai/stable-diffusion-xl-base-1.0",
+        controlnet=controlnet,
+        vae=vae,
+        variant="fp16",
+        use_safetensors=True,
+        torch_dtype=torch.float16,
+    ).to("cuda")
 
-    pipe = StableDiffusionControlNetPipeline.from_pretrained(
-            "stablediffusionapi/rev-anim", controlnet=controlnet, torch_dtype=torch.float16
-        )
-
-    pipe.scheduler = UniPCMultistepScheduler.from_config(pipe.scheduler.config)
-
-    pipe.enable_model_cpu_offload()
-    pipe.enable_xformers_memory_efficient_attention()
-
-    from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
-    from transformers import CLIPFeatureExtractor
-    safety_checker = StableDiffusionSafetyChecker.from_pretrained("CompVis/stable-diffusion-safety-checker")
-    feature_extractor = CLIPFeatureExtractor()
 
 stub = Stub("depth"+"_controlnet_"+"_image2image")
 image = (
@@ -43,42 +43,66 @@ stub.image = image
 @stub.cls(gpu="a10g", container_idle_timeout=600, memory=10240)
 class stableDiffusion:  
     def __enter__(self):
-        from diffusers import StableDiffusionControlNetPipeline, ControlNetModel, UniPCMultistepScheduler
         import torch
-        from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
-        from transformers import CLIPFeatureExtractor
-        from transformers import pipeline
+        from transformers import DPTFeatureExtractor, DPTForDepthEstimation
+        from diffusers import ControlNetModel, StableDiffusionXLControlNetPipeline, AutoencoderKL
 
+
+        self.depth_estimator = DPTForDepthEstimation.from_pretrained("Intel/dpt-hybrid-midas").to("cuda")
+        self.feature_extractor = DPTFeatureExtractor.from_pretrained("Intel/dpt-hybrid-midas")
         controlnet = ControlNetModel.from_pretrained(
-            "lllyasviel/sd-controlnet-depth", torch_dtype=torch.float16
-        )
-
-        self.pipe = StableDiffusionControlNetPipeline.from_pretrained(
-            "stablediffusionapi/rev-anim", controlnet=controlnet, safety_checker=None, torch_dtype=torch.float16
-        )
-
-        self.pipe.scheduler = UniPCMultistepScheduler.from_config(self.pipe.scheduler.config)
-
+            "diffusers/controlnet-depth-sdxl-1.0",
+            variant="fp16",
+            use_safetensors=True,
+            torch_dtype=torch.float16,
+        ).to("cuda")
+        vae = AutoencoderKL.from_pretrained("madebyollin/sdxl-vae-fp16-fix", torch_dtype=torch.float16).to("cuda")
+        self.pipe = StableDiffusionXLControlNetPipeline.from_pretrained(
+            "stabilityai/stable-diffusion-xl-base-1.0",
+            controlnet=controlnet,
+            vae=vae,
+            variant="fp16",
+            use_safetensors=True,
+            torch_dtype=torch.float16,
+        ).to("cuda")
         self.pipe.enable_model_cpu_offload()
         self.pipe.enable_xformers_memory_efficient_attention()
 
-        self.depth_estimator = pipeline('depth-estimation')
 
 
     @method()
     def run_inference(self, img, prompt,guidance_scale,negative_prompt, batch, strength):
+        import torch
         import cv2
         from PIL import Image
         import numpy as np
+
+        def get_depth_map(image):
+            image = self.feature_extractor(images=image, return_tensors="pt").pixel_values.to("cuda")
+            with torch.no_grad(), torch.autocast("cuda"):
+                depth_map = self.depth_estimator(image).predicted_depth
+
+            depth_map = torch.nn.functional.interpolate(
+                depth_map.unsqueeze(1),
+                size=(1024, 1024),
+                mode="bicubic",
+                align_corners=False,
+            )
+            depth_min = torch.amin(depth_map, dim=[1, 2, 3], keepdim=True)
+            depth_max = torch.amax(depth_map, dim=[1, 2, 3], keepdim=True)
+            depth_map = (depth_map - depth_min) / (depth_max - depth_min)
+            image = torch.cat([depth_map] * 3, dim=1)
+
+            image = image.permute(0, 2, 3, 1).cpu().numpy()[0]
+            image = Image.fromarray((image * 255.0).clip(0, 255).astype(np.uint8))
+            return image
+        
+        
         
         prompt = [prompt] * batch
         negative_prompt = [negative_prompt] * batch
         
-        image = self.depth_estimator(img)['depth']
-        image = np.array(image)
-        image = image[:, :, None]
-        image = np.concatenate([image, image, image], axis=2)
-        image = Image.fromarray(image)
-
-        image = self.pipe(prompt=prompt, image=image, num_inference_steps=20, guidance_scale=guidance_scale, negative_prompt=negative_prompt)
+        image = get_depth_map(img)
+        image = image.resize((img.size))
+        image = self.pipe(prompt=prompt, image=image, num_inference_steps=20, guidance_scale=guidance_scale, negative_prompt=negative_prompt, controlnet_conditioning_scale=0.5)
         return {"images":image.images,  "Has_NSFW_Content":[False]*batch}
