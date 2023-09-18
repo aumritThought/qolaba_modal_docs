@@ -9,7 +9,7 @@ def download_models():
 
     remover = Remover()
 
-stub = Stub("Background_removal"+"_image2image")
+stub = Stub("Background_removal_image2image")
 image = (
     Image.debian_slim(python_version="3.10")
     .run_commands([
@@ -38,11 +38,14 @@ class stableDiffusion:
     def run_inference(self, img, bg_img=None, bg_color=False, r_color=255, g_color=0, b_color=0, blur=False):
         import random, os
         from PIL import Image
-        import requests, io
+        import requests, io, tempfile
+        img=img.convert('RGB')
+
         try:
             response = requests.get(bg_img)
             bg_img = Image.open(io.BytesIO(response.content))
             bg_img=bg_img.resize(img.size)
+            bg_img=bg_img.convert('RGB')
         except:
             bg_img=None
         
@@ -50,11 +53,14 @@ class stableDiffusion:
             image = self.remover.process(img, type='blur')
             return {"images":[Image.fromarray(image).convert('RGB')],  "Has_NSFW_Content":[False]*1}
         elif(not(bg_img==None)):
-            num = random.random()
-            name=str(num)+".png"
-            bg_img.save(name)
-            image = self.remover.process(img, type=name) # use another image as a background
-            os.remove(name)
+            temp_file_img = tempfile.NamedTemporaryFile(delete=True, suffix='.jpg')
+
+            bg_img.save(temp_file_img, format='JPEG')
+            image = self.remover.process(img, type=temp_file_img.name) # use another image as a background
+            try:
+                temp_file_img.close()
+            except:
+                pass
             return {"images":[Image.fromarray(image).convert('RGB')],  "Has_NSFW_Content":[False]*1}
         elif(bg_color==True):
             image = self.remover.process(img, type=str([r_color, g_color, b_color]))

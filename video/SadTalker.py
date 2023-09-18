@@ -4,7 +4,7 @@ model_schema={
     "memory":10240,
     "container_idle_timeout":600,
     "name":"sad_talker_video",
-    "gpu":"a10g"
+    "gpu":"a100"
 }
 
 stub = Stub(model_schema["name"])
@@ -28,35 +28,67 @@ stub.image = image
 class stableDiffusion:    
     
     @method()
-    def run_inference(self,file_url, audio_url, preprocess,still_mode,  use_enhancer, size, pose_style, exp_scale, use_blink):
-        import requests, tempfile, shutil, base64, os, sys
-        from pydub import AudioSegment
+    def run_inference(self,file_url, audio_url):
+        import os, sys
+
         os.chdir("../SadTalker")
         sys.path.insert(0, '/SadTalker')
-        from src.gradio_demo import SadTalker  
+
+        from time import strftime
+        from time import time
+        from src.utils.preprocess import CropAndExtract
+        from src.test_audio2coeff import Audio2Coeff  
+        from src.facerender.animate import AnimateFromCoeff
+        from src.generate_batch import get_data
+        from src.generate_facerender_batch import get_facerender_data
+        from src.utils.init_path import init_path
+        import requests, tempfile, shutil, base64
+        from pydub import AudioSegment
+
+        
+
+        facerender_batch_size = 10
+        sadtalker_paths = init_path("./checkpoints", 'src/config', "256", False, "full")
+
+        preprocess_model = CropAndExtract(sadtalker_paths, "cuda")
+        audio_to_coeff = Audio2Coeff(sadtalker_paths, "cuda")
+        animate_from_coeff = AnimateFromCoeff(sadtalker_paths, "cuda")
+
+        save_dir = os.path.join("results", strftime("%Y_%m_%d_%H.%M.%S"))
+
         temp_file_audio= tempfile.NamedTemporaryFile(delete=True, suffix='.mp3')
+
         response = requests.get(audio_url)
+
         if response.status_code == 200:
             with open(temp_file_audio.name, 'wb') as f:
                 f.write(response.content)
+        temp_file_img = tempfile.NamedTemporaryFile(delete=True, suffix='.jpg')
+        file_url.save(temp_file_img, format='JPEG')
 
-
-        temp_file_img = tempfile.NamedTemporaryFile(delete=True, suffix='.png')
-
-        file_url.save(temp_file_img, format='PNG')
-            
         def get_duration_pydub(file_path):
             audio_file = AudioSegment.from_file(file_path)
             duration = audio_file.duration_seconds
             return duration
-        if(get_duration_pydub(temp_file_audio.name)>31):
-            raise Exception(str("Audio Length should be less than 10s"))
-        st=SadTalker()
-        video_path=st.test(source_image=temp_file_img.name, driven_audio=temp_file_audio.name, preprocess=preprocess, 
-        still_mode=still_mode,  use_enhancer=use_enhancer, size=size, 
-        pose_style = pose_style, exp_scale=exp_scale, use_blink=use_blink)
-            
+        if(get_duration_pydub(temp_file_audio.name)>60):
+            raise Exception(str("Audio Length should be less than 60s"))
 
+        audio_path=temp_file_audio.name
+        pic_path=temp_file_img.name
+
+        first_frame_dir = os.path.join(save_dir, 'first_frame_dir')
+        os.makedirs(first_frame_dir, exist_ok=True)
+        first_coeff_path, crop_pic_path, crop_info =  preprocess_model.generate(pic_path, first_frame_dir, "full", source_image_flag=True)
+        ref_eyeblink_coeff_path=None
+        ref_pose_coeff_path=None
+        batch = get_data(first_coeff_path, audio_path, "cuda", ref_eyeblink_coeff_path, still=True)
+        coeff_path = audio_to_coeff.generate(batch, save_dir, 0, ref_pose_coeff_path)
+        data = get_facerender_data(coeff_path, crop_pic_path, first_coeff_path, audio_path, 
+                                    facerender_batch_size, None, None, None,
+                                    expression_scale=1, still_mode=True, preprocess="full")
+        video_path = animate_from_coeff.generate(data, save_dir, pic_path, crop_info, \
+                                    enhancer=None, background_enhancer=None, preprocess="full")
+            
         with open(video_path, "rb") as f:
             url="https://qolaba-server-development-2303.up.railway.app/api/v1/uploadToCloudinary/audiovideo"
             byte=f.read()

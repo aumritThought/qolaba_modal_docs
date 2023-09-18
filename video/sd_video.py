@@ -4,7 +4,7 @@ model_schema={
     "memory":10240,
     "container_idle_timeout":600,
     "name":"stable_diffusion_video",
-    "gpu":"a10g"
+    "gpu":"a100"
 }
 
 def download_models():
@@ -42,6 +42,7 @@ class stableDiffusion:
         self.pipe = StableDiffusionWalkPipeline.from_pretrained(
             "stablediffusionapi/revanimated",
             torch_dtype=torch.float16,
+            safety_checker=None
         ).to("cuda")
         self.pipe.enable_xformers_memory_efficient_attention()   
         

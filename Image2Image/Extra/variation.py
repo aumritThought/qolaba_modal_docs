@@ -2,32 +2,40 @@ from modal import Image, Stub, method
 
 
 def download_models():
-    from diffusers import StableDiffusionControlNetPipeline, ControlNetModel, UniPCMultistepScheduler
-    import torch
-    controlnet = ControlNetModel.from_pretrained(
-            "lllyasviel/sd-controlnet-canny", torch_dtype=torch.float16
-        )
+    import os, sys, torch
+    from diffusers import StableDiffusionXLPipeline
 
-    pipe = StableDiffusionControlNetPipeline.from_pretrained(
-            "stablediffusionapi/rev-anim", controlnet=controlnet, torch_dtype=torch.float16
-        )
+    os.chdir("../IP-Adapter")
+    sys.path.insert(0, "../IP-Adapter")
+    os.system("git clone https://huggingface.co/h94/IP-Adapter")
+    print(os.getcwd())
+    from ip_adapter import IPAdapterXL
 
-    pipe.scheduler = UniPCMultistepScheduler.from_config(pipe.scheduler.config)
+    base_model_path = "stabilityai/stable-diffusion-xl-base-1.0"
 
-    pipe.enable_model_cpu_offload()
+    # load SDXL pipeline
+    pipe = StableDiffusionXLPipeline.from_pretrained(
+        base_model_path,
+        torch_dtype=torch.float16,
+        add_watermarker=False, use_safetensors=True, variant="fp16"
+    ).to("cuda")
     pipe.enable_xformers_memory_efficient_attention()
 
-    from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
-    from transformers import CLIPFeatureExtractor
-    safety_checker = StableDiffusionSafetyChecker.from_pretrained("CompVis/stable-diffusion-safety-checker")
-    feature_extractor = CLIPFeatureExtractor()
+    device = "cuda"
+    image_encoder_path = "IP-Adapter/sdxl_models/image_encoder"
+    ip_ckpt = "IP-Adapter/sdxl_models/ip-adapter_sdxl.bin"
 
-stub = Stub("Canny"+"_controlnet_variation"+"_image2image")
+    ip_model = IPAdapterXL(pipe, image_encoder_path, ip_ckpt, device)
+
+stub = Stub("Canny_controlnet_variation_image2image")
 image = (
     Image.debian_slim(python_version="3.10")
     .run_commands([
-        "apt-get update && apt-get install ffmpeg libsm6 libxext6  -y",
-        "pip install diffusers transformers accelerate opencv-python Pillow xformers"
+        "apt-get update && apt-get install ffmpeg libsm6 libxext6 git -y",
+        "apt-get install git-lfs",
+        "git lfs install",
+        "git clone https://github.com/tencent-ailab/IP-Adapter.git",
+        "pip install diffusers==0.19.3 transformers accelerate safetensors torch xformers"
                    ])
     ).run_function(
             download_models,
@@ -39,42 +47,34 @@ stub.image = image
 @stub.cls(gpu="a10g", container_idle_timeout=600, memory=10240)
 class stableDiffusion:  
     def __enter__(self):
-        from diffusers import StableDiffusionControlNetPipeline, ControlNetModel, UniPCMultistepScheduler
-        import torch
-        from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
-        from transformers import CLIPFeatureExtractor
-        controlnet = ControlNetModel.from_pretrained(
-            "lllyasviel/sd-controlnet-canny", torch_dtype=torch.float16
-        )
+        import os, sys, torch
+        from diffusers import StableDiffusionXLPipeline
+        os.chdir("../IP-Adapter")
+        sys.path.insert(0, "../IP-Adapter")
+        from ip_adapter import IPAdapterXL
 
-        self.pipe = StableDiffusionControlNetPipeline.from_pretrained(
-            "stablediffusionapi/rev-anim", controlnet=controlnet, safety_checker=None, torch_dtype=torch.float16
-        )
+        base_model_path = "stabilityai/stable-diffusion-xl-base-1.0"
+        image_encoder_path = "IP-Adapter/sdxl_models/image_encoder"
+        ip_ckpt = "IP-Adapter/sdxl_models/ip-adapter_sdxl.bin"  
+        device = "cuda"
 
-        self.pipe.scheduler = UniPCMultistepScheduler.from_config(self.pipe.scheduler.config)
+        # load SDXL pipeline
+        pipe = StableDiffusionXLPipeline.from_pretrained(
+            base_model_path,
+            torch_dtype=torch.float16,
+            add_watermarker=False, use_safetensors=True, variant="fp16"
+        ).to("cuda")
+        pipe.enable_xformers_memory_efficient_attention()
 
-        self.pipe.enable_model_cpu_offload()
-        self.pipe.enable_xformers_memory_efficient_attention()
-
-
+        self.ip_model = IPAdapterXL(pipe, image_encoder_path, ip_ckpt, device)
 
     @method()
     def run_inference(self, img,guidance_scale,batch):
-        import cv2
-        from PIL import Image
-        import numpy as np
+        import random
+        height=img.size[1]
+        width=img.size[0]
+        seed=random.sample(range(1, 1000000000), 1)[0]
 
-
-        image = np.array(img)
-
-        low_threshold = 100
-        high_threshold = 200
-
-        image = cv2.Canny(image, low_threshold, high_threshold)
-        image = image[:, :, None]
-        image = np.concatenate([image, image, image], axis=2)
-        image = Image.fromarray(image)
-
-        image = self.pipe(prompt="", image=image, num_inference_steps=20, guidance_scale=guidance_scale, guess_mode=True, num_images_per_prompt=batch).images
+        image = self.ip_model.generate(pil_image=img, num_samples=batch, num_inference_steps=30, height=height, width=width, seed=seed)
 
         return {"images":image,  "Has_NSFW_Content":[False]*batch}

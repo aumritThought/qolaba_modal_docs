@@ -24,7 +24,7 @@ image = (
 
 stub.image = image
 
-@stub.cls(gpu="a10g", container_idle_timeout=600, memory=10240)
+@stub.cls(gpu="a100", container_idle_timeout=600, memory=10240)
 class stableDiffusion:  
     def __enter__(self):
 
@@ -42,10 +42,7 @@ class stableDiffusion:
         self.pipe.safety_checker = None
         self.pipe.enable_attention_slicing()
         self.pipe.enable_xformers_memory_efficient_attention()
-    
-    
 
-    
 
     @method()
     def run_inference(self,file_url, List_of_prompt,zoom,Num_of_sec,height,width,guidance_scale, negative_prompt, frame_numbers, fps):

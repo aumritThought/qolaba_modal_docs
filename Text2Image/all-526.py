@@ -21,7 +21,7 @@ def download_models():
 
 stub = Stub(model_schema["name"])
 image = (
-    Image.debian_slim(python_version="3.10")
+    Image.debian_slim(python_version="3.11")
     .run_commands([
         "apt-get update && apt-get install ffmpeg libsm6 libxext6 git -y",
         "apt-get update && apt-get install wget -y",
