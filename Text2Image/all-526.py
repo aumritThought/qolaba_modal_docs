@@ -44,7 +44,8 @@ class stableDiffusion:
         import torch
         from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
         from transformers import CLIPFeatureExtractor
-
+        import os
+        os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'max_split_size_mb:32'
         self.pipe = StableDiffusionXLPipeline.from_single_file("../mbbxl.safetensors", torch_dtype=torch.float16, use_safetensors=True, variant="fp16")
         self.pipe.to("cuda")
 
@@ -69,6 +70,7 @@ class stableDiffusion:
                 num_inference_steps=num_inference_steps,
                 guidance_scale=guidance_scale,
             ).images
+        torch.cuda.empty_cache()
         safety_checker_input = self.feature_extractor(
                 image, return_tensors="pt"
             ).to("cuda")

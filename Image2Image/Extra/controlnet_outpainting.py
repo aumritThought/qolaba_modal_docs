@@ -90,8 +90,13 @@ class stableDiffusion:
         init_image, mask_image=maskimage(img,  right, left, top, bottom)
         init_image=init_image.resize((64 * round(init_image.size[0] / 64), 64 * round(init_image.size[1] / 64)))
         if(init_image.size[0]>1024 or init_image.size[0]<256 or init_image.size[1]>1024 or init_image.size[1]<256):
-            height=768
-            width=((int(init_image.size[1]*768/init_image.size[0]))//64)*64
+            if(init_image.size[1]>=init_image.size[0]):
+                height=1024
+                width=((int(init_image.size[0]*1024/init_image.size[1]))//64)*64
+            else:
+                width=1024
+                height=((int(init_image.size[1]*1024/init_image.size[0]))//64)*64
+
             init_image=init_image.resize((height, width))
             mask_image=mask_image.resize((height, width))
         control_image = make_inpaint_condition(init_image, mask_image)

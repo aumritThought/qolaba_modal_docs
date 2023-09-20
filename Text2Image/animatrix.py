@@ -69,6 +69,7 @@ class stableDiffusion:
                 num_inference_steps=num_inference_steps,
                 guidance_scale=guidance_scale,
             ).images
+        torch.cuda.empty_cache()
         safety_checker_input = self.feature_extractor(
                 image, return_tensors="pt"
             ).to("cuda")

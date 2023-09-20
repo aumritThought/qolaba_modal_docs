@@ -64,6 +64,7 @@ class stableDiffusion():
         image = self.image_pipe(
                     prompt=prompt, image=img, strength=strength, guidance_scale=guidance_scale, negative_prompt=negative_prompt
                 ).images
+        torch.cuda.empty_cache()
 
         safety_checker_input = self.feature_extractor(
                 image, return_tensors="pt"
