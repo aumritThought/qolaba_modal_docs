@@ -180,7 +180,8 @@ class stableDiffusion:
         except:
             s_img=None
         if(s_img==None):
-            raise ValueError("Source Image not found")
+            raise Exception("Not able to fetch the Image using URL" , "Provide Proper Image URL")
+
         else:
             try:
                 s_img=np.array(s_img)
@@ -198,7 +199,7 @@ class stableDiffusion:
                 length = int(vcap.get(cv2.CAP_PROP_FRAME_COUNT))
 
                 if(length>400):
-                    raise Exception("Video is too large for face swapping")
+                    raise Exception("Video is too large for face swapping", "Trim the video in multiple parts or provide the video with less than 400 frames")
                 
                 all_frames=[]
 
@@ -254,7 +255,7 @@ class stableDiffusion:
 
 
                 if(len(all_frames)==0):
-                    raise Exception("Failed in face swapping")
+                    raise Exception("Failed in face swapping because of not able to detect face", "Provide video with suitable face references")
                 
                 video_file_name = "infinite_zoom_" + str(time.time())
                 save_path = video_file_name + ".mp4"
@@ -274,5 +275,6 @@ class stableDiffusion:
 
                 return {"video_url":video_url}
             except:
-                raise ValueError("Not abled to detect face")
+                raise Exception("Not able to detect face or Input image is invalid" , "Provide Proper Image")
+
             

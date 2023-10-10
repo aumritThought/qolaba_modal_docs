@@ -2,26 +2,24 @@ from modal import Image, Stub, method
 
 
 def download_models():
-    from diffusers import StableDiffusionXLControlNetPipeline, ControlNetModel, AutoencoderKL
+    from diffusers import StableDiffusionControlNetPipeline, ControlNetModel, AutoencoderKL, StableDiffusionControlNetImg2ImgPipeline
     import torch
-    controlnet = ControlNetModel.from_pretrained(
-            "diffusers/controlnet-canny-sdxl-1.0",
-            torch_dtype=torch.float16
-    )
-    vae = AutoencoderKL.from_pretrained("madebyollin/sdxl-vae-fp16-fix", torch_dtype=torch.float16)
-    pipe = StableDiffusionXLControlNetPipeline.from_pretrained(
-            "stabilityai/stable-diffusion-xl-base-1.0",
-            controlnet=controlnet,
-            vae=vae,
-            torch_dtype=torch.float16,
-        )
-    from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
-    from transformers import CLIPFeatureExtractor
-    safety_checker = StableDiffusionSafetyChecker.from_pretrained("CompVis/stable-diffusion-safety-checker")
-    feature_extractor = CLIPFeatureExtractor()
+    BASE_MODEL = "SG161222/Realistic_Vision_V5.1_noVAE"
+
+    vae = AutoencoderKL.from_pretrained("stabilityai/sd-vae-ft-mse", torch_dtype=torch.float16)
+    #init_pipe = DiffusionPipeline.from_pretrained("SG161222/Realistic_Vision_V5.1_noVAE", torch_dtype=torch.float16)
+    controlnet = ControlNetModel.from_pretrained("monster-labs/control_v1p_sd15_qrcode_monster", torch_dtype=torch.float16)#, torch_dtype=torch.float16)
+    main_pipe = StableDiffusionControlNetPipeline.from_pretrained(
+        BASE_MODEL,
+        controlnet=controlnet,
+        vae=vae,
+        safety_checker=None,
+        torch_dtype=torch.float16,
+    ).to("cuda")
+    image_pipe = StableDiffusionControlNetImg2ImgPipeline(**main_pipe.components)
 
 
-stub = Stub("Canny"+"_controlnet_"+"_image2image")
+stub = Stub("Illusion_Diffusion_image2image")
 image = (
     Image.debian_slim(python_version="3.10")
     .run_commands([
@@ -40,21 +38,20 @@ class stableDiffusion:
     def __enter__(self):
         import time
         st= time.time()
-        from diffusers import StableDiffusionXLControlNetPipeline, ControlNetModel, AutoencoderKL
-        from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
-        from transformers import CLIPFeatureExtractor
+        from diffusers import StableDiffusionControlNetPipeline, ControlNetModel, AutoencoderKL, StableDiffusionControlNetImg2ImgPipeline
         import torch
-        controlnet = ControlNetModel.from_pretrained(
-            "diffusers/controlnet-canny-sdxl-1.0",
-            torch_dtype=torch.float16
-        )
-        vae = AutoencoderKL.from_pretrained("madebyollin/sdxl-vae-fp16-fix", torch_dtype=torch.float16)
-        self.pipe = StableDiffusionXLControlNetPipeline.from_pretrained(
-            "stabilityai/stable-diffusion-xl-base-1.0",
+        BASE_MODEL = "SG161222/Realistic_Vision_V5.1_noVAE"
+
+        vae = AutoencoderKL.from_pretrained("stabilityai/sd-vae-ft-mse", torch_dtype=torch.float16)
+        controlnet = ControlNetModel.from_pretrained("monster-labs/control_v1p_sd15_qrcode_monster", torch_dtype=torch.float16)
+        self.pipe = StableDiffusionControlNetPipeline.from_pretrained(
+            BASE_MODEL,
             controlnet=controlnet,
             vae=vae,
+            safety_checker=None,
             torch_dtype=torch.float16,
-        )
+        ).to("cuda")
+        # self.pipe = StableDiffusionControlNetImg2ImgPipeline(**main_pipe.components)
 
         self.pipe.enable_model_cpu_offload()
         self.pipe.enable_xformers_memory_efficient_attention()
@@ -84,23 +81,32 @@ class stableDiffusion:
 
     @method()
     def run_inference(self, img, prompt,guidance_scale,negative_prompt, batch, strength):
+
         import cv2, time, torch
         from PIL import Image
         import numpy as np
         st=time.time()
+        OldRange = 1  
+        NewRange = (2.5 - 0.8)  
+        strength = (((strength) * NewRange) / OldRange) + 0.8
         prompt = [prompt] * batch
         negative_prompt = [negative_prompt] * batch
-        image = np.array(img)
+        image = self.pipe(
+            prompt=prompt,
+            negative_prompt=negative_prompt,
+            # control_image=control_image_large,        
+            # image=upscaled_latents,
+            guidance_scale=float(guidance_scale),
+            # generator=generator,
+            num_inference_steps=20,
+            image = img,
+            controlnet_conditioning_scale=strength,
 
-        low_threshold = 100
-        high_threshold = 200
-
-        image = cv2.Canny(image, low_threshold, high_threshold)
-        image = image[:, :, None]
-        image = np.concatenate([image, image, image], axis=2)
-        image = Image.fromarray(image)
-        image = self.pipe(prompt=prompt, image=image, num_inference_steps=20, guidance_scale=guidance_scale, negative_prompt=negative_prompt, controlnet_conditioning_scale=0.5).images
-        
+            # strength=0.5,
+            # control_guidance_start=float(control_guidance_start),
+            # control_guidance_end=float(control_guidance_end),
+            # controlnet_conditioning_scale=float(controlnet_conditioning_scale)
+        ).images
 
         torch.cuda.empty_cache()
 

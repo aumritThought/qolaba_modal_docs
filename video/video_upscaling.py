@@ -133,7 +133,7 @@ class stableDiffusion:
         length = int(vcap.get(cv2.CAP_PROP_FRAME_COUNT))
 
         if(length>400):
-            raise Exception("Video is too large for upscaling")
+            raise Exception("Video is too large for upscaling", "Reduce the total number of Frames less than 400 frames")
 
         if face_upsample:
             self.face_enhancer = GFPGANer(
@@ -161,7 +161,7 @@ class stableDiffusion:
         cv2.destroyAllWindows()
 
         if(len(all_frames)==0):
-            raise Exception("Failed in Upscaling Video")
+            raise Exception("Failed in Upscaling Video", "Not able to extract frames from video")
         
         video_file_name = "infinite_zoom_" + str(time.time())
         save_path = video_file_name + ".mp4"

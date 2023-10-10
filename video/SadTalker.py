@@ -78,7 +78,7 @@ class stableDiffusion:
                 duration = audio_file.duration_seconds
                 return duration
             if(get_duration_pydub(temp_file_audio.name)>60):
-                raise Exception(str("Audio Length should be less than 60s"))
+                raise Exception("Audio Length should be less than 60s", "Trim the audio or Provide file less than 60s")
 
             audio_path=temp_file_audio.name
             pic_path=temp_file_img.name
@@ -96,7 +96,7 @@ class stableDiffusion:
             video_path = animate_from_coeff.generate(data, save_dir, pic_path, crop_info, \
                                         enhancer="gfpgan", background_enhancer=None, preprocess="full")
         except:
-            raise Exception("Not able to detect Face")        
+            raise Exception("Not able to detect Face", "Provide Image with proper Face structure")        
         with open(video_path, "rb") as f:
             url="https://qolaba-server-development-2303.up.railway.app/api/v1/uploadToCloudinary/audiovideo"
             byte=f.read()

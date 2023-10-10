@@ -1,6 +1,5 @@
 from modal import Image, Stub, method
 
-
 def download_models():
     import sys
     sys.path.insert(0, '/roop')
@@ -80,6 +79,7 @@ image = (
         "git clone https://github.com/s0md3v/roop.git",
         "pip install -r roop/requirements.txt",
         "pip install ffmpeg-python imageio==2.19.3 imageio-ffmpeg==0.4.7",
+        "pip install diffusers transformers accelerate opencv-python Pillow xformers"
 ])
     ).run_function(
             download_models,
@@ -91,12 +91,13 @@ stub.image = image
 @stub.cls(gpu="a10g", container_idle_timeout=600, memory=10240)
 class stableDiffusion:  
     def __enter__(self):
+        import time
+        st= time.time()
         import sys
         sys.path.insert(0, '/roop')
         from roop.processors.frame.core import get_frame_processors_modules
-        import sys, shutil, threading
+        import sys, threading
         import roop.globals
-        import cv2
         import insightface
         import onnxruntime
         from gfpgan.utils import GFPGANer
@@ -148,6 +149,26 @@ class stableDiffusion:
                     # todo: set models path -> https://github.com/TencentARC/GFPGAN/issues/399
                 self.FACE_ENHANCER = GFPGANer(model_path=model_path, upscale=1, device='cuda')
 
+        self.container_execution_time=time.time()-st
+
+    def generate_image_urls(self, image_data):
+        import io, base64, requests
+        url = "https://qolaba-server-development-2303.up.railway.app/api/v1/uploadToCloudinary/image"
+        image_urls=[]
+        for im in range(0, len(image_data["images"])):
+            filtered_image = io.BytesIO()
+            if(image_data["Has_NSFW_Content"][im]):
+                pass
+            else:
+                image_data["images"][im].save(filtered_image, "JPEG")
+                myobj = {
+                        "image":"data:image/png;base64,"+(base64.b64encode(filtered_image.getvalue()).decode("utf8"))
+                    }
+                rps = requests.post(url, json=myobj, headers={'Content-Type': 'application/json'})
+                im_url=rps.json()["data"]["secure_url"]
+                image_urls.append(im_url)
+        return image_urls
+
     @method()
     def run_inference(self, img, bg_img=None):
         import sys
@@ -155,10 +176,11 @@ class stableDiffusion:
         import sys, threading
         import roop.globals
         from roop.face_analyser import get_one_face, get_many_faces, find_similar_face
-        import cv2
+        import cv2, torch
         import numpy as np
         from PIL import Image
-
+        import time
+        st = time.time()
         import requests, io
         try:
             response = requests.get(bg_img)
@@ -166,7 +188,7 @@ class stableDiffusion:
         except:
             s_img=None
         if(s_img==None):
-            raise ValueError("Source Image not found")
+            raise Exception("Not able to fetch the Image using URL" , "Provide Proper Image URL")
         else:
             try:
                 s_img=np.array(s_img)
@@ -212,8 +234,15 @@ class stableDiffusion:
                                 paste_back=True
                             )
                     temp_frame[start_y:end_y, start_x:end_x] = temp_face
-                    
-                return {"images":[Image.fromarray(temp_frame)],  "Has_NSFW_Content":[False]*1}
+                torch.cuda.empty_cache()
+                image=[Image.fromarray(temp_frame)] 
+                image_data = {"images" :  image, "Has_NSFW_Content" : [False]*1}
+                image_urls =self.generate_image_urls(image_data)
+                
+                self.runtime=time.time()-st
+                return {"result":image_urls,  
+                        "Has_NSFW_Content":[False]*1, 
+                        "time": {"startup_time" : self.container_execution_time, "runtime":self.runtime}}
             except:
-                raise ValueError("Not abled to detect face")
+                raise Exception("Not able to detect face or Input image is invalid" , "Provide Proper Image")
             

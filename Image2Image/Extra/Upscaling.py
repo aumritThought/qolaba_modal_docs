@@ -1,13 +1,4 @@
-from pathlib import Path
-
-from modal import Image, Secret, Stub, web_endpoint, method
-
-from fastapi import Security, Depends, HTTPException, UploadFile, status, Request
-from typing import  Optional 
-import io
-from fastapi.responses import StreamingResponse
-from starlette.status import HTTP_403_FORBIDDEN
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from modal import Image, Stub, method
 
 def download_models():
     import os 
@@ -72,6 +63,8 @@ stub.image = image
 @stub.cls(gpu="a10g", container_idle_timeout=600)
 class stableDiffusion:
     def __enter__(self):
+        import time
+        st= time.time()
         import os 
         os.chdir("../Real-ESRGAN")
         from basicsr.archs.rrdbnet_arch import RRDBNet
@@ -104,11 +97,31 @@ class stableDiffusion:
             arch='clean',
             channel_multiplier=2,
             bg_upsampler=self.upsampler)
-            
+        self.container_execution_time=time.time()-st
+
+    
+    def generate_image_urls(self, image_data):
+        import io, base64, requests
+        url = "https://qolaba-server-development-2303.up.railway.app/api/v1/uploadToCloudinary/image"
+        image_urls=[]
+        for im in range(0, len(image_data["images"])):
+            filtered_image = io.BytesIO()
+            if(image_data["Has_NSFW_Content"][im]):
+                pass
+            else:
+                image_data["images"][im].save(filtered_image, "JPEG")
+                myobj = {
+                        "image":"data:image/png;base64,"+(base64.b64encode(filtered_image.getvalue()).decode("utf8"))
+                    }
+                rps = requests.post(url, json=myobj, headers={'Content-Type': 'application/json'})
+                im_url=rps.json()["data"]["secure_url"]
+                image_urls.append(im_url)
+        return image_urls
 
     @method()
     def run_inference(self, image, upscale, face_upsample):
-
+        import time
+        st=time.time()
         from gfpgan import GFPGANer
         import numpy as np
         from PIL import Image
@@ -124,4 +137,10 @@ class stableDiffusion:
         else:
             output, _ = self.upsampler.enhance(np.array(image), outscale=upscale)
         restored_img = Image.fromarray(output)
-        return {"images":[restored_img],  "Has_NSFW_Content":[False]}
+        image_data = {"images" :  [restored_img], "Has_NSFW_Content" : [False]*1}
+        image_urls =self.generate_image_urls(image_data)
+        
+        self.runtime=time.time()-st
+        return {"result":image_urls,  
+                "Has_NSFW_Content":  [False]*1, 
+                "time": {"startup_time" : self.container_execution_time, "runtime":self.runtime}}

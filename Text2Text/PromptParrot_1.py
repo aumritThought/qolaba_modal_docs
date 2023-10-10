@@ -1,6 +1,6 @@
-from modal import Image, Stub, method
+from modal import Image, Stub , method
 
-stub = Stub("promptparrot_text2text")
+stub = Stub("promptparrot_1_text2text")
 
 def download_models():
     from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -115,4 +115,3 @@ class stableDiffusion():
                 "Has_NSFW_Content":  [False]*1, 
                 "time": {"startup_time" : self.container_execution_time, "runtime":self.runtime}}
 
-        return generated_prompts
