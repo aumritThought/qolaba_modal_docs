@@ -1,4 +1,4 @@
-from modal import Image, Stub, method
+from modal import Image, Stub , method
 
 stub = Stub("promptparrot_text2text")
 
@@ -35,7 +35,7 @@ image = (
 stub.image = image
 
 
-@stub.cls(gpu="t4",container_idle_timeout=300)
+@stub.cls(gpu="t4",container_idle_timeout=100)
 class stableDiffusion():
     def __enter__(self):
         import time
@@ -115,4 +115,3 @@ class stableDiffusion():
                 "Has_NSFW_Content":  [False]*1, 
                 "time": {"startup_time" : self.container_execution_time, "runtime":self.runtime}}
 
-        return generated_prompts
