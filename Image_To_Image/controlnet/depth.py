@@ -44,7 +44,7 @@ image = (
 
 stub.image = image
 
-@stub.cls(gpu="a10g", container_idle_timeout=600, memory=10240)
+@stub.cls(gpu="a10g", container_idle_timeout=200, memory=10240)
 class stableDiffusion:  
     def __enter__(self):
         import time
@@ -97,7 +97,7 @@ class stableDiffusion:
         return image_urls
 
     @method()
-    def run_inference(self, img, prompt,guidance_scale,negative_prompt, batch, strength):
+    def run_inference(self, file_url, prompt,guidance_scale,negative_prompt, batch, strength):
         import torch
         import cv2, time
         from PIL import Image
@@ -129,8 +129,8 @@ class stableDiffusion:
         prompt = [prompt] * batch
         negative_prompt = [negative_prompt] * batch
         
-        image = get_depth_map(img)
-        image = image.resize((img.size))
+        image = get_depth_map(file_url)
+        image = image.resize((file_url.size))
         image = self.pipe(prompt=prompt, image=image, num_inference_steps=20, guidance_scale=guidance_scale, negative_prompt=negative_prompt, controlnet_conditioning_scale=0.5).images
         
         torch.cuda.empty_cache()

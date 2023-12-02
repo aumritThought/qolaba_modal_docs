@@ -88,7 +88,7 @@ image = (
 
 stub.image = image
 
-@stub.cls(gpu="a10g", container_idle_timeout=600, memory=10240)
+@stub.cls(gpu="a10g", container_idle_timeout=200, memory=10240)
 class stableDiffusion:  
     def __enter__(self):
         import time
@@ -170,7 +170,7 @@ class stableDiffusion:
         return image_urls
 
     @method()
-    def run_inference(self, img, bg_img=None):
+    def run_inference(self, file_url, bg_img=None):
         import sys
         sys.path.insert(0, '/roop')
         import sys, threading
@@ -200,7 +200,7 @@ class stableDiffusion:
                     height=((int(s_img.shape[1]*1024/s_img.shape[0]))//64)*64
                 s_img=cv2.resize(s_img, (height, width))
                 source_face = get_one_face(s_img)
-                temp_frame = np.array(img)
+                temp_frame = np.array(file_url)
                 if(temp_frame.shape[1]>=temp_frame.shape[0]):
                     height=1024
                     width=((int(temp_frame.shape[0]*1024/temp_frame.shape[1]))//64)*64

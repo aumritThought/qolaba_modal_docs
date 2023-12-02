@@ -26,7 +26,7 @@ image = (
 
 stub.image = image
 
-@stub.cls(gpu="a100", memory=model_schema["memory"], container_idle_timeout=model_schema["container_idle_timeout"],concurrency_limit=model_schema["concurrency_limit"] )
+@stub.cls(gpu="a10g", memory=model_schema["memory"], container_idle_timeout=model_schema["container_idle_timeout"],concurrency_limit=model_schema["concurrency_limit"] )
 class stableDiffusion:   
     def __enter__(self):
         self.generator = stableDiffusion_(model_schema["model_id"])

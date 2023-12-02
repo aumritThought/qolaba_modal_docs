@@ -32,6 +32,6 @@ class stableDiffusion:
         self.generator = stableDiffusion_(model_schema["model_id"])
 
     @method()
-    def run_inference(self,img, prompt,guidance_scale,negative_prompt,batch, strength):
-        return self.generator.run_inference(img, prompt,guidance_scale,negative_prompt,batch, strength)
+    def run_inference(self,file_url, prompt,guidance_scale,negative_prompt,batch, strength):
+        return self.generator.run_inference(file_url, prompt,guidance_scale,negative_prompt,batch, strength)
 

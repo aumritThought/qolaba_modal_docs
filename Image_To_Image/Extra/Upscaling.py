@@ -60,7 +60,7 @@ image = (Image.debian_slim(python_version="3.11")
 
 stub.image = image
 
-@stub.cls(gpu="a10g", container_idle_timeout=600)
+@stub.cls(gpu="a10g", container_idle_timeout=200)
 class stableDiffusion:
     def __enter__(self):
         import time
@@ -119,7 +119,7 @@ class stableDiffusion:
         return image_urls
 
     @method()
-    def run_inference(self, image, upscale, face_upsample):
+    def run_inference(self, file_url, upscale, face_upsample):
         import time
         st=time.time()
         from gfpgan import GFPGANer
@@ -133,9 +133,9 @@ class stableDiffusion:
             arch='clean',
             channel_multiplier=2,
             bg_upsampler=self.upsampler)
-            _, _, output = self.face_enhancer.enhance(np.array(image), has_aligned=False, only_center_face=False, paste_back=True)
+            _, _, output = self.face_enhancer.enhance(np.array(file_url), has_aligned=False, only_center_face=False, paste_back=True)
         else:
-            output, _ = self.upsampler.enhance(np.array(image), outscale=upscale)
+            output, _ = self.upsampler.enhance(np.array(file_url), outscale=upscale)
         restored_img = Image.fromarray(output)
         image_data = {"images" :  [restored_img], "Has_NSFW_Content" : [False]*1}
         image_urls =self.generate_image_urls(image_data)

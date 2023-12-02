@@ -56,7 +56,7 @@ class stableDiffusion():
     def run_inference(
         self, 
         prompt= "a beautiful painting",
-        num_prompts_to_generate=5, 
+        batch=5, 
         max_prompt_length=50,
         min_prompt_length=30):
         import time
@@ -86,7 +86,7 @@ class stableDiffusion():
             top_k=top_k,
             top_p=top_p,
             do_sample=True,
-            num_return_sequences=num_prompts_to_generate,
+            num_return_sequences=batch,
             pad_token_id=self.tokenizer.pad_token_id,  # gets rid of warning
         )
 

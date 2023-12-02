@@ -3,7 +3,7 @@ from Common_code import *
 
 model_schema= get_schema()
 model_schema["name"] = "colorful_image2image"
-model_schema["model_id"] = "../Yamer_rel.safetensors"
+model_schema["model_id"] = "../Starlight.safetensors"
 
 def download_models():
     download_models_(model_schema["model_id"])
@@ -14,10 +14,10 @@ image = (
     .run_commands([
         "apt-get update && apt-get install ffmpeg libsm6 libxext6 git -y",
         "apt-get update && apt-get install wget -y",
-        "wget https://civitai.com/api/download/models/170252",
+        "wget https://civitai.com/api/download/models/182077",
         "pip install diffusers --upgrade",
         "pip install invisible_watermark transformers accelerate safetensors xformers==0.0.22 omegaconf",
-        "mv 170252 Yamer_rel.safetensors",
+        "mv 182077 Starlight.safetensors",
         ])
     ).run_function(
             download_models,
@@ -32,5 +32,5 @@ class stableDiffusion:
         self.generator = stableDiffusion_(model_schema["model_id"])
 
     @method()
-    def run_inference(self,img, prompt,guidance_scale,negative_prompt,batch, strength):
-        return self.generator.run_inference(img, prompt,guidance_scale,negative_prompt,batch, strength)
+    def run_inference(self,file_url, prompt,guidance_scale,negative_prompt,batch, strength):
+        return self.generator.run_inference(file_url, prompt,guidance_scale,negative_prompt,batch, strength)

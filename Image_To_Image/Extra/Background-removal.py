@@ -23,7 +23,7 @@ image = (
 
 stub.image = image
 
-@stub.cls(gpu="a10g", container_idle_timeout=600, memory=10240)
+@stub.cls(gpu="a10g", container_idle_timeout=200, memory=10240)
 class stableDiffusion:  
     def __enter__(self):
         import time
@@ -56,40 +56,40 @@ class stableDiffusion:
         return image_urls
 
     @method()
-    def run_inference(self, img, bg_img=None, bg_color=False, r_color=255, g_color=0, b_color=0, blur=False):
+    def run_inference(self, file_url, bg_img=None, bg_color=False, r_color=255, g_color=0, b_color=0, blur=False):
         from PIL import Image
         import requests, io, tempfile, torch
         import time
         st=time.time()
-        img=img.convert('RGB')
+        file_url=file_url.convert('RGB')
         from transparent_background import Remover
 
         self.remover = Remover()
         try:
             response = requests.get(bg_img)
             bg_img = Image.open(io.BytesIO(response.content))
-            bg_img=bg_img.resize(img.size)
+            bg_img=bg_img.resize(file_url.size)
             bg_img=bg_img.convert('RGB')
         except:
             bg_img=None
         
         if(blur==True):
-            image = self.remover.process(img, type='blur')
+            image = self.remover.process(file_url, type='blur')
             
         elif(not(bg_img==None)):
             temp_file_img = tempfile.NamedTemporaryFile(delete=True, suffix='.jpg')
             bg_img.save(temp_file_img, format='JPEG')
-            image = self.remover.process(img, type=temp_file_img.name) # use another image as a background
+            image = self.remover.process(file_url, type=temp_file_img.name) # use another image as a background
             try:
                 temp_file_img.close()
                 bg_img = None
-                img = None
+                file_url = None
             except:
                 pass
         elif(bg_color==True):
-            image = self.remover.process(img, type=str([r_color, g_color, b_color]))
+            image = self.remover.process(file_url, type=str([r_color, g_color, b_color]))
         else:
-            image = self.remover.process(img, type='white')
+            image = self.remover.process(file_url, type='white')
         torch.cuda.empty_cache()
 
         has_nsfw_concept = [False]*1

@@ -37,7 +37,7 @@ image = (
 
 stub.image = image
 
-@stub.cls(gpu="a10g", container_idle_timeout=600, memory=10240)
+@stub.cls(gpu="a10g", container_idle_timeout=200, memory=10240)
 class stableDiffusion:  
     def __enter__(self):
         import time
@@ -90,7 +90,7 @@ class stableDiffusion:
         return result
 
     @method()
-    def run_inference(self, img, prompt,guidance_scale,negative_prompt,batch, strength, bg_img):
+    def run_inference(self, file_url, prompt,guidance_scale,negative_prompt,batch, strength, bg_img):
         import time
         st=time.time()
 
@@ -98,12 +98,12 @@ class stableDiffusion:
         controlnets_startstop = [(0,1), (0.3,0.7)]
         guidance_starts = [val[0] for val in controlnets_startstop]
         guidance_stops = [val[1] for val in controlnets_startstop]
-        img=img.resize((768,768))
+        file_url=file_url.resize((768,768))
         # print(img)
-        img = self.add_margin(img, 50,50,50,50, (255,255,255))
-        img=img.resize((768,768))
+        file_url = self.add_margin(file_url, 50,50,50,50, (255,255,255))
+        file_url=file_url.resize((768,768))
 
-        image = self.pipe(prompt=prompt, image=[img,img],
+        image = self.pipe(prompt=prompt, image=[file_url,file_url],
             controlnet_conditioning_scale=controlnets_weights,
             control_guidance_start=guidance_starts,
             control_guidance_end=guidance_stops,guidance_scale=guidance_scale,

@@ -36,7 +36,7 @@ image = (
 
 stub.image = image
 
-@stub.cls(gpu="a10g", container_idle_timeout=600, memory=10240)
+@stub.cls(gpu="a10g", container_idle_timeout=200, memory=10240)
 class stableDiffusion:  
     def __enter__(self):
         import time
@@ -79,7 +79,7 @@ class stableDiffusion:
         return image_urls
 
     @method()
-    def run_inference(self, img, batch,  right, left, top, bottom, prompt, negative_prompt):
+    def run_inference(self, file_url, batch,  right, left, top, bottom, prompt, negative_prompt): #add prompt and negative prompt
         import numpy as np
         from PIL import Image
         import torch
@@ -109,7 +109,7 @@ class stableDiffusion:
             mask_image.paste(extra_image, (left+32, top+32))
             return result, mask_image
 
-        init_image, mask_image=maskimage(img,  right, left, top, bottom)
+        init_image, mask_image=maskimage(file_url,  right, left, top, bottom)
         init_image=init_image.resize((64 * round(init_image.size[0] / 64), 64 * round(init_image.size[1] / 64)))
         if(init_image.size[0]>1024 or init_image.size[0]<256 or init_image.size[1]>1024 or init_image.size[1]<256):
             if(init_image.size[1]>=init_image.size[0]):

@@ -42,7 +42,7 @@ image = (
 
 stub.image = image
 
-@stub.cls(gpu="a10g", container_idle_timeout=600, memory=10240)
+@stub.cls(gpu="a10g", container_idle_timeout=200, memory=10240)
 class stableDiffusion:  
     def __enter__(self):
         import time
@@ -246,7 +246,7 @@ class stableDiffusion:
 
 
     @method()
-    def run_inference(self, img, prompt,guidance_scale,negative_prompt, batch, strength):
+    def run_inference(self, file_url, prompt,guidance_scale,negative_prompt, batch, strength):
         from PIL import Image
         import numpy as np
         import torch
@@ -256,12 +256,12 @@ class stableDiffusion:
         prompt = [prompt] * batch
         negative_prompt = [negative_prompt] * batch
         
-        pixel_values = self.image_processor(img, return_tensors="pt").pixel_values
+        pixel_values = self.image_processor(file_url, return_tensors="pt").pixel_values
 
         with torch.no_grad():
             outputs = self.image_segmentor(pixel_values)
 
-        seg = self.image_processor.post_process_semantic_segmentation(outputs, target_sizes=[img.size[::-1]])[0]
+        seg = self.image_processor.post_process_semantic_segmentation(outputs, target_sizes=[file_url.size[::-1]])[0]
 
         color_seg = np.zeros((seg.shape[0], seg.shape[1], 3), dtype=np.uint8) # height, width, 3
 

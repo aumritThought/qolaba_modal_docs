@@ -33,7 +33,7 @@ image = (
 
 stub.image = image
 
-@stub.cls(gpu="a10g", container_idle_timeout=600, memory=10240)
+@stub.cls(gpu="a10g", container_idle_timeout=200, memory=10240)
 class stableDiffusion:  
     def __enter__(self):
         import time
@@ -80,7 +80,7 @@ class stableDiffusion:
 
 
     @method()
-    def run_inference(self, img, prompt,guidance_scale,negative_prompt, batch, strength):
+    def run_inference(self, file_url, prompt,guidance_scale,negative_prompt, batch, strength):
 
         import cv2, time, torch
         from PIL import Image
@@ -99,7 +99,7 @@ class stableDiffusion:
             guidance_scale=float(guidance_scale),
             # generator=generator,
             num_inference_steps=20,
-            image = img,
+            image = file_url,
             controlnet_conditioning_scale=strength,
 
             # strength=0.5,

@@ -104,6 +104,7 @@ class stableDiffusion_:
                     num_inference_steps=num_inference_steps,
                     denoising_end=0.8,
                     guidance_scale=guidance_scale,
+                    output_type="latent",
                 ).images[0]
             torch.cuda.empty_cache()
 

@@ -35,7 +35,7 @@ image = (
 
 stub.image = image
 
-@stub.cls(gpu="a10g", container_idle_timeout=600, memory=10240)
+@stub.cls(gpu="a10g", container_idle_timeout=200, memory=10240)
 class stableDiffusion:  
     def __enter__(self):
         import time
@@ -83,14 +83,14 @@ class stableDiffusion:
 
 
     @method()
-    def run_inference(self, img, prompt,guidance_scale,negative_prompt, batch, strength):
+    def run_inference(self, file_url, prompt,guidance_scale,negative_prompt, batch, strength):
         import cv2, time, torch
         from PIL import Image
         import numpy as np
         st=time.time()
         prompt = [prompt] * batch
         negative_prompt = [negative_prompt] * batch
-        image = np.array(img)
+        image = np.array(file_url)
 
         low_threshold = 100
         high_threshold = 200

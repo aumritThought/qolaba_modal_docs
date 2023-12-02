@@ -3,7 +3,7 @@ from Common_code import *
 
 model_schema= get_schema()
 model_schema["name"] = "pixela_image2image"
-model_schema["model_id"] = "../BrightProtoNuke.safetensors"
+model_schema["model_id"] = "../RealitiesEdgeXL.safetensors"
 
 def download_models():
     download_models_(model_schema["model_id"])
@@ -14,14 +14,14 @@ image = (
     .run_commands([
         "apt-get update && apt-get install ffmpeg libsm6 libxext6 git -y",
         "apt-get update && apt-get install wget -y",
-        "wget https://civitai.com/api/download/models/168123",
+        "wget https://civitai.com/api/download/models/183894",
         "pip install diffusers --upgrade",
         "pip install invisible_watermark transformers accelerate safetensors xformers==0.0.22 omegaconf",
-        "mv 168123 BrightProtoNuke.safetensors",
+        "mv 183894 RealitiesEdgeXL.safetensors",
         ])
     ).run_function(
             download_models,
-            gpu="t4"
+            gpu="t4",
         )
 
 stub.image = image
@@ -32,5 +32,5 @@ class stableDiffusion:
         self.generator = stableDiffusion_(model_schema["model_id"])
 
     @method()
-    def run_inference(self,img, prompt,guidance_scale,negative_prompt,batch, strength):
-        return self.generator.run_inference(img, prompt,guidance_scale,negative_prompt,batch, strength)
+    def run_inference(self,file_url, prompt,guidance_scale,negative_prompt,batch, strength):
+        return self.generator.run_inference(file_url, prompt,guidance_scale,negative_prompt,batch, strength)

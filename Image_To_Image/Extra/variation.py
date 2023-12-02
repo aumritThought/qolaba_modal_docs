@@ -48,7 +48,7 @@ image = (
 
 stub.image = image
 
-@stub.cls(gpu="a10g", container_idle_timeout=600, memory=10240)
+@stub.cls(gpu="a10g", container_idle_timeout=200, memory=10240)
 class stableDiffusion:  
     def __enter__(self):
         import time
@@ -98,17 +98,22 @@ class stableDiffusion:
         return image_urls
 
     @method()
-    def run_inference(self, img,prompt,guidance_scale,batch, negative_prompt):
+    def run_inference(self, file_url,prompt,guidance_scale,batch):
+        
         import time
         st=time.time()
         import random, torch
         import numpy as np
         from PIL import Image
-        height=img.size[1]
-        width=img.size[0]
-        seed=random.sample(range(1, 1000000000), 1)[0]
+        height=file_url.size[1]
+        width=file_url.size[0]
+        
         torch.cuda.empty_cache()
-        image = self.ip_model.generate(pil_image=img,prompt=prompt, num_samples=batch, num_inference_steps=30, height=height, width=width, seed=seed, scale=0.5, negative_prompt=negative_prompt)
+        image=[]
+        for i in range(0, batch):
+            seed=random.sample(range(1, 1000000000), 1)[0]
+            img = self.ip_model.generate(pil_image=file_url, num_samples=1, num_inference_steps=30, height=height, width=width, seed=seed, scale=0.5)
+            image.append(img[0])
         torch.cuda.empty_cache()
 
         safety_checker_input = self.feature_extractor_safety(
