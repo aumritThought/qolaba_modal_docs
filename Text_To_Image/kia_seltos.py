@@ -41,9 +41,9 @@ def download_models():
     from huggingface_hub import login
     login("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")
 
-    create_stable_diffusion_pipeline(checkpoint, lora_weights)
+    pipe = create_stable_diffusion_pipeline(checkpoint, lora_weights)
 
-    create_refiner()
+    create_refiner(pipe)
 
     StableDiffusionSafetyChecker.from_pretrained("CompVis/stable-diffusion-safety-checker")
     CLIPFeatureExtractor()
