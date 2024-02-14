@@ -52,7 +52,7 @@ class stableDiffusion:
             audio_file = AudioSegment.from_file(file_path)
             duration = audio_file.duration_seconds
             return duration
-        if(get_duration_pydub(temp_file_audio.name)>600):
+        if(get_duration_pydub(temp_file_audio.name)>610):
                 raise Exception("Audio Length should be less than 600s", "Trim the audio or Provide file less than 600s")
 
         result = self.model.transcribe(temp_file_audio.name, language=language)

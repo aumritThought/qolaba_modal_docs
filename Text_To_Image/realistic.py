@@ -3,7 +3,7 @@ from Common_code import *
 
 model_schema= get_schema()
 model_schema["name"] = "realistic_text2image"
-model_schema["model_id"] = "../XXMix_9realisticSDXL.safetensors"
+model_schema["model_id"] = "../RealismEngineSDXL.safetensors"
 
 def download_models():
     download_models_(model_schema["model_id"])
@@ -14,10 +14,10 @@ image = (
     .run_commands([
         "apt-get update && apt-get install ffmpeg libsm6 libxext6 git -y",
         "apt-get update && apt-get install wget -y",
-        "wget https://civitai.com/api/download/models/163192",
+        "wget https://civitai.com/api/download/models/258380",
         "pip install diffusers --upgrade",
         "pip install invisible_watermark transformers accelerate safetensors xformers==0.0.22 omegaconf",
-        "mv 163192 XXMix_9realisticSDXL.safetensors",
+        "mv 258380 RealismEngineSDXL.safetensors",
         ])
     ).run_function(
             download_models,

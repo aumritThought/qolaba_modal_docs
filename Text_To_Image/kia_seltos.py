@@ -6,14 +6,12 @@ model_schema["name"] = "kia_seltos_text2image"
 
 def download_models():
     from diffusers import StableDiffusionXLPipeline, LCMScheduler, DiffusionPipeline
-    import torch
+    import torch, os
     from huggingface_hub import login
     login("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")
 
-    pipe = StableDiffusionXLPipeline.from_pretrained(
-            "stabilityai/stable-diffusion-xl-base-1.0", torch_dtype=torch.float16, variant="fp16", use_safetensors=True
-        )
-    pipe.load_lora_weights("Qolaba/Lora_Models",  weight_name="Lora_anjanavr_OuyDEf3t.safetensors")
+    pipe = StableDiffusionXLPipeline.from_single_file("../RealismEngineSDXL.safetensors", torch_dtype=torch.float16, use_safetensors=True, variant="fp16")
+    pipe.load_lora_weights("Qolaba/Lora_Models",  weight_name="Lora_yogasanavectorart_QPTc0sa1.safetensors")
     pipe.to(device="cuda", dtype=torch.float16)
     pipe.enable_xformers_memory_efficient_attention()
 
@@ -37,17 +35,19 @@ image = (
     .run_commands([
         "apt-get update && apt-get install ffmpeg libsm6 libxext6 git -y",
         "apt-get update && apt-get install wget -y",
+        "wget https://civitai.com/api/download/models/258380",
         "pip install diffusers --upgrade",
         "pip install invisible_watermark transformers accelerate safetensors xformers==0.0.22 omegaconf",
+        "mv 258380 RealismEngineSDXL.safetensors",
         ])
     ).run_function(
             download_models,
-            gpu="t4"
+            gpu="a10g"
         )
 
 stub.image = image
 
-@stub.cls(gpu="a100", memory=model_schema["memory"], container_idle_timeout=200)
+@stub.cls(gpu="a10g", memory=model_schema["memory"], container_idle_timeout=200)
 class stableDiffusion:   
     def __enter__(self):
         import time
@@ -57,10 +57,8 @@ class stableDiffusion:
         from transformers import CLIPImageProcessor
         from diffusers import StableDiffusionXLPipeline, LCMScheduler, DiffusionPipeline
 
-        self.pipe = StableDiffusionXLPipeline.from_pretrained(
-            "stabilityai/stable-diffusion-xl-base-1.0", torch_dtype=torch.float16, variant="fp16", use_safetensors=True
-        )
-        self.pipe.load_lora_weights("Qolaba/Lora_Models",  weight_name="Lora_anjanavr_OuyDEf3t.safetensors")
+        self.pipe = StableDiffusionXLPipeline.from_single_file("../RealismEngineSDXL.safetensors", torch_dtype=torch.float16, use_safetensors=True, variant="fp16")
+        self.pipe.load_lora_weights("Qolaba/Lora_Models",  weight_name="Lora_yogasanavectorart_QPTc0sa1.safetensors")
 
         self.pipe.to(device="cuda", dtype=torch.float16)
         self.pipe.enable_xformers_memory_efficient_attention()
@@ -74,6 +72,9 @@ class stableDiffusion:
             variant="fp16",
         ).to("cuda")
         self.refiner.enable_xformers_memory_efficient_attention()
+
+        self.pipe.enable_xformers_memory_efficient_attention()
+
         self.safety_checker = StableDiffusionSafetyChecker.from_pretrained("CompVis/stable-diffusion-safety-checker").to("cuda")
         self.feature_extractor = CLIPImageProcessor()   
         self.container_execution_time=time.time()-st
@@ -87,8 +88,9 @@ class stableDiffusion:
 
         st=time.time()
         torch.cuda.empty_cache()
-        prompt="anjana vr, "+prompt
+        prompt="yogasana-vector-art. , "+prompt
         images=[]
+        print(prompt)
         for i in range(0,batch):
             image = self.pipe(
                     prompt=prompt,
@@ -99,7 +101,7 @@ class stableDiffusion:
                     denoising_end=0.8,
                     guidance_scale=guidance_scale,
                     output_type="latent",
-                    cross_attention_kwargs={"scale": 0.7}
+                    cross_attention_kwargs={"scale": 0.95}
                 ).images[0]
             torch.cuda.empty_cache()
 

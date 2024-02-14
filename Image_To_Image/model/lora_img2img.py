@@ -2,17 +2,15 @@ from modal import Image, Stub, method
 from Common_code import *
 
 model_schema= get_schema()
-model_schema["name"] = "vr_headset_text2image"
+model_schema["name"] = "kia_seltos_image2image"
 
 def download_models():
+    from diffusers import StableDiffusionXLImg2ImgPipeline, LCMScheduler, DiffusionPipeline
+    import torch, os
     from huggingface_hub import login
     login("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")
-    from diffusers import StableDiffusionXLPipeline, LCMScheduler, DiffusionPipeline
-    import torch
 
-    pipe = StableDiffusionXLPipeline.from_pretrained(
-            "stabilityai/stable-diffusion-xl-base-1.0", torch_dtype=torch.float16, variant="fp16", use_safetensors=True
-        )
+    pipe = StableDiffusionXLImg2ImgPipeline.from_single_file("../RealismEngineSDXL.safetensors", torch_dtype=torch.float16, use_safetensors=True, variant="fp16")
     pipe.load_lora_weights("Qolaba/Lora_Models",  weight_name="Lora_yogasanavectorart_QPTc0sa1.safetensors")
     pipe.to(device="cuda", dtype=torch.float16)
     pipe.enable_xformers_memory_efficient_attention()
@@ -35,13 +33,12 @@ stub = Stub(model_schema["name"])
 image = (
     Image.debian_slim(python_version="3.11")
     .run_commands([
-        "apt-get update && apt-get install ffmpeg libsm6 libxext6 git wget -y",
-        "apt-get install git-lfs",
-        "git lfs install",
-        "git clone https://github.com/tencent-ailab/IP-Adapter.git",
-        "pip install --upgrade diffusers transformers accelerate safetensors torch xformers onnxruntime einops insightface omegaconf",
-        "wget https://civitai.com/api/download/models/182077",
-        "mv 182077 Starlight.safetensors",
+        "apt-get update && apt-get install ffmpeg libsm6 libxext6 git -y",
+        "apt-get update && apt-get install wget -y",
+        "wget https://civitai.com/api/download/models/258380",
+        "pip install diffusers --upgrade",
+        "pip install invisible_watermark transformers accelerate safetensors xformers==0.0.22 omegaconf",
+        "mv 258380 RealismEngineSDXL.safetensors",
         ])
     ).run_function(
             download_models,
@@ -58,11 +55,9 @@ class stableDiffusion:
         import torch
         from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
         from transformers import CLIPImageProcessor
-        from diffusers import StableDiffusionXLPipeline, LCMScheduler, DiffusionPipeline
+        from diffusers import StableDiffusionXLImg2ImgPipeline, LCMScheduler, DiffusionPipeline
 
-        self.pipe = StableDiffusionXLPipeline.from_pretrained(
-            "stabilityai/stable-diffusion-xl-base-1.0", torch_dtype=torch.float16, variant="fp16", use_safetensors=True
-        )
+        self.pipe = StableDiffusionXLImg2ImgPipeline.from_single_file("../RealismEngineSDXL.safetensors", torch_dtype=torch.float16, use_safetensors=True, variant="fp16")
         self.pipe.load_lora_weights("Qolaba/Lora_Models",  weight_name="Lora_yogasanavectorart_QPTc0sa1.safetensors")
 
         self.pipe.to(device="cuda", dtype=torch.float16)
@@ -77,12 +72,15 @@ class stableDiffusion:
             variant="fp16",
         ).to("cuda")
         self.refiner.enable_xformers_memory_efficient_attention()
+
+        self.pipe.enable_xformers_memory_efficient_attention()
+
         self.safety_checker = StableDiffusionSafetyChecker.from_pretrained("CompVis/stable-diffusion-safety-checker").to("cuda")
         self.feature_extractor = CLIPImageProcessor()   
         self.container_execution_time=time.time()-st
 
     @method()
-    def run_inference(self,prompt,height,width,num_inference_steps,guidance_scale,negative_prompt,batch):
+    def run_inference(self,file_url, prompt,guidance_scale,negative_prompt,batch, strength):
         import torch, io, requests, base64
         import numpy as np
         from PIL import Image
@@ -90,25 +88,25 @@ class stableDiffusion:
 
         st=time.time()
         torch.cuda.empty_cache()
-        prompt="Blue_Striped_Blazer, "+prompt
+        prompt="yogasana-vector-art. , "+prompt
         images=[]
+        print(prompt)
         for i in range(0,batch):
             image = self.pipe(
                     prompt=prompt,
-                    height=height,
-                    width=width,
                     negative_prompt=negative_prompt,
-                    num_inference_steps=num_inference_steps,
+                    image=file_url, 
                     denoising_end=0.8,
                     guidance_scale=guidance_scale,
                     output_type="latent",
-                    cross_attention_kwargs={"scale": 0.8}
+                    strength=strength,
+                    cross_attention_kwargs={"scale": 0.95}                        
                 ).images[0]
             torch.cuda.empty_cache()
 
             image = self.refiner(
                 prompt=prompt,
-                num_inference_steps=num_inference_steps,
+                num_inference_steps=int(50*strength),
                 guidance_scale=guidance_scale,
                 denoising_start=0.8,
                 image=image,

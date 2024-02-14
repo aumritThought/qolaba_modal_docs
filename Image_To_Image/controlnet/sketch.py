@@ -2,33 +2,33 @@ from modal import Image, Stub, method
 
 
 def download_models():
-    import torch
+    from diffusers import StableDiffusionXLAdapterPipeline, T2IAdapter, EulerAncestralDiscreteScheduler, AutoencoderKL
+    import torch, os
+    from controlnet_aux.pidi import PidiNetDetector
 
-    from transformers import DPTFeatureExtractor, DPTForDepthEstimation
-    from diffusers import ControlNetModel, StableDiffusionXLControlNetPipeline, AutoencoderKL
-
-    depth_estimator = DPTForDepthEstimation.from_pretrained("Intel/dpt-hybrid-midas").to("cuda")
-    feature_extractor = DPTFeatureExtractor.from_pretrained("Intel/dpt-hybrid-midas")
-    controlnet = ControlNetModel.from_pretrained(
-        "diffusers/controlnet-depth-sdxl-1.0",
-        variant="fp16",
-        use_safetensors=True,
-        torch_dtype=torch.float16,
+    # load adapter
+    adapter = T2IAdapter.from_pretrained(
+    "TencentARC/t2i-adapter-sketch-sdxl-1.0", torch_dtype=torch.float16, varient="fp16"
     ).to("cuda")
 
-    pipe = StableDiffusionXLControlNetPipeline.from_single_file(
-            "../Starlight.safetensors",
-            controlnet=controlnet,
-            torch_dtype=torch.float16,
-        ).to("cuda")
+    # load euler_a scheduler
+    model_id = '../Starlight.safetensors'
+    # euler_a = EulerAncestralDiscreteScheduler.from_pretrained(model_id, subfolder="scheduler")
     
+    pipe = StableDiffusionXLAdapterPipeline.from_single_file(
+        model_id, adapter=adapter, torch_dtype=torch.float16, variant="fp16", 
+    ).to("cuda")
+    pipe.enable_xformers_memory_efficient_attention()
+
+    pidinet = PidiNetDetector.from_pretrained("lllyasviel/Annotators").to("cuda")
+
     from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
     from transformers import CLIPFeatureExtractor
     safety_checker = StableDiffusionSafetyChecker.from_pretrained("CompVis/stable-diffusion-safety-checker")
     feature_extractor = CLIPFeatureExtractor()
 
 
-stub = Stub("depth"+"_controlnet_"+"_image2image")
+stub = Stub("sketch"+"_controlnet_"+"_image2image")
 image = (
     Image.debian_slim(python_version="3.11")
     .run_commands([
@@ -51,31 +51,28 @@ class stableDiffusion:
     def __enter__(self):
         import time
         st= time.time()
+
+        from diffusers import StableDiffusionXLAdapterPipeline, T2IAdapter, EulerAncestralDiscreteScheduler
+        from controlnet_aux.pidi import PidiNetDetector
         import torch
-        from transformers import DPTFeatureExtractor, DPTForDepthEstimation
-        from diffusers import ControlNetModel, StableDiffusionXLControlNetPipeline, AutoencoderKL
         from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
         from transformers import CLIPFeatureExtractor
 
-        self.depth_estimator = DPTForDepthEstimation.from_pretrained("Intel/dpt-hybrid-midas").to("cuda")
-        self.feature_extractor = DPTFeatureExtractor.from_pretrained("Intel/dpt-hybrid-midas")
-        controlnet = ControlNetModel.from_pretrained(
-            "diffusers/controlnet-depth-sdxl-1.0",
-            variant="fp16",
-            use_safetensors=True,
-            torch_dtype=torch.float16,
+        adapter = T2IAdapter.from_pretrained(
+        "TencentARC/t2i-adapter-sketch-sdxl-1.0", torch_dtype=torch.float16, varient="fp16"
         ).to("cuda")
 
-        self.pipe = StableDiffusionXLControlNetPipeline.from_single_file(
-            "../Starlight.safetensors",
-            controlnet=controlnet,
-            torch_dtype=torch.float16,
-        ).to("cuda")
+        model_id = '../Starlight.safetensors'
         
-        self.pipe.enable_model_cpu_offload()
+        self.pipe = StableDiffusionXLAdapterPipeline.from_single_file(
+            model_id, adapter=adapter, torch_dtype=torch.float16, variant="fp16", 
+        ).to("cuda")
         self.pipe.enable_xformers_memory_efficient_attention()
-        # self.safety_checker = StableDiffusionSafetyChecker.from_pretrained("CompVis/stable-diffusion-safety-checker").to("cuda")
-        # self.feature_extractor_safety = CLIPFeatureExtractor()  
+
+        self.pidinet = PidiNetDetector.from_pretrained("lllyasviel/Annotators").to("cuda")
+
+        self.safety_checker = StableDiffusionSafetyChecker.from_pretrained("CompVis/stable-diffusion-safety-checker").to("cuda")
+        self.feature_extractor_safety = CLIPFeatureExtractor()  
         self.container_execution_time=time.time()-st
 
     def generate_image_urls(self, image_data):
@@ -104,33 +101,15 @@ class stableDiffusion:
         import numpy as np
         st=time.time()
 
-        def get_depth_map(image):
-            image = self.feature_extractor(images=image, return_tensors="pt").pixel_values.to("cuda")
-            with torch.no_grad(), torch.autocast("cuda"):
-                depth_map = self.depth_estimator(image).predicted_depth
-
-            depth_map = torch.nn.functional.interpolate(
-                depth_map.unsqueeze(1),
-                size=(1024, 1024),
-                mode="bicubic",
-                align_corners=False,
+        image = self.pidinet(
+            file_url, detect_resolution=1024, image_resolution=1024, apply_filter=True
             )
-            depth_min = torch.amin(depth_map, dim=[1, 2, 3], keepdim=True)
-            depth_max = torch.amax(depth_map, dim=[1, 2, 3], keepdim=True)
-            depth_map = (depth_map - depth_min) / (depth_max - depth_min)
-            image = torch.cat([depth_map] * 3, dim=1)
-
-            image = image.permute(0, 2, 3, 1).cpu().numpy()[0]
-            image = Image.fromarray((image * 255.0).clip(0, 255).astype(np.uint8))
-            return image
         
-        
-        
-        image = get_depth_map(file_url)
         image = image.resize((file_url.size))
         images = []
         for i in range(0, batch):
-            img=self.pipe(prompt=prompt, image=image, num_inference_steps=20, guidance_scale=guidance_scale, negative_prompt=negative_prompt, controlnet_conditioning_scale=0.5).images
+            img=self.pipe(prompt=prompt, image=image, num_inference_steps=20, guidance_scale=guidance_scale, negative_prompt=negative_prompt, adapter_conditioning_scale=0.8,
+        adapter_conditioning_factor=0.8, height = file_url.size[1], width = file_url.size[0] ).images
             images.append(img[0])
 
         torch.cuda.empty_cache()
@@ -139,7 +118,7 @@ class stableDiffusion:
         #         image, return_tensors="pt"
         #     ).to("cuda")
         # image, has_nsfw_concept = self.safety_checker(
-        #                 images=[np.array(i) for i in image], clip_input=safety_checker_input.pixel_values
+        #                 images=[np.array(i) for i in images], clip_input=safety_checker_input.pixel_values
         #             )
         # image=[ Image.fromarray(np.uint8(i)) for i in image] 
 

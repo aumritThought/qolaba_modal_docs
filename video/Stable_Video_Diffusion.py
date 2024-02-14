@@ -54,7 +54,7 @@ image = (
         "RUN cd generative-models && . $HOME/.cargo/env && pip3 install -r requirements/pt2.txt",
         "RUN cd generative-models && pip3 install .",
         "RUN cd generative-models && mkdir checkpoints",
-        "RUn cd generative-models/checkpoints && wget https://huggingface.co/stabilityai/stable-video-diffusion-img2vid-xt/resolve/main/svd_xt.safetensors",
+        "RUN cd generative-models/checkpoints && wget https://huggingface.co/stabilityai/stable-video-diffusion-img2vid-xt/resolve/main/svd_xt.safetensors",
         "RUN cd generative-models/checkpoints && wget https://huggingface.co/stabilityai/stable-video-diffusion-img2vid-xt/resolve/main/svd_xt_image_decoder.safetensors"
         ]).run_function(
              download_models,
@@ -64,7 +64,7 @@ image = (
 
 stub.image = image
 
-@stub.cls(gpu=model_schema["gpu"], memory=model_schema["memory"], container_idle_timeout=1200)
+@stub.cls(gpu=model_schema["gpu"], memory=model_schema["memory"], container_idle_timeout=200, timeout=1200)
 class stableDiffusion: 
     def __enter__(self):
         import os,sys, torch
@@ -115,6 +115,36 @@ class stableDiffusion:
         from torchvision.transforms import ToTensor
 
         import random, time, base64, requests, imageio
+        from PIL import Image
+        from io import BytesIO
+
+
+        def fetch_image_from_url(url):
+            try:
+                response = requests.get(url)
+                response.raise_for_status()
+
+                image = Image.open(BytesIO(response.content))
+
+                return image
+            except requests.exceptions.RequestException as e:
+                raise Exception(f"Error fetching image: {e}", "Provide URL of Image")
+
+        def resize_image(img):
+            img=img.resize((64 * round(img.size[0] / 64), 64 * round(img.size[1] / 64)))
+            if(img.size[0]>1024 or img.size[0]<512 or img.size[1]>1024 or img.size[1]<512):
+                if(img.size[1]>=img.size[0]):
+                    height=1024
+                    width=((int(img.size[0]*1024/img.size[1]))//64)*64
+                else:
+                    width=1024
+                    height=((int(img.size[1]*1024/img.size[0]))//64)*64
+                img=img.resize((width, height))
+            return img
+
+        if (not(isinstance(file_url, Image.Image))):
+            file_url=fetch_image_from_url(file_url)
+            file_url=resize_image(file_url)
 
         def sample(
             image,  # Can either be image file or folder with image files

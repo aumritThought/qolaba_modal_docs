@@ -2,18 +2,16 @@ from modal import Image, Stub, method
 from Common_code import *
 
 model_schema= get_schema()
-model_schema["name"] = "vr_headset_text2image"
+model_schema["name"] = "Lora_text2image"
 
 def download_models():
-    from huggingface_hub import login
-    login("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")
     from diffusers import StableDiffusionXLPipeline, LCMScheduler, DiffusionPipeline
     import torch
+    
 
     pipe = StableDiffusionXLPipeline.from_pretrained(
             "stabilityai/stable-diffusion-xl-base-1.0", torch_dtype=torch.float16, variant="fp16", use_safetensors=True
         )
-    pipe.load_lora_weights("Qolaba/Lora_Models",  weight_name="Lora_yogasanavectorart_QPTc0sa1.safetensors")
     pipe.to(device="cuda", dtype=torch.float16)
     pipe.enable_xformers_memory_efficient_attention()
 
@@ -35,35 +33,34 @@ stub = Stub(model_schema["name"])
 image = (
     Image.debian_slim(python_version="3.11")
     .run_commands([
-        "apt-get update && apt-get install ffmpeg libsm6 libxext6 git wget -y",
-        "apt-get install git-lfs",
-        "git lfs install",
-        "git clone https://github.com/tencent-ailab/IP-Adapter.git",
-        "pip install --upgrade diffusers transformers accelerate safetensors torch xformers onnxruntime einops insightface omegaconf",
-        "wget https://civitai.com/api/download/models/182077",
-        "mv 182077 Starlight.safetensors",
+        "apt-get update && apt-get install ffmpeg libsm6 libxext6 git -y",
+        "apt-get update && apt-get install wget -y",
+        "pip install diffusers --upgrade",
+        "pip install invisible_watermark transformers accelerate safetensors xformers==0.0.22 omegaconf",
         ])
     ).run_function(
             download_models,
-            gpu="a10g"
+            gpu="t4"
         )
 
 stub.image = image
 
 @stub.cls(gpu="a10g", memory=model_schema["memory"], container_idle_timeout=200)
 class stableDiffusion:   
-    def __enter__(self):
+    def __init__(self):
         import time
         st= time.time()
         import torch
         from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
         from transformers import CLIPImageProcessor
         from diffusers import StableDiffusionXLPipeline, LCMScheduler, DiffusionPipeline
+        from huggingface_hub import login
+        login("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")
 
         self.pipe = StableDiffusionXLPipeline.from_pretrained(
             "stabilityai/stable-diffusion-xl-base-1.0", torch_dtype=torch.float16, variant="fp16", use_safetensors=True
         )
-        self.pipe.load_lora_weights("Qolaba/Lora_Models",  weight_name="Lora_yogasanavectorart_QPTc0sa1.safetensors")
+        
 
         self.pipe.to(device="cuda", dtype=torch.float16)
         self.pipe.enable_xformers_memory_efficient_attention()
@@ -82,7 +79,7 @@ class stableDiffusion:
         self.container_execution_time=time.time()-st
 
     @method()
-    def run_inference(self,prompt,height,width,num_inference_steps,guidance_scale,negative_prompt,batch):
+    def run_inference(self,prompt,height,width,num_inference_steps,guidance_scale,negative_prompt,batch,Lora_dir, Lora_model, Lora_scale):
         import torch, io, requests, base64
         import numpy as np
         from PIL import Image
@@ -90,7 +87,9 @@ class stableDiffusion:
 
         st=time.time()
         torch.cuda.empty_cache()
-        prompt="Blue_Striped_Blazer, "+prompt
+        self.pipe.load_lora_weights(Lora_dir,  weight_name=Lora_model)
+        self.pipe.to(device="cuda", dtype=torch.float16)
+        self.pipe.enable_xformers_memory_efficient_attention()
         images=[]
         for i in range(0,batch):
             image = self.pipe(
@@ -102,7 +101,7 @@ class stableDiffusion:
                     denoising_end=0.8,
                     guidance_scale=guidance_scale,
                     output_type="latent",
-                    cross_attention_kwargs={"scale": 0.8}
+                    cross_attention_kwargs={"scale": Lora_scale}
                 ).images[0]
             torch.cuda.empty_cache()
 

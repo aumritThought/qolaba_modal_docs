@@ -61,22 +61,24 @@ class stableDiffusion_:
     def generate_image_urls(self, image):
         import io, base64, requests
         import numpy as np
+        from PIL import Image
 
         safety_checker_input = self.feature_extractor(
                 image, return_tensors="pt"
             ).to("cuda")
         image, has_nsfw_concept = self.safety_checker(
-                        images=image, clip_input=safety_checker_input.pixel_values
+                        images=[np.array(image)], clip_input=safety_checker_input.pixel_values
                     )
-        # image=[ Image.fromarray(np.uint8(i)) for i in image] 
+        image=[ Image.fromarray(np.uint8(i)) for i in image] 
 
         url = "https://qolaba-server-production-caff.up.railway.app/api/v1/uploadToCloudinary/image"
 
         filtered_image = io.BytesIO()
+        im_url = None
         if(has_nsfw_concept[0]):
             pass
         else:
-            image.save(filtered_image, "JPEG")
+            image[0].save(filtered_image, "JPEG")
             myobj = {
                         "image":"data:image/png;base64,"+(base64.b64encode(filtered_image.getvalue()).decode("utf8"))
                     }
@@ -125,10 +127,11 @@ class stableDiffusion_:
         image_urls=[]
         has_nsfw_concept=[]
         for i, j in results:
-            image_urls.append(i)
+            if(j == False):
+                image_urls.append(i)
             has_nsfw_concept.append(j)
 
-
+        print(image_urls)
         
         self.runtime=time.time()-st
         return {"result":image_urls,  

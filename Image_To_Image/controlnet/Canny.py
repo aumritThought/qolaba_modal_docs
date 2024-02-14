@@ -8,13 +8,12 @@ def download_models():
             "diffusers/controlnet-canny-sdxl-1.0",
             torch_dtype=torch.float16
     )
-    vae = AutoencoderKL.from_pretrained("madebyollin/sdxl-vae-fp16-fix", torch_dtype=torch.float16)
-    pipe = StableDiffusionXLControlNetPipeline.from_pretrained(
-            "stabilityai/stable-diffusion-xl-base-1.0",
+    pipe = StableDiffusionXLControlNetPipeline.from_single_file(
+            "../Starlight.safetensors",
             controlnet=controlnet,
-            vae=vae,
             torch_dtype=torch.float16,
-        )
+        ).to("cuda")
+
     from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
     from transformers import CLIPFeatureExtractor
     safety_checker = StableDiffusionSafetyChecker.from_pretrained("CompVis/stable-diffusion-safety-checker")
@@ -25,8 +24,12 @@ stub = Stub("Canny"+"_controlnet_"+"_image2image")
 image = (
     Image.debian_slim(python_version="3.11")
     .run_commands([
-        "apt-get update && apt-get install ffmpeg libsm6 libxext6  -y",
-        "pip install diffusers transformers accelerate opencv-python Pillow xformers"
+        "apt-get update && apt-get install ffmpeg libsm6 libxext6 git -y",
+        "apt-get update && apt-get install wget -y",
+        "wget https://civitai.com/api/download/models/182077",
+        "pip install diffusers --upgrade",
+        "pip install controlnet_aux invisible_watermark transformers accelerate safetensors xformers==0.0.22 omegaconf",
+        "mv 182077 Starlight.safetensors",
                    ])
     ).run_function(
             download_models,
@@ -49,12 +52,11 @@ class stableDiffusion:
             torch_dtype=torch.float16
         )
         vae = AutoencoderKL.from_pretrained("madebyollin/sdxl-vae-fp16-fix", torch_dtype=torch.float16)
-        self.pipe = StableDiffusionXLControlNetPipeline.from_pretrained(
-            "stabilityai/stable-diffusion-xl-base-1.0",
+        self.pipe = StableDiffusionXLControlNetPipeline.from_single_file(
+            "../Starlight.safetensors",
             controlnet=controlnet,
-            vae=vae,
             torch_dtype=torch.float16,
-        )
+        ).to("cuda")
 
         self.pipe.enable_model_cpu_offload()
         self.pipe.enable_xformers_memory_efficient_attention()
@@ -88,8 +90,7 @@ class stableDiffusion:
         from PIL import Image
         import numpy as np
         st=time.time()
-        prompt = [prompt] * batch
-        negative_prompt = [negative_prompt] * batch
+
         image = np.array(file_url)
 
         low_threshold = 100
@@ -99,12 +100,14 @@ class stableDiffusion:
         image = image[:, :, None]
         image = np.concatenate([image, image, image], axis=2)
         image = Image.fromarray(image)
-        image = self.pipe(prompt=prompt, image=image, num_inference_steps=20, guidance_scale=guidance_scale, negative_prompt=negative_prompt, controlnet_conditioning_scale=0.5).images
-        
+        images = []
+        for i in range(0, batch):
+            img=self.pipe(prompt=prompt, image=image, num_inference_steps=20, guidance_scale=guidance_scale, negative_prompt=negative_prompt, controlnet_conditioning_scale=0.5).images
+            images.append(img[0])
 
         torch.cuda.empty_cache()
 
-        image_data = {"images" :  image, "Has_NSFW_Content" : [False]*batch}
+        image_data = {"images" :  images, "Has_NSFW_Content" : [False]*batch}
         
         image_urls =self.generate_image_urls(image_data)
         self.runtime=time.time()-st

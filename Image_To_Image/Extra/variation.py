@@ -3,44 +3,53 @@ from modal import Image, Stub, method
 
 def download_models():
     import os, sys, torch
-    from diffusers import StableDiffusionXLPipeline
+    
 
     os.chdir("../IP-Adapter")
     sys.path.insert(0, "../IP-Adapter")
+
     os.system("git clone https://huggingface.co/h94/IP-Adapter")
-    print(os.getcwd())
-    from ip_adapter import IPAdapterXL
+
+
+    from ip_adapter import IPAdapterPlusXL
     from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
     from transformers import CLIPFeatureExtractor
+    from diffusers import StableDiffusionXLPipeline
+
     safety_checker = StableDiffusionSafetyChecker.from_pretrained("CompVis/stable-diffusion-safety-checker")
     feature_extractor = CLIPFeatureExtractor()
 
-    base_model_path = "stabilityai/stable-diffusion-xl-base-1.0"
+    base_model_path =  "../Starlight.safetensors"
 
     # load SDXL pipeline
-    pipe = StableDiffusionXLPipeline.from_pretrained(
+    pipe = StableDiffusionXLPipeline.from_single_file(
         base_model_path,
         torch_dtype=torch.float16,
-        add_watermarker=False, use_safetensors=True, variant="fp16"
+        add_watermarker=False
     ).to("cuda")
+
     pipe.enable_xformers_memory_efficient_attention()
 
     device = "cuda"
-    image_encoder_path = "IP-Adapter/sdxl_models/image_encoder"
-    ip_ckpt = "IP-Adapter/sdxl_models/ip-adapter_sdxl.bin"
+    image_encoder_path = "IP-Adapter/models/image_encoder"
+    ip_ckpt = "IP-Adapter/sdxl_models/ip-adapter-plus_sdxl_vit-h.bin"
 
-    ip_model = IPAdapterXL(pipe, image_encoder_path, ip_ckpt, device)
+
+    ip_model = IPAdapterPlusXL(pipe, image_encoder_path, ip_ckpt, device, num_tokens=16)
+
 
 stub = Stub("variation_image2image")
 image = (
     Image.debian_slim(python_version="3.11")
     .run_commands([
-        "apt-get update && apt-get install ffmpeg libsm6 libxext6 git -y",
+        "apt-get update && apt-get install ffmpeg libsm6 libxext6 git wget -y",
         "apt-get install git-lfs",
         "git lfs install",
         "git clone https://github.com/tencent-ailab/IP-Adapter.git",
-        "pip install diffusers==0.19.3 transformers accelerate safetensors torch xformers==0.0.22"
-                   ])
+        "pip install --upgrade diffusers transformers accelerate safetensors torch xformers onnxruntime einops insightface omegaconf",
+        "wget https://civitai.com/api/download/models/182077",
+        "mv 182077 Starlight.safetensors",
+        ])
     ).run_function(
             download_models,
             gpu="a10g"
@@ -54,27 +63,30 @@ class stableDiffusion:
         import time
         st= time.time()
         import os, sys, torch
+
         from diffusers import StableDiffusionXLPipeline
         os.chdir("../IP-Adapter")
         sys.path.insert(0, "../IP-Adapter")
-        from ip_adapter import IPAdapterXL
+        from ip_adapter import IPAdapterPlusXL
         from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
         from transformers import CLIPImageProcessor
 
-        base_model_path = "stabilityai/stable-diffusion-xl-base-1.0"
-        image_encoder_path = "IP-Adapter/sdxl_models/image_encoder"
-        ip_ckpt = "IP-Adapter/sdxl_models/ip-adapter_sdxl.bin"  
         device = "cuda"
+        image_encoder_path = "IP-Adapter/models/image_encoder"
+        ip_ckpt = "IP-Adapter/sdxl_models/ip-adapter-plus_sdxl_vit-h.bin"
+
+        base_model_path =  "../Starlight.safetensors"
+
 
         # load SDXL pipeline
-        pipe = StableDiffusionXLPipeline.from_pretrained(
+        pipe = StableDiffusionXLPipeline.from_single_file(
             base_model_path,
             torch_dtype=torch.float16,
-            add_watermarker=False, use_safetensors=True, variant="fp16"
+            add_watermarker=False
         ).to("cuda")
         pipe.enable_xformers_memory_efficient_attention()
 
-        self.ip_model = IPAdapterXL(pipe, image_encoder_path, ip_ckpt, device)
+        self.ip_model = IPAdapterPlusXL(pipe, image_encoder_path, ip_ckpt, device, num_tokens=16)
         self.safety_checker = StableDiffusionSafetyChecker.from_pretrained("CompVis/stable-diffusion-safety-checker").to("cuda")
         self.feature_extractor_safety = CLIPImageProcessor()  
         self.container_execution_time=time.time()-st
@@ -98,7 +110,7 @@ class stableDiffusion:
         return image_urls
 
     @method()
-    def run_inference(self, file_url,prompt,guidance_scale,batch):
+    def run_inference(self, file_url,prompt,guidance_scale,batch, num_inference_steps = 30, negative_prompt = "blurr"):
         
         import time
         st=time.time()
@@ -112,7 +124,14 @@ class stableDiffusion:
         image=[]
         for i in range(0, batch):
             seed=random.sample(range(1, 1000000000), 1)[0]
-            img = self.ip_model.generate(pil_image=file_url, num_samples=1, num_inference_steps=30, height=height, width=width, seed=seed, scale=0.5)
+            img = self.ip_model.generate(pil_image=file_url,
+                                         prompt=prompt,
+                                         negative_prompt = negative_prompt,
+                                         guidance_scale=guidance_scale,
+                                         num_samples=1, 
+                                         num_inference_steps=num_inference_steps, 
+                                         height=height, width=width, 
+                                         seed=seed, scale=0.5)
             image.append(img[0])
         torch.cuda.empty_cache()
 

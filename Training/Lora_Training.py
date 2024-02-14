@@ -12,23 +12,26 @@ model_schema["name"] = "Lora_Training"
 def download_models():
     import os
     import sys
+    
     sys.path.insert(0, "/kohya_ss")
     os.chdir("/kohya_ss")
+    os.system("wget https://civitai.com/api/download/models/258380")
+    os.system("mv 258380 RealismEngineSDXL.safetensors")
     train_data_path="/kohya_ss/zip_Data"
     os.system(f'python3 "finetune/make_captions.py" --batch_size="1" --num_beams="1" --top_p="0.9" --max_length="75" --min_length="5" --beam_search  --caption_extension=".txt" {train_data_path} --caption_weights="https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_large_caption.pth"')    
     from diffusers import StableDiffusionXLPipeline
     import torch
 
-    pipe = StableDiffusionXLPipeline.from_pretrained(
-            "stabilityai/stable-diffusion-xl-base-1.0", use_safetensors=True
-        )
-    pipe.to(device="cuda", dtype=torch.float16)
+    # pipe = StableDiffusionXLPipeline.from_pretrained(
+    #         "stabilityai/stable-diffusion-xl-base-1.0", use_safetensors=True
+    #     )
+    pipe = StableDiffusionXLPipeline.from_single_file("RealismEngineSDXL.safetensors", torch_dtype=torch.float16, use_safetensors=True, variant="fp16").save_pretrained("Stable_diffusion")
 
     img_folder="/workspace/kohya_ss/zip_Data/x4lyyB1P/img"
     log_folder="/workspace/kohya_ss/zip_Data/x4lyyB1P/log"
     model_folder="/workspace/kohya_ss/zip_Data/x4lyyB1P/model"
     train_file_name = "Lora_Model"
-    train_cmd= f'''accelerate launch --num_cpu_threads_per_process=2 "./sdxl_train_network.py" --pretrained_model_name_or_path="stabilityai/stable-diffusion-xl-base-1.0" --train_data_dir="{img_folder}" --resolution="1024,1024"  --output_dir="{model_folder}"  --logging_dir="{log_folder}"  --text_encoder_lr=0.0004 --unet_lr=0.0004 --learning_rate="0.0004" --output_name="{train_file_name}"  --lr_scheduler_num_cycles="10"  --train_batch_size="1"  --max_train_steps="1000"  --network_dim=256 --network_alpha="1" --enable_bucket --min_bucket_reso=256 --max_bucket_reso=2048 --network_module=networks.lora --save_model_as=safetensors --no_half_vae  --lr_scheduler="constant" --save_every_n_epochs="1" --mixed_precision="bf16" --save_precision="bf16" --caption_extension=".txt" --optimizer_type="Adafactor" --cache_latents --cache_latents_to_disk --max_data_loader_n_workers="0" --bucket_reso_steps=64 --gradient_checkpointing --xformers --bucket_no_upscale --noise_offset=0.0 --optimizer_args scale_parameter=False relative_step=False warmup_init=False'''
+    train_cmd= f'''accelerate launch --num_cpu_threads_per_process=2 "./sdxl_train_network.py" --pretrained_model_name_or_path="Stable_diffusion" --train_data_dir="{img_folder}" --resolution="1024,1024"  --output_dir="{model_folder}"  --logging_dir="{log_folder}"  --text_encoder_lr=0.0004 --unet_lr=0.0004 --learning_rate="0.0004" --output_name="{train_file_name}"  --lr_scheduler_num_cycles="10"  --train_batch_size="1"  --max_train_steps="1000"  --network_dim=256 --network_alpha="1" --enable_bucket --min_bucket_reso=256 --max_bucket_reso=2048 --network_module=networks.lora --save_model_as=safetensors --no_half_vae  --lr_scheduler="constant" --save_every_n_epochs="1" --mixed_precision="bf16" --save_precision="bf16" --caption_extension=".txt" --optimizer_type="Adafactor" --cache_latents --cache_latents_to_disk --max_data_loader_n_workers="0" --bucket_reso_steps=64 --gradient_checkpointing --xformers --bucket_no_upscale --noise_offset=0.0 --optimizer_args scale_parameter=False relative_step=False warmup_init=False'''
 
     os.system(train_cmd)
 
@@ -51,7 +54,7 @@ image = (
 
 stub.image = image
 
-@stub.cls(gpu="a100", memory=model_schema["memory"], container_idle_timeout=200,  timeout=7200)
+@stub.cls(gpu="a100", memory=model_schema["memory"], container_idle_timeout=200,  timeout=14400)
 class stableDiffusion:
          
     def is_image_file(self, file_path):
@@ -110,8 +113,10 @@ class stableDiffusion:
 
     def download_zip_extract_and_delete(self, url, extract_folder):
         import string, shutil, zipfile, requests, random, os
-
-        response = requests.get(url, stream=True)
+        try:
+            response = requests.get(url, stream=True)
+        except:
+            raise Exception("Please provide accessible Zip file URL which only contains Images", "URL is not accessible")
         if response.status_code == 200:
             random_folder_name = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
             random_folder_path = os.path.join(extract_folder, random_folder_name)
@@ -229,7 +234,7 @@ class stableDiffusion:
         print(os.listdir(train_data_path))
         print(os.listdir(img_folder))
 
-        train_cmd= f'''accelerate launch --num_cpu_threads_per_process=2 "./sdxl_train_network.py" --pretrained_model_name_or_path="stabilityai/stable-diffusion-xl-base-1.0" --train_data_dir="{img_folder}" --resolution="1024,1024"  --output_dir="{model_folder}"  --logging_dir="{log_folder}"  --text_encoder_lr=0.0004 --unet_lr=0.0004 --learning_rate="0.0004" --output_name="{train_file_name}"  --lr_scheduler_num_cycles="{epochs}"  --train_batch_size="1"  --max_train_steps="{max_steps}"  --network_dim=256 --network_alpha="1" --enable_bucket --min_bucket_reso=256 --max_bucket_reso=2048 --network_module=networks.lora --save_model_as=safetensors --no_half_vae  --lr_scheduler="constant" --save_every_n_epochs="1" --mixed_precision="bf16" --save_precision="bf16" --caption_extension=".txt" --optimizer_type="Adafactor" --cache_latents --cache_latents_to_disk --max_data_loader_n_workers="0" --bucket_reso_steps=64 --gradient_checkpointing --xformers --bucket_no_upscale --noise_offset=0.0 --optimizer_args scale_parameter=False relative_step=False warmup_init=False'''
+        train_cmd= f'''accelerate launch --num_cpu_threads_per_process=2 "./sdxl_train_network.py" --pretrained_model_name_or_path="Stable_diffusion" --train_data_dir="{img_folder}" --resolution="1024,1024"  --output_dir="{model_folder}"  --logging_dir="{log_folder}"  --text_encoder_lr=0.0004 --unet_lr=0.0004 --learning_rate="0.0004" --output_name="{train_file_name}"  --lr_scheduler_num_cycles="{epochs}"  --train_batch_size="1"  --max_train_steps="{max_steps}"  --network_dim=384 --network_alpha="1" --enable_bucket --min_bucket_reso=256 --max_bucket_reso=2048 --network_module=networks.lora --save_model_as=safetensors --no_half_vae  --lr_scheduler="constant" --save_every_n_epochs="1" --mixed_precision="bf16" --save_precision="bf16" --caption_extension=".txt" --optimizer_type="Adafactor" --cache_latents --cache_latents_to_disk --max_data_loader_n_workers="0" --bucket_reso_steps=64 --gradient_checkpointing --xformers --bucket_no_upscale --noise_offset=0.0 --optimizer_args scale_parameter=False relative_step=False warmup_init=False'''
 
         os.system(train_cmd)
 

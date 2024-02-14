@@ -1,39 +1,54 @@
 from modal import Image, Stub, method
+from Common_code import *
 
+model_schema= get_schema()
+model_schema["name"] = "sdxl_turbo_text2image"
+model_schema["model_id"] = "../turbovision.safetensors"
 
-def get_schema():
-    model_schema={
-    "memory":10240,
-    "container_idle_timeout":200,
-    "gpu":"a10g",
-    "concurrency_limit" : 1
-    }
-    return model_schema
+# def download_models():
+#     import torch
+#     from diffusers import StableDiffusionXLPipeline, DPMSolverMultistepScheduler, DiffusionPipeline
+    
+#     pipe = StableDiffusionXLPipeline.from_single_file("../turbovision.safetensors", torch_dtype=torch.float16, variant="fp16")
+#     pipe.scheduler = DPMSolverMultistepScheduler.from_config(pipe.scheduler.config)
+#     pipe.to("cuda")
+#     refiner = DiffusionPipeline.from_pretrained(
+#             "stabilityai/stable-diffusion-xl-refiner-1.0",
+#             text_encoder_2=pipe.text_encoder_2,
+#             vae=pipe.vae,
+#             torch_dtype=torch.float16,
+#             use_safetensors=True,
+#             variant="fp16",
+#         ).to("cuda")
 
-def download_models_(model_name):
-    from diffusers import StableDiffusionXLPipeline, DiffusionPipeline
-    import torch
-    pipe = StableDiffusionXLPipeline.from_single_file(model_name, torch_dtype=torch.float16, use_safetensors=True, variant="fp16")
-    pipe.to("cuda")
-    pipe.enable_xformers_memory_efficient_attention()
+#     from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
+#     from transformers import CLIPFeatureExtractor
+#     safety_checker = StableDiffusionSafetyChecker.from_pretrained("CompVis/stable-diffusion-safety-checker")
+#     feature_extractor = CLIPFeatureExtractor()
+def download_models():
+    download_models_(model_schema["model_id"])
 
-    refiner = DiffusionPipeline.from_pretrained(
-        "stabilityai/stable-diffusion-xl-refiner-1.0",
-        text_encoder_2=pipe.text_encoder_2,
-        vae=pipe.vae,
-        torch_dtype=torch.float16,
-        use_safetensors=True,
-        variant="fp16",
-    ).to("cuda")
+stub = Stub(model_schema["name"])
+image = (
+    Image.debian_slim(python_version="3.11")
+    .run_commands([
+        "apt-get update && apt-get install ffmpeg libsm6 libxext6 git -y",
+        "apt-get update && apt-get install wget -y",
+        "pip install diffusers --upgrade",
+        "pip install invisible_watermark transformers accelerate safetensors xformers==0.0.22 omegaconf",
+        "wget https://civitai.com/api/download/models/273102",
+        "mv 273102 turbovision.safetensors"
+        ])
+    ).run_function(
+            download_models,
+            gpu="t4"
+        )
 
-    from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
-    from transformers import CLIPFeatureExtractor
-    safety_checker = StableDiffusionSafetyChecker.from_pretrained("CompVis/stable-diffusion-safety-checker")
-    feature_extractor = CLIPFeatureExtractor()
+stub.image = image
 
-
-class stableDiffusion_:   
-    def __init__(self, model_name):
+@stub.cls(gpu="a10g", memory=model_schema["memory"], container_idle_timeout=200)
+class stableDiffusion:   
+    def __init__(self):
         import time
         st= time.time()
         from diffusers import StableDiffusionXLPipeline, DiffusionPipeline
@@ -42,7 +57,7 @@ class stableDiffusion_:
         from transformers import CLIPImageProcessor
         
 
-        self.pipe = StableDiffusionXLPipeline.from_single_file(model_name, torch_dtype=torch.float16, use_safetensors=True, variant="fp16")
+        self.pipe = StableDiffusionXLPipeline.from_single_file(model_schema["model_id"], torch_dtype=torch.float16, use_safetensors=True, variant="fp16")
         self.pipe.to("cuda")
         self.refiner = DiffusionPipeline.from_pretrained(
             "stabilityai/stable-diffusion-xl-refiner-1.0",
@@ -69,8 +84,8 @@ class stableDiffusion_:
         image, has_nsfw_concept = self.safety_checker(
                         images=image, clip_input=safety_checker_input.pixel_values
                     )
-        image=[ Image.fromarray(np.uint8(i)) for i in image] 
-        has_nsfw_concept = [False]
+        # image=[ Image.fromarray(np.uint8(i)) for i in image] 
+
         url = "https://qolaba-server-production-caff.up.railway.app/api/v1/uploadToCloudinary/image"
 
         filtered_image = io.BytesIO()
@@ -84,7 +99,9 @@ class stableDiffusion_:
             rps = requests.post(url, json=myobj, headers={'Content-Type': 'application/json'})
             im_url=rps.json()["data"]["secure_url"]
         return [im_url, has_nsfw_concept[0]]
+    
 
+    @method()
     def run_inference(self,prompt,height,width,num_inference_steps,guidance_scale,negative_prompt,batch):
         import torch, io, requests, base64
         import numpy as np
@@ -111,8 +128,8 @@ class stableDiffusion_:
 
             image = self.refiner(
                 prompt=prompt,
-                num_inference_steps=num_inference_steps,
-                guidance_scale=guidance_scale,
+                num_inference_steps=20,
+                guidance_scale=7.5,
                 denoising_start=0.8,
                 image=image,
             ).images[0]
