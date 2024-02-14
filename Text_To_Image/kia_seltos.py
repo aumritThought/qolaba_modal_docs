@@ -1,8 +1,6 @@
 from modal import Image, Stub, method
 from Common_code import *
-from diffusers import StableDiffusionXLPipeline
-from diffusers import StableDiffusionXLPipeline, LCMScheduler, DiffusionPipeline
-import torch
+
 
 model_schema= get_schema()
 model_schema["name"] = "kia_seltos_text2image"
@@ -11,13 +9,19 @@ lora_weights = "Lora_yogasanavectorart_QPTc0sa1.safetensors"
 hf_lora_path = "Qolaba/Lora_Models"
 
 def create_stable_diffusion_pipeline(checkpoint: str, lora_weights: str, hf_lora_path: str = "Qolaba/Lora_Models"):
+    import torch
+    from diffusers import StableDiffusionXLPipeline
+    
     pipe = StableDiffusionXLPipeline.from_single_file(f"../{checkpoint}", torch_dtype=torch.float16, use_safetensors=True, variant="fp16")
     pipe.load_lora_weights(hf_lora_path,  weight_name=lora_weights)
     pipe.to(device="cuda", dtype=torch.float16)
     pipe.enable_xformers_memory_efficient_attention()
     return pipe
 
-def create_refiner(pipe: StableDiffusionXLPipeline, name: str = "stabilityai/stable-diffusion-xl-refiner-1.0"):
+def create_refiner(pipe, name: str = "stabilityai/stable-diffusion-xl-refiner-1.0"):
+    from diffusers import StableDiffusionXLPipeline, LCMScheduler, DiffusionPipeline
+    import torch
+
     refiner = DiffusionPipeline.from_pretrained(
             name,
             text_encoder_2=pipe.text_encoder_2,
@@ -37,16 +41,9 @@ def download_models():
     from huggingface_hub import login
     login("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")
 
-    pipe = create_stable_diffusion_pipeline(checkpoint, lora_weights)
+    create_stable_diffusion_pipeline(checkpoint, lora_weights)
 
-    DiffusionPipeline.from_pretrained(
-        "stabilityai/stable-diffusion-xl-refiner-1.0",
-        text_encoder_2=pipe.text_encoder_2, 
-        vae=pipe.vae,
-        torch_dtype=torch.float16,
-        use_safetensors=True,
-        variant="fp16",
-    ).to("cuda")
+    create_refiner()
 
     StableDiffusionSafetyChecker.from_pretrained("CompVis/stable-diffusion-safety-checker")
     CLIPFeatureExtractor()
