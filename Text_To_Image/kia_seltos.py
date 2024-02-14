@@ -6,7 +6,6 @@ import torch
 
 model_schema= get_schema()
 model_schema["name"] = "kia_seltos_text2image"
-
 checkpoint = "RealismEngineSDXL.safetensors"
 lora_weights = "Lora_yogasanavectorart_QPTc0sa1.safetensors"
 hf_lora_path = "Qolaba/Lora_Models"
