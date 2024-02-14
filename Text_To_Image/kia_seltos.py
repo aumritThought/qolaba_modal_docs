@@ -1,33 +1,56 @@
 from modal import Image, Stub, method
 from Common_code import *
+from diffusers import StableDiffusionXLPipeline
+from diffusers import StableDiffusionXLPipeline, LCMScheduler, DiffusionPipeline
+import torch
 
 model_schema= get_schema()
 model_schema["name"] = "kia_seltos_text2image"
 
+checkpoint = "RealismEngineSDXL.safetensors"
+lora_weights = "Lora_yogasanavectorart_QPTc0sa1.safetensors"
+hf_lora_path = "Qolaba/Lora_Models"
+
+def create_stable_diffusion_pipeline(checkpoint: str, lora_weights: str, hf_lora_path: str = "Qolaba/Lora_Models"):
+    pipe = StableDiffusionXLPipeline.from_single_file(f"../{checkpoint}", torch_dtype=torch.float16, use_safetensors=True, variant="fp16")
+    pipe.load_lora_weights(hf_lora_path,  weight_name=lora_weights)
+    pipe.to(device="cuda", dtype=torch.float16)
+    pipe.enable_xformers_memory_efficient_attention()
+    return pipe
+
+def create_refiner(pipe: StableDiffusionXLPipeline, name: str = "stabilityai/stable-diffusion-xl-refiner-1.0"):
+    refiner = DiffusionPipeline.from_pretrained(
+            name,
+            text_encoder_2=pipe.text_encoder_2,
+            vae=pipe.vae,
+            torch_dtype=torch.float16,
+            use_safetensors=True,
+            variant="fp16",
+        ).to("cuda")
+    refiner.enable_xformers_memory_efficient_attention()
+    return refiner
+
 def download_models():
     from diffusers import StableDiffusionXLPipeline, LCMScheduler, DiffusionPipeline
+    from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
+    from transformers import CLIPFeatureExtractor
     import torch, os
     from huggingface_hub import login
     login("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")
 
-    pipe = StableDiffusionXLPipeline.from_single_file("../RealismEngineSDXL.safetensors", torch_dtype=torch.float16, use_safetensors=True, variant="fp16")
-    pipe.load_lora_weights("Qolaba/Lora_Models",  weight_name="Lora_yogasanavectorart_QPTc0sa1.safetensors")
-    pipe.to(device="cuda", dtype=torch.float16)
-    pipe.enable_xformers_memory_efficient_attention()
+    pipe = create_stable_diffusion_pipeline(checkpoint, lora_weights)
 
-    refiner = DiffusionPipeline.from_pretrained(
+    DiffusionPipeline.from_pretrained(
         "stabilityai/stable-diffusion-xl-refiner-1.0",
-        text_encoder_2=pipe.text_encoder_2,
+        text_encoder_2=pipe.text_encoder_2, 
         vae=pipe.vae,
         torch_dtype=torch.float16,
         use_safetensors=True,
         variant="fp16",
     ).to("cuda")
 
-    from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
-    from transformers import CLIPFeatureExtractor
-    safety_checker = StableDiffusionSafetyChecker.from_pretrained("CompVis/stable-diffusion-safety-checker")
-    feature_extractor = CLIPFeatureExtractor()
+    StableDiffusionSafetyChecker.from_pretrained("CompVis/stable-diffusion-safety-checker")
+    CLIPFeatureExtractor()
 
 stub = Stub(model_schema["name"])
 image = (
@@ -38,7 +61,7 @@ image = (
         "wget https://civitai.com/api/download/models/258380",
         "pip install diffusers --upgrade",
         "pip install invisible_watermark transformers accelerate safetensors xformers==0.0.22 omegaconf",
-        "mv 258380 RealismEngineSDXL.safetensors",
+        f"mv 258380 {checkpoint}",
         ])
     ).run_function(
             download_models,
@@ -57,24 +80,8 @@ class stableDiffusion:
         from transformers import CLIPImageProcessor
         from diffusers import StableDiffusionXLPipeline, LCMScheduler, DiffusionPipeline
 
-        self.pipe = StableDiffusionXLPipeline.from_single_file("../RealismEngineSDXL.safetensors", torch_dtype=torch.float16, use_safetensors=True, variant="fp16")
-        self.pipe.load_lora_weights("Qolaba/Lora_Models",  weight_name="Lora_yogasanavectorart_QPTc0sa1.safetensors")
-
-        self.pipe.to(device="cuda", dtype=torch.float16)
-        self.pipe.enable_xformers_memory_efficient_attention()
-
-        self.refiner = DiffusionPipeline.from_pretrained(
-            "stabilityai/stable-diffusion-xl-refiner-1.0",
-            text_encoder_2=self.pipe.text_encoder_2,
-            vae=self.pipe.vae,
-            torch_dtype=torch.float16,
-            use_safetensors=True,
-            variant="fp16",
-        ).to("cuda")
-        self.refiner.enable_xformers_memory_efficient_attention()
-
-        self.pipe.enable_xformers_memory_efficient_attention()
-
+        self.pipe = create_stable_diffusion_pipeline(checkpoint, lora_weights)
+        self.refiner = create_refiner(self.pipe)
         self.safety_checker = StableDiffusionSafetyChecker.from_pretrained("CompVis/stable-diffusion-safety-checker").to("cuda")
         self.feature_extractor = CLIPImageProcessor()   
         self.container_execution_time=time.time()-st
