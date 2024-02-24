@@ -1,6 +1,7 @@
-from modal import Image, Stub , method
+from modal import Image, Stub, method
 
 stub = Stub("promptparrot_text2text")
+
 
 def download_models():
     from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -10,36 +11,48 @@ def download_models():
     end_token = "<EOP>"
     model = AutoModelForCausalLM.from_pretrained("/model").to("cuda")
     tokenizer = AutoTokenizer.from_pretrained(
-            "distilgpt2", cache_dir="./model", bos_token=start_token, eos_token=end_token, pad_token=pad_token
-        )
+        "distilgpt2",
+        cache_dir="./model",
+        bos_token=start_token,
+        eos_token=end_token,
+        pad_token=pad_token,
+    )
 
 
 image = (
     Image.debian_slim(python_version="3.10")
     .pip_install(
-        ["torch==1.12.1+cu113", "torchvision==0.13.1+cu113", "torchaudio==0.12.1","transformers==4.21.1"],
-        find_links="https://download.pytorch.org/whl/torch_stable.html"
+        [
+            "torch==1.12.1+cu113",
+            "torchvision==0.13.1+cu113",
+            "torchaudio==0.12.1",
+            "transformers==4.21.1",
+        ],
+        find_links="https://download.pytorch.org/whl/torch_stable.html",
     )
     .apt_install(["wget"])
-    .run_commands([
-                    "wget --no-check-certificate 'https://docs.google.com/uc?export=download&id=1loDPyYZlNAuq0gbhCQOK-XJ8CvTo_np4' -O config.json",
-                    "wget --load-cookies /tmp/cookies.txt \"https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1iFFFdUBbGu9WJGNHvvoHEU2f1652DYB9' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\\1\\n/p')&id=1iFFFdUBbGu9WJGNHvvoHEU2f1652DYB9\" -O pytorch_model.bin && rm -rf /tmp/cookies.txt!mkdir model",
-                    "mkdir model",
-                    "mv config.json model/",
-                    "mv pytorch_model.bin model/",
-                   ])
-).run_function(
-        download_models,
-        gpu="t4",
+    .run_commands(
+        [
+            "wget --no-check-certificate 'https://docs.google.com/uc?export=download&id=1loDPyYZlNAuq0gbhCQOK-XJ8CvTo_np4' -O config.json",
+            "wget --load-cookies /tmp/cookies.txt \"https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1iFFFdUBbGu9WJGNHvvoHEU2f1652DYB9' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\\1\\n/p')&id=1iFFFdUBbGu9WJGNHvvoHEU2f1652DYB9\" -O pytorch_model.bin && rm -rf /tmp/cookies.txt!mkdir model",
+            "mkdir model",
+            "mv config.json model/",
+            "mv pytorch_model.bin model/",
+        ]
     )
+).run_function(
+    download_models,
+    gpu="t4",
+)
 stub.image = image
 
 
-@stub.cls(gpu="t4",container_idle_timeout=100)
-class stableDiffusion():
+@stub.cls(gpu="t4", container_idle_timeout=100)
+class stableDiffusion:
     def __enter__(self):
         import time
-        st= time.time()
+
+        st = time.time()
         from transformers import AutoModelForCausalLM, AutoTokenizer
 
         start_token = "<BOP>"
@@ -48,19 +61,25 @@ class stableDiffusion():
         """Load the model into memory to make running multiple predictions efficient"""
         self.model = AutoModelForCausalLM.from_pretrained("/model").to("cuda")
         self.tokenizer = AutoTokenizer.from_pretrained(
-            "distilgpt2", cache_dir="./model", bos_token=start_token, eos_token=end_token, pad_token=pad_token
+            "distilgpt2",
+            cache_dir="./model",
+            bos_token=start_token,
+            eos_token=end_token,
+            pad_token=pad_token,
         )
-        self.container_execution_time=time.time()-st
-    
+        self.container_execution_time = time.time() - st
+
     @method()
     def run_inference(
-        self, 
-        prompt= "a beautiful painting",
-        batch=5, 
+        self,
+        prompt="a beautiful painting",
+        batch=5,
         max_prompt_length=50,
-        min_prompt_length=30):
+        min_prompt_length=30,
+    ):
         import time
-        st=time.time()
+
+        st = time.time()
         temperature = 1.0
         top_k = 70
         top_p = 0.9
@@ -105,13 +124,15 @@ class stableDiffusion():
             text = self.tokenizer.decode(
                 tokens, clean_up_tokenization_spaces=True, skip_special_tokens=True
             )
-            text = (
-                text.strip().replace("\n", " ").replace("/", ",")
-            ) 
+            text = text.strip().replace("\n", " ").replace("/", ",")
             text = " ".join([k for k, g in itertools.groupby(text.split())])
             generated_prompts.append(text)
-        self.runtime=time.time()-st
-        return {"result":generated_prompts,  
-                "Has_NSFW_Content":  [False]*1, 
-                "time": {"startup_time" : self.container_execution_time, "runtime":self.runtime}}
-
+        self.runtime = time.time() - st
+        return {
+            "result": generated_prompts,
+            "Has_NSFW_Content": [False] * 1,
+            "time": {
+                "startup_time": self.container_execution_time,
+                "runtime": self.runtime,
+            },
+        }
