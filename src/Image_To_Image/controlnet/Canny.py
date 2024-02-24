@@ -112,6 +112,14 @@ class stableDiffusion:
         image_urls =self.generate_image_urls(image_data)
         self.runtime=time.time()-st
 
-        return {"result":image_urls,  
-                "Has_NSFW_Content":[False]*batch, 
-                "time": {"startup_time" : self.container_execution_time, "runtime":self.runtime}}
+
+        from src.data_models.ImageToImage import Inference
+        
+
+        inference = Inference()
+        inference.result = image_urls
+        inference.has_nsfw_content = [False]*batch
+        inference.time.startup_time = self.container_execution_time
+        inference.time.runtime = self.runtime
+
+        return inference
