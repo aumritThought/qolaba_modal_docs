@@ -1,4 +1,5 @@
 from modal import Image, Stub, method
+from src.data_models.ImageToImage import Inference
 
 
 def download_models():
@@ -102,7 +103,7 @@ class stableDiffusion:
     @method()
     def run_inference(
         self, file_url, prompt, guidance_scale, negative_prompt, batch, strength
-    ):
+    ) -> Inference:
         import cv2, time, torch
         from PIL import Image
         import numpy as np
@@ -137,12 +138,7 @@ class stableDiffusion:
         image_urls = self.generate_image_urls(image_data)
         self.runtime = time.time() - st
 
-        from src.data_models.ImageToImage import Inference
+        from src.utils.globals import image_to_image_inference
 
-        inference = Inference()
-        inference.result = image_urls
-        inference.has_nsfw_content = [False] * batch
-        inference.time.startup_time = self.container_execution_time
-        inference.time.runtime = self.runtime
-
-        return inference
+        return image_to_image_inference(image_urls, [False] * batch,
+                                        self.container_execution_time, self.runtime)
