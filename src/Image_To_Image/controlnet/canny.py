@@ -1,3 +1,4 @@
+import modal
 from modal import Image, Stub, method
 from src.data_models.ImageToImage import Inference, Models
 from src.utils.Globals import image_to_image_inference, generate_image_urls, create_stub
@@ -40,24 +41,30 @@ stub = create_stub(
     download_canny_models,
 )
 
+
 def create_controlnet_pipe():
     controlnet = ControlNetModel.from_pretrained(
-            canny_models.controlnet_model, torch_dtype=torch.float16
-        )
+        canny_models.controlnet_model, torch_dtype=torch.float16
+    )
     pipe = StableDiffusionXLControlNetPipeline.from_single_file(
-            STARLIGHT_SAFETENSORS,
-            controlnet=controlnet,
-            torch_dtype=torch.float16,
-        ).to("cuda")
+        STARLIGHT_SAFETENSORS,
+        controlnet=controlnet,
+        torch_dtype=torch.float16,
+    ).to("cuda")
 
     pipe.enable_model_cpu_offload()
     pipe.enable_xformers_memory_efficient_attention()
     return pipe
 
-@stub.cls(gpu="a10g", container_idle_timeout=200, memory=10240)
+
+@stub.cls(
+    gpu="a10g",
+    container_idle_timeout=200,
+    memory=10240,
+    secrets=[modal.Secret.from_name("clodinary-secrets")],
+)
 class stableDiffusion:
     def __enter__(self):
-
         st = time.time()
         self.pipe = create_controlnet_pipe()
         self.container_execution_time = time.time() - st
@@ -95,7 +102,7 @@ class stableDiffusion:
 
         torch.cuda.empty_cache()
 
-        image_data = {"images": images, "Has_NSFW_Content": [False] * batch}
+        image_data = {"images": images, "has_nsfw_content": [False] * batch}
 
         image_urls = generate_image_urls(image_data)
         self.runtime = time.time() - st
