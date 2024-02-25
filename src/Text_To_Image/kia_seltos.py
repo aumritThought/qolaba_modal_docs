@@ -14,7 +14,7 @@ hf_lora_path = "Qolaba/Lora_Models"
 
 def create_stable_diffusion_pipeline(
     checkpoint: str, lora_weights: str, hf_lora_path: str = "Qolaba/Lora_Models"
-):
+) -> StableDiffusionXLPipeline:
     pipe = StableDiffusionXLPipeline.from_single_file(
         f"../{checkpoint}",
         torch_dtype=torch.float16,

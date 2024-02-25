@@ -2,3 +2,8 @@ modal
 pydantic
 beanie
 black
+diffusers
+transformers
+torch
+accelerate
+cloudinary
