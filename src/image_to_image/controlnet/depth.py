@@ -116,19 +116,9 @@ class stableDiffusion:
                 im_url = rps.json()["data"]["secure_url"]
                 image_urls.append(im_url)
         return image_urls
+    
 
-    @method()
-    def run_inference(
-        self, file_url, prompt, guidance_scale, negative_prompt, batch, strength
-    ):
-        import torch
-        import cv2, time
-        from PIL import Image
-        import numpy as np
-
-        st = time.time()
-
-        def get_depth_map(image):
+    def get_depth_map(self, image):
             image = self.feature_extractor(
                 images=image, return_tensors="pt"
             ).pixel_values.to("cuda")
@@ -150,7 +140,18 @@ class stableDiffusion:
             image = Image.fromarray((image * 255.0).clip(0, 255).astype(np.uint8))
             return image
 
-        image = get_depth_map(file_url)
+    @method()
+    def run_inference(
+        self, file_url, prompt, guidance_scale, negative_prompt, batch, strength
+    ):
+        import torch
+        import cv2, time
+        from PIL import Image
+        import numpy as np
+
+        st = time.time()
+
+        image = self.get_depth_map(file_url)
         image = image.resize((file_url.size))
         images = []
         for i in range(0, batch):

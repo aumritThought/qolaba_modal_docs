@@ -34,3 +34,9 @@ class ImageInferenceInput(BaseModel):
     guidance_scale: float = 7.5
     negative_prompt: str = ""
     controlnet_conditioning_scale: float = Field(default=0.5, gt=0)
+
+class DepthModels(BaseModel):
+    controlnet_model: str = "diffusers/controlnet-depth-sdxl-1.0"
+    sd_safety_checker: str = "CompVis/stable-diffusion-safety-checker"
+    sdxl_vae_autoencoder: str = "madebyollin/sdxl-vae-fp16-fix"
+    depth_estimator: str = "Intel/dpt-hybrid-midas"
