@@ -5,6 +5,10 @@ import cloudinary
 import cloudinary.uploader
 from io import BytesIO
 import os
+import numpy as np
+from io import BytesIO
+import requests
+from PIL import Image as pim
 
 
 def image_to_image_inference(image_urls, nsfw, time, runtime):
@@ -56,3 +60,12 @@ def create_stub(name: str, run_commands: list, run_function) -> Stub:
 
     stub.image = image
     return stub
+
+
+def get_image_array_from_url(url: str):
+
+    response = requests.get(url)
+    response.raise_for_status()  # Raise an HTTPError for bad responses
+    image_data = BytesIO(response.content)
+    image = pim.open(image_data)
+    return np.array(image.convert("RGB"))

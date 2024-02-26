@@ -1,20 +1,23 @@
-import modal
-from modal import Image, Stub, method
-from src.data_models.ImageToImage import Inference, Models
-from src.utils.Globals import image_to_image_inference, generate_image_urls, create_stub
-from diffusers import (
-    StableDiffusionXLControlNetPipeline,
-    ControlNetModel,
-)
-import torch
+import time
+from diffusers import StableDiffusionXLControlNetPipeline, ControlNetModel
 from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
 from transformers import CLIPFeatureExtractor
+from modal import method, Secret
+from src.data_models.ImageToImage import CannyModels, ImageInferenceInput
+from src.utils.Globals import (
+    image_to_image_inference,
+    generate_image_urls,
+    create_stub,
+    get_image_array_from_url,
+)
 from src.utils.Strings import STARLIGHT_SAFETENSORS
-import time
-
-canny_models = Models()
+import torch
 
 
+canny_models = CannyModels()
+
+
+# Function to download and prepare Canny models
 def download_canny_models() -> None:
     controlnet = ControlNetModel.from_pretrained(
         canny_models.controlnet_model, torch_dtype=torch.float16
@@ -28,8 +31,9 @@ def download_canny_models() -> None:
     CLIPFeatureExtractor()
 
 
+# Create a stub for the service
 stub = create_stub(
-    "Canny" + "_controlnet_" + "_image2image",
+    "canny_controlnet_image2image",
     [
         "apt-get update && apt-get install ffmpeg libsm6 libxext6 git -y",
         "apt-get update && apt-get install wget -y",
@@ -42,6 +46,7 @@ stub = create_stub(
 )
 
 
+# Function to create the controlnet pipeline
 def create_controlnet_pipe():
     controlnet = ControlNetModel.from_pretrained(
         canny_models.controlnet_model, torch_dtype=torch.float16
@@ -57,56 +62,65 @@ def create_controlnet_pipe():
     return pipe
 
 
+# Define the StableDiffusion class with modal methods
 @stub.cls(
     gpu="a10g",
     container_idle_timeout=200,
     memory=10240,
-    secrets=[modal.Secret.from_name("clodinary-secrets")],
+    secrets=[Secret.from_name("clodinary-secrets")],
 )
-class stableDiffusion:
+class StableDiffusion:
     def __enter__(self):
-        st = time.time()
+        self.start_time = time.time()
         self.pipe = create_controlnet_pipe()
-        self.container_execution_time = time.time() - st
+        self.container_execution_time = time.time() - self.start_time
 
     @method()
-    def run_inference(
-        self, file_url, prompt, guidance_scale, negative_prompt, batch, strength=None
-    ) -> Inference:
-        import cv2, time, torch
+    def run_inference(self, inference_input: dict) -> dict:
+        import cv2
+
+        # from cv2 import Canny
         from PIL import Image
         import numpy as np
 
-        st = time.time()
+        inference_input = ImageInferenceInput(**inference_input)
+        start_time = time.time()
+        image = get_image_array_from_url(inference_input.image_url)
+        generator = torch.Generator()
+        generator.manual_seed(inference_input.seed)
+        # Apply Canny edge detection
+        edges = cv2.Canny(
+            image, inference_input.low_threshold, inference_input.high_threshold
+        )
+        edges = edges[:, :, None]
+        edges = np.concatenate([edges, edges, edges], axis=2)
+        image = Image.fromarray(edges)
 
-        image = np.array(file_url)
-
-        low_threshold = 100
-        high_threshold = 200
-
-        image = cv2.Canny(image, low_threshold, high_threshold)
-        image = image[:, :, None]
-        image = np.concatenate([image, image, image], axis=2)
-        image = Image.fromarray(image)
         images = []
-        for i in range(0, batch):
-            img = self.pipe(
-                prompt=prompt,
+        for _ in range(inference_input.batch):
+            result = self.pipe(
+                prompt=inference_input.prompt,
                 image=image,
-                num_inference_steps=20,
-                guidance_scale=guidance_scale,
-                negative_prompt=negative_prompt,
-                controlnet_conditioning_scale=0.5,
+                num_inference_steps=inference_input.num_inference_steps,
+                guidance_scale=inference_input.guidance_scale,
+                negative_prompt=inference_input.negative_prompt,
+                controlnet_conditioning_scale=inference_input.controlnet_conditioning_scale,
+                generator=generator,
             ).images
-            images.append(img[0])
+            images.append(result[0])
 
         torch.cuda.empty_cache()
 
-        image_data = {"images": images, "has_nsfw_content": [False] * batch}
-
+        image_data = {
+            "images": images,
+            "has_nsfw_content": [False] * inference_input.batch,
+        }
         image_urls = generate_image_urls(image_data)
-        self.runtime = time.time() - st
+        self.runtime = time.time() - start_time
 
         return image_to_image_inference(
-            image_urls, [False] * batch, self.container_execution_time, self.runtime
+            image_urls,
+            [False] * inference_input.batch,
+            self.container_execution_time,
+            self.runtime,
         )
