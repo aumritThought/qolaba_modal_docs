@@ -30,13 +30,19 @@ class ImageInferenceInput(BaseModel):
     seed: int = 0
     low_threshold: int = Field(default=100, ge=0, le=255)
     high_threshold: int = Field(default=200, ge=0, le=255)
-    num_inference_steps: int = Field(default=20, gt=0)
+    num_inference_steps: int = Field(default=1, gt=0)
     guidance_scale: float = 7.5
     negative_prompt: str = ""
     controlnet_conditioning_scale: float = Field(default=0.5, gt=0)
+
 
 class DepthModels(BaseModel):
     controlnet_model: str = "diffusers/controlnet-depth-sdxl-1.0"
     sd_safety_checker: str = "CompVis/stable-diffusion-safety-checker"
     sdxl_vae_autoencoder: str = "madebyollin/sdxl-vae-fp16-fix"
     depth_estimator: str = "Intel/dpt-hybrid-midas"
+
+
+class ImageData(BaseModel):
+    images: list
+    has_nsfw_content: list
