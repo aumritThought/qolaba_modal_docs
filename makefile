@@ -31,6 +31,9 @@ dev-canny:
 dev-depth:
 		modal deploy /home/prakhar-pc/qolaba/Modal-Deployments/src/image_to_image/controlnet/Depth.py --env dev
 
+dev-normal:
+		modal deploy /home/prakhar-pc/qolaba/Modal-Deployments/src/image_to_image/controlnet/normal_copy.py --env dev
+
 format:
 	black src
 

@@ -3,3 +3,5 @@ QOLABA_SERVER_UPLOAD_CLOUDINARY_URL = "https://qolaba-server-production-caff.up.
 CLOUDINARY_SECRET = "cloudinary-secrets"
 CANNY_CONTROLNET_IMAGETOIMAGE = "canny_controlnet_image2image"
 DEPTH_CONTROLNET_IMAGETOIMAGE = "depth_controlnet_image2image"
+SD_REVANIM = "stablediffusionapi/rev-anim"
+NORMAL_CONTROLNET_IMAGETOIMAGE = "normal_controlnet_image2image"

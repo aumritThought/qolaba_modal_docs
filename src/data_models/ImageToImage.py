@@ -46,3 +46,10 @@ class DepthModels(BaseModel):
 class ImageData(BaseModel):
     images: list
     has_nsfw_content: list
+
+class NormalModels(BaseModel):
+    controlnet_model: str = "fusing/stable-diffusion-v1-5-controlnet-normal"
+    sd_safety_checker: str = "CompVis/stable-diffusion-safety-checker"
+    sdxl_vae_autoencoder: str = "madebyollin/sdxl-vae-fp16-fix"
+    depth_estimator: str = "Intel/dpt-hybrid-midas"
+    depth_estimation_name: str = "depth-estimation"

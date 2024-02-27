@@ -24,7 +24,7 @@ from src.data_models.ImageToImage import ImageInferenceInput
 # negative = "blurry"
 # batch = 1
 # guidance_Scale = 7.5
-output = modal.Function.lookup("canny_controlnet_image2image", 
+output = modal.Function.lookup("normal_controlnet_image2image", 
                       "StableDiffusion.run_inference", 
                       environment_name="dev")
 input = ImageInferenceInput(image_url="https://res.cloudinary.com/qolaba/image/upload/v1695690455/kxug1tmiolt1dtsvv5br.jpg", 
