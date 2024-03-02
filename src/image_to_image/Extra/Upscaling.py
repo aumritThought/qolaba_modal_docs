@@ -1,5 +1,5 @@
 from modal import Image, Stub, method
-
+#!pip install git+https://github.com/sberbank-ai/Real-ESRGAN.git
 
 def download_models():
     import os
