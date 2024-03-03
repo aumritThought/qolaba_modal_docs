@@ -15,7 +15,7 @@ import modal
 from PIL import Image
 import requests
 from io import BytesIO
-from src.data_models.ImageToImage import ImageInferenceInput
+from data_models.Configuration import ImageInferenceInput
 # response = requests.get("https://res.cloudinary.com/qolaba/image/upload/v1695690455/kxug1tmiolt1dtsvv5br.jpg")
 # response.raise_for_status()  # Raise an HTTPError for bad responses
 # image_data = BytesIO(response.content)

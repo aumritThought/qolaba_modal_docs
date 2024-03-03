@@ -3,7 +3,7 @@ from diffusers import StableDiffusionXLControlNetPipeline, ControlNetModel
 from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
 from transformers import CLIPFeatureExtractor
 from modal import method, Secret, Image
-from src.data_models.ImageToImage import NormalModels, ImageInferenceInput, ImageData
+from data_models.Configuration import NormalModels, ImageInferenceInput, ImageData
 from src.utils.Globals import (
     image_to_image_inference,
     create_stub,
