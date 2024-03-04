@@ -1,4 +1,4 @@
-from pydantic import BaseModel, constr
+from pydantic import BaseModel, Field
 from fastapi import Query
 from typing import  Optional
 from src.utils.Constants import (
@@ -13,6 +13,7 @@ from src.utils.Constants import sdxl_model_string
 
 class StubNames(BaseModel):
     sdxl_text_to_image: str = "SDXL_Text_To_Image"
+    sdxl_image_to_image : str = "SDXL_Image_To_Image"
     
 
 class StubConfiguration(BaseModel):
@@ -30,7 +31,11 @@ class TaskResponse(BaseModel):
     time : TimeData
 
 
-class SDXLText2ImageParameters(BaseModel):
+class SDXLParameters(BaseModel):
+    model : str = Field(pattern = sdxl_model_string)  
+    lora_model : Optional[str] = None
+    image : Optional[str] = None
+    controlnet_models : Optional[list[str]] = None
     height: int = Query(ge = MIN_HEIGHT, le = MAX_HEIGHT)
     width: int = Query(ge=MIN_HEIGHT, le = MAX_HEIGHT)
     num_inference_steps: int = Query(ge = MIN_INFERENCE_STEPS, le = MAX_INFERENCE_STEPS) 
@@ -40,6 +45,5 @@ class SDXLText2ImageParameters(BaseModel):
     negative_prompt: Optional[str] = " "
     lora_scale : float = Query(default = 0.5, gt = 0, le = 1)
 
-class InitParameters(BaseModel):
-    model_name : sdxl_model_string  # type: ignore
-    lora_model : Optional[str] = None
+
+    

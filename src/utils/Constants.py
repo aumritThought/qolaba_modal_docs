@@ -60,7 +60,7 @@ sdxl_model_list = {
     "SDXL Turbo" : SDXL_TURBO_MODEL
 }
 
-sdxl_model_string = constr(pattern="|".join(sdxl_model_list.keys()))
+sdxl_model_string = "|".join(sdxl_model_list.keys())
 
 SDXL_REFINER_MODEL = "stabilityai/stable-diffusion-xl-refiner-1.0"
 SDXL_REFINER_MODEL_PATH = "/SDXL_models/sdxl_model_refiner"
