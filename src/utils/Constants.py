@@ -64,6 +64,8 @@ sdxl_model_list = {
 
 sdxl_model_string = "|".join(sdxl_model_list.keys())
 
+
+
 SDXL_REFINER_MODEL = "stabilityai/stable-diffusion-xl-refiner-1.0"
 SDXL_REFINER_MODEL_PATH = "/SDXL_models/sdxl_model_refiner"
 
@@ -71,6 +73,18 @@ OPENPOSE_PATH = "/SDXL_models/openpose"
 SKETCH_PATH = "/SDXL_models/sketch"
 CANNY_PATH = "/SDXL_models/canny"
 DEPTH_PATH = "/SDXL_models/depth"
+
+CANNY = "canny"
+OPENPOSE = "openpose"
+SKETCH = "sketch"
+DEPTH = "depth"
+
+controlnet_model_list = {
+    OPENPOSE : OPENPOSE_PATH,
+    SKETCH : SKETCH_PATH,
+    CANNY : CANNY_PATH,
+    DEPTH : DEPTH_PATH
+}
 
 
 # Text_To_Image Configuration
@@ -82,3 +96,7 @@ MAX_GUIDANCE_SCALE = 30
 MIN_GUIDANCE_SCALE = 0
 MAX_BATCH = 8
 MIN_BATCH = 1
+
+#Image_To_Image Configuration
+MAX_STRENGTH = 1
+MIN_STRENGTH = 0

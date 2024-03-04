@@ -35,29 +35,118 @@
 # print(dict(input))
 # print(output.remote(dict(input)))
 
-from modal import Cls
+# from modal import Cls
 
+# import time
+
+# init_parameters = {
+#     "model" : "Vibrant"
+# }
+
+# parameters = {
+#     "height": 512,
+#     "width": 512,
+#     "num_inference_steps": 30, 
+#     "guidance_scale":  7.5,
+#     "batch":  8,
+#     "prompt": "cute dog",
+#     "negative_prompt": "blurry",
+#     "lora_scale" : 0.5
+# }
+
+# st = time.time()
+# Model = Cls.lookup("SDXL_Text_To_Image", "stableDiffusion", environment_name = "dev")  # returns a class-like object
+
+# m = Model(init_parameters)
+# print(m.run_inference.remote(parameters))
+# print(time.time() - st)
+# from modal import Cls
+# import time
+
+# init_parameters = {
+#     "model" : "Vibrant"
+# }
+
+# parameters = {
+#     "height": 1024,
+#     "width": 1024,
+#     "num_inference_steps": 30, 
+#     "guidance_scale":  7.5,
+#     "batch":  1,
+#     "prompt": "cute dog",
+#     "negative_prompt": "blurry",
+#     "lora_scale" : 0.5,
+#     "image" : "https://res.cloudinary.com/qolaba/image/upload/v1709571878/file_fdyz5m.jpg",
+#     "strength" : 1
+# }
+
+# st = time.time()
+# Model = Cls.lookup("SDXL_Image_To_Image", "stableDiffusion", environment_name = "dev")  # returns a class-like object
+
+# m = Model(init_parameters)
+# print("model obtained")
+# print(time.time() - st)
+
+# print(time.time()-st)
+# print(m.run_inference.remote(parameters))
+# print(time.time() - st)
+
+
+# from modal import Cls
+
+# import time
+
+# init_parameters = {
+#     "model" : "Vibrant",
+#     ""
+# }
+
+# parameters = {
+#     "height": 512,
+#     "width": 512,
+#     "num_inference_steps": 30, 
+#     "guidance_scale":  7.5,
+#     "batch":  8,
+#     "prompt": "cute dog",
+#     "negative_prompt": "blurry",
+#     "lora_scale" : 0.5
+# }
+
+# st = time.time()
+# Model = Cls.lookup("SDXL_controlnet", "stableDiffusion", environment_name = "dev")  # returns a class-like object
+
+# m = Model(init_parameters)
+# print(m.run_inference.remote(parameters))
+# print(time.time() - st)
+from modal import Cls
 import time
 
 init_parameters = {
-    "model_name" : "Vibrant"
+    "model" : "Vibrant",
+    "controlnet_models" : ["openpose"]
 }
 
 parameters = {
-    "height": 512,
-    "width": 512,
+    "height": 1024,
+    "width": 1024,
     "num_inference_steps": 30, 
     "guidance_scale":  7.5,
-    "batch":  8,
+    "batch":  1,
     "prompt": "cute dog",
     "negative_prompt": "blurry",
-    "lora_scale" : 0.5
+    "lora_scale" : 0.5,
+    "image" : "https://res.cloudinary.com/qolaba/image/upload/v1695690455/kxug1tmiolt1dtsvv5br.jpg",
+    "controlnet_scale" : 0.5,
+    "strength" : 1
 }
 
 st = time.time()
-Model = Cls.lookup("SDXL_Text_To_Image", "stableDiffusion", environment_name = "dev")  # returns a class-like object
+Model = Cls.lookup("SDXL_controlnet", "stableDiffusion", environment_name = "dev")  # returns a class-like object
 
 m = Model(init_parameters)
-print(m.run_inference.remote(parameters))
+print("model obtained")
 print(time.time() - st)
 
+print(time.time()-st)
+print(m.run_inference.remote(parameters))
+print(time.time() - st)

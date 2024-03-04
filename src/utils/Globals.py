@@ -88,7 +88,7 @@ def resize_image(img: Image) -> PIL.Image:
     return img
 
 
-def get_image_array_from_url(url: str, resize : bool) -> PIL.Image:
+def get_image_from_url(url: str, resize : bool) -> PIL.Image:
 
     response = requests.get(url)
     response.raise_for_status()  # Raise an HTTPError for bad responses

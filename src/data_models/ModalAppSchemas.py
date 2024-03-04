@@ -1,20 +1,22 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from fastapi import Query
-from typing import  Optional
+from typing import  Optional, Any
 from src.utils.Constants import (
     MIN_HEIGHT, MAX_HEIGHT, 
     MAX_INFERENCE_STEPS, 
     MIN_INFERENCE_STEPS, 
     MAX_BATCH, MIN_BATCH, 
     MAX_GUIDANCE_SCALE, 
-    MIN_GUIDANCE_SCALE)
+    MIN_GUIDANCE_SCALE, 
+    MAX_STRENGTH,
+    MIN_STRENGTH, controlnet_model_list)
 from src.utils.Constants import sdxl_model_string
 
 
 class StubNames(BaseModel):
     sdxl_text_to_image: str = "SDXL_Text_To_Image"
     sdxl_image_to_image : str = "SDXL_Image_To_Image"
-    
+    sdxl_controlnet : str = "SDXL_controlnet"
 
 class StubConfiguration(BaseModel):
     memory : int
@@ -57,9 +59,42 @@ class SDXLText2ImageParameters(BaseModel):
     negative_prompt: Optional[str] = " "
     lora_scale : float = Query(default = 0.5, gt = 0, le = 1)
 
+class SDXLImage2ImageParameters(BaseModel):
+    image : str | Any
+    strength : float = Query(ge = MIN_STRENGTH, le = MAX_STRENGTH)
+    guidance_scale:  float = Query( ge = MIN_GUIDANCE_SCALE, le = MAX_GUIDANCE_SCALE)
+    batch:  int = Query( ge = MIN_BATCH, le = MAX_BATCH)
+    prompt: str
+    negative_prompt: Optional[str] = " "
+    lora_scale : float = Query(default = 0.5, gt = 0, le = 1)
+
+class SDXLControlNetParameters(BaseModel):
+    image : str | Any
+    controlnet_scale : list[float]
+    guidance_scale:  float = Query( ge = MIN_GUIDANCE_SCALE, le = MAX_GUIDANCE_SCALE)
+    batch:  int = Query( ge = MIN_BATCH, le = MAX_BATCH)
+    prompt: str
+    negative_prompt: Optional[str] = " "
+    lora_scale : float = Query(default = 0.5, gt = 0, le = 1)
+    num_inference_steps: int = Query(ge = MIN_INFERENCE_STEPS, le = MAX_INFERENCE_STEPS)
+
+    @field_validator('controlnet_scale')
+    def check_controlnet_models(cls, v):
+        for scale in v:
+            if not (scale > MIN_STRENGTH and scale < MAX_STRENGTH):
+                raise ValueError(f"The controlnet scale {scale} should be in the range of {MIN_STRENGTH} to {MAX_STRENGTH}")
+        return v
+
 class InitParameters(BaseModel):
-    model_name : str = Field(pattern = sdxl_model_string)  
+    model : str = Field(pattern = sdxl_model_string)  
     lora_model : Optional[str] = None
+    controlnet_models : list[str]
+
+    @field_validator('controlnet_models')
+    def check_controlnet_models(cls, v):
+        if not set(v).issubset(set(controlnet_model_list.keys())):
+            raise ValueError(f"The given contronets '{v}' are not valid")
+        return list(set(v))
 
 
 
