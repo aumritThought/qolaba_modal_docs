@@ -21,7 +21,7 @@ class PipelineBuilder:
     def prepare_sdxl_t2i_pipeline(self):
         if not hasattr(self, "pipe"):
             
-        return self
+            return self
     
     def prepare_sdxl_i2i_pipeline(self):
         if self.parameters.image != None:

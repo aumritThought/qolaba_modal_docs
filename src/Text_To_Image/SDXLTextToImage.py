@@ -1,52 +1,72 @@
-from src.data_models.ModalAppSchemas import SDXLParameters
+from modal import Stub, method, Volume, Secret
 from src.data_models.Configuration import stub_dictionary
-from src.data_models.ModalAppSchemas import StubNames, SDXLParameters
+from src.data_models.ModalAppSchemas import StubNames, SDXLText2ImageParameters, InitParameters
 from src.utils.Globals import get_base_image, get_refiner, SafetyChecker, generate_image_urls, prepare_response
-from src.utils.Constants import sdxl_model_list
+from src.utils.Constants import sdxl_model_list, VOLUME_NAME, VOLUME_PATH, SECRET_NAME
 from diffusers import StableDiffusionXLPipeline
 import torch, time
 
+stub_name = StubNames().sdxl_text_to_image
 
-class SDXLTextToImage:
-    def __init__(self, input_parameters : SDXLParameters, safety_checker : SafetyChecker):
-        st = time.time()
-        self.parameters = input_parameters
-        self.safety_checker = safety_checker
-        self.pipe = StableDiffusionXLPipeline.from_single_file(
-                sdxl_model_list.get(self.parameters.model), torch_dtype=torch.float16, use_safetensors=True, variant="fp16"
-            )
+stub = Stub(stub_name)
+
+image = get_base_image()
+
+stub.image = image
+
+vol = Volume.persisted(VOLUME_NAME)
+
+
+@stub.cls(gpu = stub_dictionary[stub_name].gpu, 
+          container_idle_timeout = stub_dictionary[stub_name].container_idle_timeout,
+          memory = stub_dictionary[stub_name].memory,
+          volumes = {VOLUME_PATH: vol},
+          secrets = [Secret.from_name(SECRET_NAME)])
+class stableDiffusion:
         
+    def __init__(self, init_parameters : dict) -> None:
+        init_parameters : InitParameters = InitParameters(**init_parameters)
+        st = time.time()
+
+        self.pipe = StableDiffusionXLPipeline.from_single_file(
+            sdxl_model_list.get(init_parameters.model_name), torch_dtype=torch.float16, use_safetensors=True, variant="fp16"
+        )
         self.pipe.to("cuda")
-        if(self.parameters.lora_model):
-            self.pipe.load_lora_weights(self.parameters.lora_model)
+        if(init_parameters.lora_model):
+            self.pipe.load_lora_weights(init_parameters.lora_model)
 
         self.refiner = get_refiner(self.pipe)
-
+        
+        self.safety_checker = SafetyChecker()
         self.container_execution_time = time.time() - st
 
-    def generate_images(self):
+    @method()
+    def run_inference(self, parameters : dict) -> dict:
+
+        parameters : SDXLText2ImageParameters = SDXLText2ImageParameters(**parameters)
+
         st = time.time()
 
         images = []
 
-        for i in range(0, self.parameters.batch):
+        for i in range(0, parameters.batch):
             image = self.pipe(
-                prompt = self.parameters.prompt,
-                height = self.parameters.height,
-                width = self.parameters.width,
-                negative_prompt = self.parameters.negative_prompt,
-                num_inference_steps = self.parameters.num_inference_steps,
+                prompt = parameters.prompt,
+                height = parameters.height,
+                width = parameters.width,
+                negative_prompt = parameters.negative_prompt,
+                num_inference_steps = parameters.num_inference_steps,
                 denoising_end = 0.8,
-                guidance_scale = self.parameters.guidance_scale,
+                guidance_scale = parameters.guidance_scale,
                 output_type="latent",
-                cross_attention_kwargs={"scale": self.parameters.lora_scale},
+                cross_attention_kwargs={"scale": parameters.lora_scale},
             ).images[0]
             torch.cuda.empty_cache()
 
             image = self.refiner(
-                prompt = self.parameters.prompt,
-                num_inference_steps = self.parameters.num_inference_steps,
-                guidance_scale = self.parameters.guidance_scale,
+                prompt = parameters.prompt,
+                num_inference_steps = parameters.num_inference_steps,
+                guidance_scale = parameters.guidance_scale,
                 denoising_start=0.8,
                 image=image,
             ).images[0]

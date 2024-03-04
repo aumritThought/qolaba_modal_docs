@@ -31,11 +31,23 @@ class TaskResponse(BaseModel):
     time : TimeData
 
 
-class SDXLParameters(BaseModel):
-    model : str = Field(pattern = sdxl_model_string)  
-    lora_model : Optional[str] = None
-    image : Optional[str] = None
-    controlnet_models : Optional[list[str]] = None
+# class SDXLParameters(BaseModel):
+#     model : str = Field(pattern = sdxl_model_string)  
+#     lora_model : Optional[str] = None
+#     image : Optional[str] = None
+#     controlnet_models : Optional[list[str]] = None
+#     height: int = Query(ge = MIN_HEIGHT, le = MAX_HEIGHT)
+#     width: int = Query(ge=MIN_HEIGHT, le = MAX_HEIGHT)
+#     num_inference_steps: int = Query(ge = MIN_INFERENCE_STEPS, le = MAX_INFERENCE_STEPS) 
+#     guidance_scale:  float = Query( ge = MIN_GUIDANCE_SCALE, le = MAX_GUIDANCE_SCALE)
+#     batch:  int = Query( ge = MIN_BATCH, le = MAX_BATCH)
+#     prompt: str
+#     negative_prompt: Optional[str] = " "
+#     lora_scale : float = Query(default = 0.5, gt = 0, le = 1)
+    
+
+
+class SDXLText2ImageParameters(BaseModel):
     height: int = Query(ge = MIN_HEIGHT, le = MAX_HEIGHT)
     width: int = Query(ge=MIN_HEIGHT, le = MAX_HEIGHT)
     num_inference_steps: int = Query(ge = MIN_INFERENCE_STEPS, le = MAX_INFERENCE_STEPS) 
@@ -44,6 +56,11 @@ class SDXLParameters(BaseModel):
     prompt: str
     negative_prompt: Optional[str] = " "
     lora_scale : float = Query(default = 0.5, gt = 0, le = 1)
+
+class InitParameters(BaseModel):
+    model_name : str = Field(pattern = sdxl_model_string)  
+    lora_model : Optional[str] = None
+
 
 
     

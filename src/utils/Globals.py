@@ -33,26 +33,27 @@ def generate_image_urls(image_data: list[PIL.Image], safety_checker : SafetyChec
     has_nsfw_content = []
     for im in range(0, len(image_data)):
         nsfw_content = safety_checker.check_nsfw_content(image_data[im])
-        if nsfw_content:
-            has_nsfw_content.append(nsfw_content)
+        if nsfw_content[0]:
+            has_nsfw_content.append(nsfw_content[0])
         else:
             im_url = upload_cloudinary_image(image_data[im])
             image_urls.append(im_url)
-            has_nsfw_content.append(nsfw_content)
+            has_nsfw_content.append(nsfw_content[0])
     return image_urls, has_nsfw_content
 
 
 def prepare_response(result: list[str] | dict, Has_NSFW_content : list[bool], time : float, runtime : float) -> dict:
-    return TaskResponse(
+    task_response = TaskResponse(
         result = result,
         Has_NSFW_Content = Has_NSFW_content,
         time = TimeData(startup_time = time, runtime = runtime)
-    ).model_dump()
+    )
+    return task_response.model_dump()
 
 
 def upload_cloudinary_image(image : PIL.Image) -> str:
     cloudinary.config(
-        cloud_name=os.environ["CLOUDINARY_CLOUD_NAME"],
+        cloud_name=os.environ["CLOUD_NAME"],
         api_key=os.environ["CLOUDINARY_API_KEY"],
         api_secret=os.environ["CLOUDINARY_API_SECRET"],
     )
@@ -68,7 +69,7 @@ def upload_cloudinary_image(image : PIL.Image) -> str:
         return response["secure_url"]
 
     except Exception as e:
-        print(f"Error uploading image to Cloudinary: {e}")
+        raise Exception(f"Error uploading image to Cloudinary: {e}")
 
 
 def resize_image(img: Image) -> PIL.Image:
@@ -104,9 +105,11 @@ def get_seed_generator(seed: int) -> torch.Generator:
     generator.manual_seed(seed)
     return generator
 
+def download_safety_checker():
+    SafetyChecker()
 
 def get_base_image() -> Image:
-    return Image.debian_slim(python_version = PYTHON_VERSION).run_commands(BASE_IMAGE_COMMANDS).pip_install_from_requirements(REQUIREMENT_FILE_PATH)
+    return Image.debian_slim(python_version = PYTHON_VERSION).run_commands(BASE_IMAGE_COMMANDS).pip_install_from_requirements(REQUIREMENT_FILE_PATH).run_function(download_safety_checker, gpu = "t4")
 
 
 

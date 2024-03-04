@@ -27,14 +27,16 @@ VOLUME_NAME = "SDXL-LORA-Volume"
 VOLUME_PATH = "/SDXL_models"
 
 #Environment variables
-PYTHON_VERSION = "3.11"
+PYTHON_VERSION = "3.11.8"
 
 BASE_IMAGE_COMMANDS = [
-    "apt-get update && apt-get install ffmpeg libsm6 libxext6 git curl wget pkg-config libssl-dev openssl -y",
-    "pip3 install torch torchvision torchaudio"
+    "apt-get update && apt-get install ffmpeg libsm6 libxext6 git curl wget pkg-config libssl-dev openssl git-lfs -y",
+    "git lfs install",
+    "pip install torch torchvision torchaudio"
 ]
 
 REQUIREMENT_FILE_PATH = "requirements.txt"
+SECRET_NAME = "environment_configuration"
 
 SDXL_ANIME_MODEL = "/SDXL_models/Animagine.safetensors"
 SDXL_ANIME_2_MODEL = "/SDXL_models/AstreaPixie.safetensors"
@@ -65,16 +67,9 @@ sdxl_model_string = "|".join(sdxl_model_list.keys())
 SDXL_REFINER_MODEL = "stabilityai/stable-diffusion-xl-refiner-1.0"
 SDXL_REFINER_MODEL_PATH = "/SDXL_models/sdxl_model_refiner"
 
-OPENPOSE_MODEL = "TencentARC/t2i-adapter-openpose-sdxl-1.0"
 OPENPOSE_PATH = "/SDXL_models/openpose"
-
-SKETCH_MODEL = "TencentARC/t2i-adapter-sketch-sdxl-1.0"
 SKETCH_PATH = "/SDXL_models/sketch"
-
-CANNY_MODEL = "TencentARC/t2i-adapter-canny-sdxl-1.0"
 CANNY_PATH = "/SDXL_models/canny"
-
-DEPTH_MODEL = "TencentARC/t2i-adapter-depth-midas-sdxl-1.0"
 DEPTH_PATH = "/SDXL_models/depth"
 
 
