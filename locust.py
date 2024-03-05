@@ -188,8 +188,6 @@ import time
 
 init_parameters = {
     "model" : "Vibrant",
-    "controlnet_model" : "depth",
-    "scale"  : 4
 }
 
 parameters = {
@@ -206,7 +204,7 @@ parameters = {
 }
 
 st = time.time()
-Model = Cls.lookup("Ultrasharp_Upscaler", "stableDiffusion", environment_name = "dev")  # returns a class-like object
+Model = Cls.lookup("IPAdapter_image_variation", "stableDiffusion", environment_name = "dev")  # returns a class-like object
 
 m = Model(init_parameters)
 print("model obtained")

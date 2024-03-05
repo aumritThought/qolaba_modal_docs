@@ -40,6 +40,9 @@ class stableDiffusion:
             self.pipe.load_lora_weights(init_parameters.lora_model)
 
         self.refiner = get_refiner(self.pipe)
+
+        self.pipe.enable_xformers_memory_efficient_attention()
+        self.refiner.enable_xformers_memory_efficient_attention()
         
         self.safety_checker = SafetyChecker()
         self.container_execution_time = time.time() - st

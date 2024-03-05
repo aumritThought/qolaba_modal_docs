@@ -114,7 +114,7 @@ def get_base_image() -> Image:
 
 
     
-def get_refiner(pipe : StableDiffusionXLPipeline):
+def get_refiner(pipe : StableDiffusionXLPipeline) -> DiffusionPipeline:
     return DiffusionPipeline.from_pretrained(
             SDXL_REFINER_MODEL_PATH,
             text_encoder_2 = pipe.text_encoder_2,

@@ -18,6 +18,7 @@ class StubNames(BaseModel):
     sdxl_image_to_image : str = "SDXL_Image_To_Image"
     sdxl_controlnet : str = "SDXL_controlnet"
     ultrasharp_upscaler : str = "Ultrasharp_Upscaler"
+    image_variation : str = "IPAdapter_image_variation"
 
 class StubConfiguration(BaseModel):
     memory : int
@@ -69,23 +70,19 @@ class SDXLImage2ImageParameters(BaseModel):
     negative_prompt: Optional[str] = " "
     lora_scale : float = Query(default = 0.5, gt = 0, le = 1)
 
-class SDXLControlNetParameters(BaseModel):
-    image : str | Any
-    strength : float = Query(ge = MIN_STRENGTH, le = MAX_STRENGTH)
-    guidance_scale:  float = Query( ge = MIN_GUIDANCE_SCALE, le = MAX_GUIDANCE_SCALE)
-    batch:  int = Query( ge = MIN_BATCH, le = MAX_BATCH)
-    prompt: str
-    negative_prompt: Optional[str] = " "
-    lora_scale : float = Query(default = 0.5, gt = 0, le = 1)
+class SDXLControlNetParameters(SDXLImage2ImageParameters):
     num_inference_steps: int = Query(ge = MIN_INFERENCE_STEPS, le = MAX_INFERENCE_STEPS)
 
 class UpscaleParameters(BaseModel):
     image : str | Any
 
+class VariationParameters(SDXLControlNetParameters):
+    pass
+
 class InitParameters(BaseModel):
     model : str = Field(pattern = sdxl_model_string)  
     lora_model : Optional[str] = None
-    controlnet_model : str = Field(pattern = controlnet_models)
+    controlnet_model : Optional[str] = Field(default=None, pattern = controlnet_models)
 
 
 

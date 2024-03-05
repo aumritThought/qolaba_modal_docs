@@ -30,8 +30,8 @@ stub.image = image
           secrets = [Secret.from_name(SECRET_NAME)])
 class stableDiffusion:
     def __init__(self, init_parameters : dict) -> None:
-        init_parameters : InitParameters = InitParameters(**init_parameters)
         st = time.time()
+        init_parameters : InitParameters = InitParameters(**init_parameters)
 
         self.pipe = StableDiffusionXLPipeline.from_single_file(
             sdxl_model_list.get(init_parameters.model), torch_dtype=torch.float16, use_safetensors=True, variant="fp16"
@@ -41,16 +41,17 @@ class stableDiffusion:
             self.pipe.load_lora_weights(init_parameters.lora_model)
 
         self.refiner = get_refiner(self.pipe)
+
+        self.pipe.enable_xformers_memory_efficient_attention()
+        self.refiner.enable_xformers_memory_efficient_attention()
         
         self.safety_checker = SafetyChecker()
         self.container_execution_time = time.time() - st
 
     @method()
     def run_inference(self, parameters : dict) -> dict:
-
-        parameters : SDXLText2ImageParameters = SDXLText2ImageParameters(**parameters)
-
         st = time.time()
+        parameters : SDXLText2ImageParameters = SDXLText2ImageParameters(**parameters)
 
         images = []
 
