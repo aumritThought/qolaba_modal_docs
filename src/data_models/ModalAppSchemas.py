@@ -9,7 +9,7 @@ from src.utils.Constants import (
     MAX_GUIDANCE_SCALE, 
     MIN_GUIDANCE_SCALE, 
     MAX_STRENGTH,
-    MIN_STRENGTH, controlnet_model_list)
+    MIN_STRENGTH)
 from src.utils.Constants import sdxl_model_string, controlnet_models
 
 
@@ -17,6 +17,7 @@ class StubNames(BaseModel):
     sdxl_text_to_image: str = "SDXL_Text_To_Image"
     sdxl_image_to_image : str = "SDXL_Image_To_Image"
     sdxl_controlnet : str = "SDXL_controlnet"
+    ultrasharp_upscaler : str = "Ultrasharp_Upscaler"
 
 class StubConfiguration(BaseModel):
     memory : int
@@ -78,11 +79,14 @@ class SDXLControlNetParameters(BaseModel):
     lora_scale : float = Query(default = 0.5, gt = 0, le = 1)
     num_inference_steps: int = Query(ge = MIN_INFERENCE_STEPS, le = MAX_INFERENCE_STEPS)
 
+class UpscaleParameters(BaseModel):
+    image : str | Any
 
 class InitParameters(BaseModel):
     model : str = Field(pattern = sdxl_model_string)  
     lora_model : Optional[str] = None
-    controlnet_model : str = Field(pattern = controlnet_models)  
+    controlnet_model : str = Field(pattern = controlnet_models)
+
 
 
 

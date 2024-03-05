@@ -144,3 +144,4 @@ wget==3.2
 xformers==0.0.16
 yarl==1.9.4
 zipp==3.17.0
+imaginairy==14.1.1

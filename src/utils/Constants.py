@@ -88,6 +88,7 @@ controlnet_model_list = {
 
 controlnet_models = "|".join(controlnet_model_list.keys())
 
+ULTRASHARP_MODEL = "/SDXL_models/4x-UltraSharp.pth"
 
 
 # Text_To_Image Configuration

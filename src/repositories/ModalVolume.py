@@ -94,6 +94,10 @@ def download_models():
         os.system(f"git clone https://huggingface.co/TencentARC/t2i-adapter-canny-sdxl-1.0 {CANNY_PATH}")
         vol.commit()
 
+    if not os.path.isdir(ULTRASHARP_MODEL):
+        os.system(f"wget -O {ULTRASHARP_MODEL} https://huggingface.co/lokCX/4x-Ultrasharp/resolve/1856559b50de25116a7c07261177dd128f1f5664/4x-UltraSharp.pth")
+        vol.commit()
+
     vol.commit()
 
 
