@@ -10,7 +10,7 @@ from src.utils.Constants import (
     MIN_GUIDANCE_SCALE, 
     MAX_STRENGTH,
     MIN_STRENGTH, controlnet_model_list)
-from src.utils.Constants import sdxl_model_string
+from src.utils.Constants import sdxl_model_string, controlnet_models
 
 
 class StubNames(BaseModel):
@@ -70,7 +70,7 @@ class SDXLImage2ImageParameters(BaseModel):
 
 class SDXLControlNetParameters(BaseModel):
     image : str | Any
-    controlnet_scale : list[float]
+    strength : float = Query(ge = MIN_STRENGTH, le = MAX_STRENGTH)
     guidance_scale:  float = Query( ge = MIN_GUIDANCE_SCALE, le = MAX_GUIDANCE_SCALE)
     batch:  int = Query( ge = MIN_BATCH, le = MAX_BATCH)
     prompt: str
@@ -78,23 +78,12 @@ class SDXLControlNetParameters(BaseModel):
     lora_scale : float = Query(default = 0.5, gt = 0, le = 1)
     num_inference_steps: int = Query(ge = MIN_INFERENCE_STEPS, le = MAX_INFERENCE_STEPS)
 
-    @field_validator('controlnet_scale')
-    def check_controlnet_models(cls, v):
-        for scale in v:
-            if not (scale > MIN_STRENGTH and scale < MAX_STRENGTH):
-                raise ValueError(f"The controlnet scale {scale} should be in the range of {MIN_STRENGTH} to {MAX_STRENGTH}")
-        return v
 
 class InitParameters(BaseModel):
     model : str = Field(pattern = sdxl_model_string)  
     lora_model : Optional[str] = None
-    controlnet_models : list[str]
+    controlnet_model : str = Field(pattern = controlnet_models)  
 
-    @field_validator('controlnet_models')
-    def check_controlnet_models(cls, v):
-        if not set(v).issubset(set(controlnet_model_list.keys())):
-            raise ValueError(f"The given contronets '{v}' are not valid")
-        return list(set(v))
 
 
 

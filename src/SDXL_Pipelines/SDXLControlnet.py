@@ -18,20 +18,20 @@ stub = Stub(stub_name)
 
 
 class ContrloNetImageGeneration:
-    def __init__(self, image : Image, controlnet_list : list[str]) -> None:
+    def __init__(self, image : Image, controlnet : str) -> None:
         self.images = []
         self.image = image
-        self.controlnet_list = controlnet_list
+        self.controlnet = controlnet
 
     def canny_image_generation(self):
-        if(CANNY in self.controlnet_list):
+        if(CANNY == self.controlnet):
             canny = CannyDetector()
             image = canny(self.image, detect_resolution=384, image_resolution=1024, output_type = "pil")
             self.images.append(image.resize(self.image.size))
         return self
 
     def openpose_image_generation(self):
-        if(OPENPOSE in self.controlnet_list):
+        if(OPENPOSE == self.controlnet):
             openpose =  OpenposeDetector.from_pretrained("lllyasviel/Annotators").to("cuda")
             image = openpose(self.image, detect_resolution=512, image_resolution=1024)
             image = np.array(image)[:, :, ::-1]           
@@ -40,21 +40,21 @@ class ContrloNetImageGeneration:
         return self
         
     def depth_image_generation(self):
-        if(DEPTH in self.controlnet_list):
+        if(DEPTH == self.controlnet):
             depth = MidasDetector.from_pretrained("valhalla/t2iadapter-aux-models", filename="dpt_large_384.pt", model_type="dpt_large").to("cuda")
             image = depth(self.image, detect_resolution=512, image_resolution=1024,  output_type="pil")
             self.images.append(image.resize(self.image.size))
         return self
     
     def sketch_image_generation(self):
-        if(SKETCH in self.controlnet_list):
+        if(SKETCH == self.controlnet):
             pidinet = PidiNetDetector.from_pretrained("lllyasviel/Annotators").to("cuda")
             image = pidinet(self.image, detect_resolution=1024, image_resolution=1024, apply_filter=True)
             self.images.append(image.resize(self.image.size))
         return self
     
-    def prepare_images(self):
-        return self.canny_image_generation().depth_image_generation().openpose_image_generation().sketch_image_generation().images
+    def prepare_images(self) -> Image:
+        return self.canny_image_generation().depth_image_generation().openpose_image_generation().sketch_image_generation().images[0]
     
 
 
@@ -90,16 +90,13 @@ class stableDiffusion:
         self.init_parameters : InitParameters = InitParameters(**init_parameters)
         st = time.time()
 
-        controlnet_models = []
-        for i in self.init_parameters.controlnet_models:
-            controlnet_models.append(
-                T2IAdapter.from_pretrained(
-                    controlnet_model_list[i],
+        controlnet_model = T2IAdapter.from_pretrained(
+                    controlnet_model_list[self.init_parameters.controlnet_model],
                     torch_dtype=torch.float16,
-                    varient="fp16"))
+                    varient="fp16")
 
         self.pipe = StableDiffusionXLAdapterPipeline.from_single_file(
-            sdxl_model_list.get(self.init_parameters.model), adapter = controlnet_models[0], torch_dtype=torch.float16, use_safetensors=True, variant="fp16"
+            sdxl_model_list.get(self.init_parameters.model), adapter = controlnet_model, torch_dtype=torch.float16, use_safetensors=True, variant="fp16"
         )
         self.pipe.to("cuda")
         if(self.init_parameters.lora_model):
@@ -116,11 +113,8 @@ class stableDiffusion:
 
         parameters.image = get_image_from_url(parameters.image, resize = True)
 
-        controlnet_image_model = ContrloNetImageGeneration(parameters.image, self.init_parameters.controlnet_models)
-        images = controlnet_image_model.prepare_images()
-
-        if(len(self.init_parameters.controlnet_models) != len(parameters.controlnet_scale)):
-            raise Exception("The number of controlnet scales should be similar to given controlnets")
+        controlnet_image_model = ContrloNetImageGeneration(parameters.image, self.init_parameters.controlnet_model)
+        controlnet_image = controlnet_image_model.prepare_images()
 
         st = time.time()
 
@@ -130,13 +124,13 @@ class stableDiffusion:
             image = self.pipe(
                 prompt = parameters.prompt,
                 negative_prompt = parameters.negative_prompt,
-                image=images,
+                image=controlnet_image,
                 denoising_end = 0.8,
                 guidance_scale = parameters.guidance_scale,
                 output_type="latent",
                 num_inference_steps = parameters.num_inference_steps,
                 cross_attention_kwargs={"scale": parameters.lora_scale},
-                adapter_conditioning_scale = parameters.controlnet_scale
+                adapter_conditioning_scale = parameters.strength
             ).images[0]
             torch.cuda.empty_cache()
 

@@ -86,6 +86,9 @@ controlnet_model_list = {
     DEPTH : DEPTH_PATH
 }
 
+controlnet_models = "|".join(controlnet_model_list.keys())
+
+
 
 # Text_To_Image Configuration
 MAX_HEIGHT = 2048
