@@ -187,24 +187,35 @@ from modal import Cls
 import time
 
 init_parameters = {
-    "model" : "Vibrant",
+    "model" : "Realistic",
+    "controlnet_model" : "canny"
 }
 
 parameters = {
     "height": 1024,
     "width": 1024,
     "num_inference_steps": 30, 
-    "guidance_scale":  7.5,
+    "guidance_scale":  13,
     "batch":  1,
-    "prompt": "a cute man sitting on chair",
+    "prompt": "cute dog",
     "negative_prompt": "blurry",
     "lora_scale" : 0.5,
-    "image" : "https://res.cloudinary.com/qolaba/image/upload/v1709597877/pm51vshvnskxv8a16emv.png",
-    "strength" : 1
+    "image" : "https://res.cloudinary.com/qolaba/image/upload/v1709715234/toxu6q3dc1nlsupl6lax.png",
+    "strength" : 1,
+    "prompt" : "a man with black background",
+    "bg_img" : "https://res.cloudinary.com/qolaba/image/upload/v1705612740/jbsewrunbccplqd19y4p.png",
+    "controlnet_scale" : 2.5
 }
-
+# image : str | Any
+#     bg_img : Optional[str] = None
+#     bg_color : Optional[bool] = False 
+#     r_color: int = Query(default=MIN_COLOR,ge=MIN_COLOR, le=MAX_COLOR)
+#     g_color: int = Query(default=MIN_COLOR,ge=MIN_COLOR, le=MAX_COLOR)
+#     b_color: int = Query(default=MIN_COLOR,ge=MIN_COLOR, le=MAX_COLOR)
+#     blur: Optional[bool] = False  
+#     strength : float = Query(ge = MIN_STRENGTH, le = MAX_STRENGTH)
 st = time.time()
-Model = Cls.lookup("IPAdapter_image_variation", "stableDiffusion", environment_name = "dev")  # returns a class-like object
+Model = Cls.lookup("Illusion_Diffusion", "stableDiffusion", environment_name = "dev")  # returns a class-like object
 
 m = Model(init_parameters)
 print("model obtained")

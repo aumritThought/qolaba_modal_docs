@@ -3,7 +3,8 @@ from modal import Image
 import cloudinary
 import cloudinary.uploader
 from io import BytesIO
-import os, PIL
+import os
+from PIL import Image as PIM
 import requests
 from diffusers import DiffusionPipeline, StableDiffusionXLPipeline
 from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
@@ -18,7 +19,7 @@ class SafetyChecker:
         ).to("cuda")
         self.feature_extractor = CLIPImageProcessor()
 
-    def check_nsfw_content(self, image : PIL.Image) -> list[bool]:
+    def check_nsfw_content(self, image : PIM) -> list[bool]:
         
         safety_checker_input = self.feature_extractor(image, return_tensors="pt").to("cuda")
 
@@ -28,7 +29,7 @@ class SafetyChecker:
 
         return has_nsfw_concept
 
-def generate_image_urls(image_data: list[PIL.Image], safety_checker : SafetyChecker) -> tuple[list[str], list[bool]]:
+def generate_image_urls(image_data, safety_checker : SafetyChecker, format : str = "JPEG") -> tuple[list[str], list[bool]]:
     image_urls = []
     has_nsfw_content = []
     for im in range(0, len(image_data)):
@@ -36,7 +37,7 @@ def generate_image_urls(image_data: list[PIL.Image], safety_checker : SafetyChec
         if nsfw_content[0]:
             has_nsfw_content.append(nsfw_content[0])
         else:
-            im_url = upload_cloudinary_image(image_data[im])
+            im_url = upload_cloudinary_image(image_data[im], format)
             image_urls.append(im_url)
             has_nsfw_content.append(nsfw_content[0])
     return image_urls, has_nsfw_content
@@ -51,7 +52,7 @@ def prepare_response(result: list[str] | dict, Has_NSFW_content : list[bool], ti
     return task_response.model_dump()
 
 
-def upload_cloudinary_image(image : PIL.Image) -> str:
+def upload_cloudinary_image(image : PIM, format : str = "JPEG") -> str:
     cloudinary.config(
         cloud_name=os.environ["CLOUD_NAME"],
         api_key=os.environ["CLOUDINARY_API_KEY"],
@@ -60,7 +61,7 @@ def upload_cloudinary_image(image : PIL.Image) -> str:
 
     try:
         with BytesIO() as buffer:
-            image.save(buffer, format="JPEG")
+            image.save(buffer, format=format)
             image_bytes = buffer.getvalue()
 
         response = cloudinary.uploader.upload(
@@ -71,8 +72,24 @@ def upload_cloudinary_image(image : PIL.Image) -> str:
     except Exception as e:
         raise Exception(f"Error uploading image to Cloudinary: {e}")
 
+def upload_cloudinary_video(video_path : str) -> str:
+    cloudinary.config(
+        cloud_name=os.environ["CLOUD_NAME"],
+        api_key=os.environ["CLOUDINARY_API_KEY"],
+        api_secret=os.environ["CLOUDINARY_API_SECRET"],
+    )
 
-def resize_image(img: Image) -> PIL.Image:
+    try:
+        response = cloudinary.uploader.upload(
+                file=video_path,  resource_type="video"
+            )
+        return response["secure_url"]
+
+    except Exception as e:
+        raise Exception(f"Error uploading image to Cloudinary: {e}")
+
+
+def resize_image(img: PIM) -> PIM:
     img = img.resize((64 * round(img.size[0] / 64), 64 * round(img.size[1] / 64)))
 
     if ( img.size[0] > MAX_HEIGHT or img.size[0] < MIN_HEIGHT or img.size[1] > MAX_HEIGHT or img.size[1] < MIN_HEIGHT):
@@ -88,12 +105,12 @@ def resize_image(img: Image) -> PIL.Image:
     return img
 
 
-def get_image_from_url(url: str, resize : bool) -> PIL.Image:
+def get_image_from_url(url: str, resize : bool) -> PIM:
 
     response = requests.get(url)
     response.raise_for_status()  # Raise an HTTPError for bad responses
     image_data = BytesIO(response.content)
-    image = PIL.Image.open(image_data)
+    image = PIM.open(image_data).convert("RGB")
     if(resize == True):
         image = resize_image(image)
     return image

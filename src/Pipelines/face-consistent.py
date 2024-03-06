@@ -1,358 +1,121 @@
-# from modal import Image, Stub, method
+from modal import Stub, method, Volume, Secret
+from src.data_models.Configuration import stub_dictionary
+from src.data_models.ModalAppSchemas import StubNames, InitParameters, FaceConsistentParameters
+from src.utils.Globals import get_base_image, SafetyChecker, generate_image_urls, prepare_response, get_image_from_url, get_refiner
+from src.utils.Constants import VOLUME_NAME, VOLUME_PATH, SECRET_NAME, sdxl_model_list
+import torch, time, os, sys
+from diffusers import StableDiffusionXLPipeline
+from insightface.app import FaceAnalysis
+from insightface.utils import face_align
+import numpy as np
 
+stub_name = StubNames().face_consistent
 
-# def download_models():
-#     import torch, os, sys
+stub = Stub(stub_name)
 
-#     os.chdir("../IP-Adapter")
-#     sys.path.insert(0, "../IP-Adapter")
-#     os.system("pip install omegaconf")
-#     from diffusers import StableDiffusionXLPipeline, DDIMScheduler, AutoencoderKL
-#     from insightface.app import FaceAnalysis
-#     from ip_adapter.ip_adapter_faceid import IPAdapterFaceIDXL
+vol = Volume.persisted(VOLUME_NAME)
 
-#     os.system("git clone https://huggingface.co/h94/IP-Adapter")
-#     os.system("wget https://huggingface.co/h94/IP-Adapter-FaceID/resolve/main/ip-adapter-faceid_sdxl.bin")
-
-
-#     app = FaceAnalysis(name="buffalo_l", providers=['CUDAExecutionProvider', 'CPUExecutionProvider'])
-#     app.prepare(ctx_id=0, det_size=(640, 640))
-
-#     ip_ckpt = "ip-adapter-faceid_sdxl.bin"
-#     device = "cuda"
-
-#     pipe = StableDiffusionXLPipeline.from_single_file(
-#         "../Starlight.safetensors",
-#         torch_dtype=torch.float16,
-#         add_watermarker=False,
-#     )
-
-#     # load ip-adapter
-#     ip_model = IPAdapterFaceIDXL(pipe, ip_ckpt, device)
-#     from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
-#     from transformers import CLIPFeatureExtractor
-#     safety_checker = StableDiffusionSafetyChecker.from_pretrained("CompVis/stable-diffusion-safety-checker")
-#     feature_extractor = CLIPFeatureExtractor()
-
-# stub = Stub("face_consistent_image2image")
-# image = (
-#     Image.debian_slim(python_version="3.11")
-#     .run_commands([
-#         "apt-get update && apt-get install ffmpeg libsm6 libxext6 git wget -y",
-#         "apt-get install git-lfs",
-#         "git lfs install",
-#         "git clone https://github.com/tencent-ailab/IP-Adapter.git",
-#         "pip install --upgrade diffusers transformers accelerate safetensors torch xformers onnxruntime einops insightface",
-#         "wget https://civitai.com/api/download/models/189102",
-#         "mv 189102 Starlight.safetensors",
-#                    ])
-#     ).run_function(
-#             download_models,
-#             gpu="a10g"
-#         )
-
-# stub.image = image
-
-# @stub.cls(gpu="a10g", container_idle_timeout=200, memory=10240)
-# class stableDiffusion:
-#     def __enter__(self):
-#         import time
-#         st= time.time()
-
-#         from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
-#         from transformers import CLIPImageProcessor
-
-#         import torch, os, sys
-
-#         os.chdir("../IP-Adapter")
-#         sys.path.insert(0, "../IP-Adapter")
-#         from insightface.app import FaceAnalysis
-#         from diffusers import StableDiffusionXLPipeline, DDIMScheduler, AutoencoderKL
-#         from ip_adapter.ip_adapter_faceid import IPAdapterFaceIDXL
-
-#         self.app = FaceAnalysis(name="buffalo_l", providers=['CUDAExecutionProvider', 'CPUExecutionProvider'])
-#         self.app.prepare(ctx_id=0, det_size=(640, 640))
-
-#         ip_ckpt = "ip-adapter-faceid_sdxl.bin"
-#         device = "cuda"
-
-#         pipe = StableDiffusionXLPipeline.from_single_file(
-#             "../Starlight.safetensors",
-#             torch_dtype=torch.float16,
-#             add_watermarker=False,
-#         )
-#         pipe.enable_xformers_memory_efficient_attention()
-
-#         # load ip-adapter
-#         self.ip_model = IPAdapterFaceIDXL(pipe, ip_ckpt, device)
-
-#         self.safety_checker = StableDiffusionSafetyChecker.from_pretrained("CompVis/stable-diffusion-safety-checker").to("cuda")
-#         self.feature_extractor_safety = CLIPImageProcessor()
-#         self.container_execution_time=time.time()-st
-
-#     def generate_image_urls(self, image_data):
-#         import io, base64, requests
-#         url = "https://qolaba-server-production-caff.up.railway.app/api/v1/uploadToCloudinary/image"
-#         image_urls=[]
-#         for im in range(0, len(image_data["images"])):
-#             filtered_image = io.BytesIO()
-#             if(image_data["Has_NSFW_Content"][im]):
-#                 pass
-#             else:
-#                 image_data["images"][im].save(filtered_image, "JPEG")
-#                 myobj = {
-#                         "image":"data:image/png;base64,"+(base64.b64encode(filtered_image.getvalue()).decode("utf8"))
-#                     }
-#                 rps = requests.post(url, json=myobj, headers={'Content-Type': 'application/json'})
-#                 im_url=rps.json()["data"]["secure_url"]
-#                 image_urls.append(im_url)
-#         return image_urls
-
-
-#     @method()
-#     def run_inference(self, file_url,prompt,height, width ,batch):
-#         import  torch
-#         import time
-#         import numpy as np
-#         from PIL import Image
-
-#         from insightface.utils import face_align
-
-#         st=time.time()
-
-#         face_img=np.array(file_url)
-#         # face_img=cv2.resize(face_img, (224,224))
-#         faces = self.app.get(face_img)
-
-#         faceid_embeds = torch.from_numpy(faces[0].normed_embedding).unsqueeze(0)
-#         face_image = face_align.norm_crop(face_img, landmark=faces[0].kps, image_size=224)
-#         negative_prompt="female, disfigured, kitsch, ugly, oversaturated, greain, low-res, Deformed, blurry, bad anatomy, poorly drawn face, mutation, mutated, extra limb, poorly drawn hands, missing limb, floating limbs, disconnected limbs, malformed hands, blur, out of focus, long neck, long body, disgusting, poorly drawn, childish, mutilated, mangled, old, surreal, calligraphy, sign, writing, watermark, text, body out of frame, extra legs, extra arms, extra feet, out of frame, poorly drawn feet, cross-eye"
-#         image=[]
-
-#         for i in range(0, batch):
-#             img = self.ip_model.generate(
-#                 prompt=prompt, negative_prompt=negative_prompt, face_image=face_image, faceid_embeds=faceid_embeds, num_samples=1, width=width, height=height, num_inference_steps=30,
-#                 s_scale=3,
-#             )
-#             image.append(img[0])
-#         torch.cuda.empty_cache()
-
-#         safety_checker_input = self.feature_extractor_safety(
-#                 image, return_tensors="pt"
-#             ).to("cuda")
-#         image, has_nsfw_concept = self.safety_checker(
-#                         images=[np.array(i) for i in image], clip_input=safety_checker_input.pixel_values
-#                     )
-#         image=[ Image.fromarray(np.uint8(i)) for i in image]
-
-#         image_data = {"images" :  image, "Has_NSFW_Content" : has_nsfw_concept}
-#         image_urls =self.generate_image_urls(image_data)
-
-#         self.runtime=time.time()-st
-#         return {"result":image_urls,
-#                 "Has_NSFW_Content":has_nsfw_concept,
-#                 "time": {"startup_time" : self.container_execution_time, "runtime":self.runtime}}
-
-
-from modal import Image, Stub, method
-
-
-def download_models():
-    import os, sys
-
-    os.chdir("../IP-Adapter")
-    sys.path.insert(0, "../IP-Adapter")
-    import cv2
-    from insightface.app import FaceAnalysis
-    import torch
-
-    app = FaceAnalysis(
-        name="buffalo_l", providers=["CUDAExecutionProvider", "CPUExecutionProvider"]
-    )
+def download_face_model():
+    app = FaceAnalysis(name="buffalo_l", providers=['CUDAExecutionProvider', 'CPUExecutionProvider'])
     app.prepare(ctx_id=0, det_size=(640, 640))
 
-    import torch
-    from diffusers import StableDiffusionXLPipeline, DDIMScheduler, AutoencoderKL
-    from PIL import Image
-
-    from ip_adapter.ip_adapter_faceid_separate import IPAdapterFaceIDXL
-    from huggingface_hub import login
-
-    login("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")
-    os.system(
-        "wget https://huggingface.co/h94/IP-Adapter-FaceID/resolve/main/ip-adapter-faceid_sdxl.bin"
-    )
-    ip_ckpt = "ip-adapter-faceid_sdxl.bin"
-    device = "cuda"
-
-    pipe = StableDiffusionXLPipeline.from_pretrained(
-        "stablediffusionapi/protovision-xl-high-fidel",
-        torch_dtype=torch.float16,
-        add_watermarker=False,
-    )
-    pipe.load_lora_weights(
-        "Qolaba/Lora_Models",
-        weight_name="Vector cartoon illustration-000008.safetensors",
-    )
-
-    ip_model = IPAdapterFaceIDXL(pipe, ip_ckpt, device)
-
-    from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
-    from transformers import CLIPFeatureExtractor
-
-    safety_checker = StableDiffusionSafetyChecker.from_pretrained(
-        "CompVis/stable-diffusion-safety-checker"
-    )
-    feature_extractor = CLIPFeatureExtractor()
-
-
-stub = Stub("face_consistent_image2image")
-image = (
-    Image.debian_slim(python_version="3.11").run_commands(
-        [
-            "apt-get update && apt-get install ffmpeg libsm6 libxext6 git wget -y",
-            "apt-get install git-lfs",
-            "git lfs install",
-            "git clone https://github.com/tencent-ailab/IP-Adapter.git",
-            "pip install --upgrade diffusers transformers accelerate safetensors torch xformers onnxruntime einops insightface omegaconf",
-            "pip install -U peft",
-        ]
-    )
-).run_function(download_models, gpu="a10g")
+image = get_base_image().run_commands(
+    "git clone https://github.com/tencent-ailab/IP-Adapter.git",
+    "wget https://huggingface.co/h94/IP-Adapter-FaceID/resolve/main/ip-adapter-faceid_sdxl.bin"
+).run_function(download_face_model)
 
 stub.image = image
 
 
-@stub.cls(gpu="a10g", container_idle_timeout=200, memory=10240)
+
+@stub.cls(gpu = stub_dictionary[stub_name].gpu, 
+          container_idle_timeout = stub_dictionary[stub_name].container_idle_timeout,
+          memory = stub_dictionary[stub_name].memory,
+          volumes = {VOLUME_PATH: vol},
+          secrets = [Secret.from_name(SECRET_NAME)])
 class stableDiffusion:
-    def __enter__(self):
-        import time
-
+    def __init__(self, init_parameters : dict) -> None:
         st = time.time()
-        import os, sys
-
         os.chdir("../IP-Adapter")
         sys.path.insert(0, "../IP-Adapter")
-        import cv2
-        from insightface.app import FaceAnalysis
-        import torch
 
-        self.app = FaceAnalysis(
-            name="buffalo_l",
-            providers=["CUDAExecutionProvider", "CPUExecutionProvider"],
+        from ip_adapter.ip_adapter_faceid import IPAdapterFaceIDXL
+
+        init_parameters : InitParameters = InitParameters(**init_parameters)
+        
+        pipe = StableDiffusionXLPipeline.from_single_file(
+            sdxl_model_list.get(init_parameters.model), torch_dtype=torch.float16, use_safetensors=True, variant="fp16"
         )
+        pipe.to("cuda")
+        if(init_parameters.lora_model):
+            pipe.load_lora_weights(init_parameters.lora_model)
+
+        self.refiner = get_refiner(pipe)
+
+        # pipe.enable_xformers_memory_efficient_attention()
+        # self.refiner.enable_xformers_memory_efficient_attention()
+
+        self.app = FaceAnalysis(name="buffalo_l", providers=['CUDAExecutionProvider', 'CPUExecutionProvider'])
         self.app.prepare(ctx_id=0, det_size=(640, 640))
 
-        import torch
-        from diffusers import StableDiffusionXLPipeline, DDIMScheduler, AutoencoderKL
-        from PIL import Image
-
-        from ip_adapter.ip_adapter_faceid_separate import IPAdapterFaceIDXL
-        from huggingface_hub import login
-
-        login("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")
-
-        ip_ckpt = "ip-adapter-faceid_sdxl.bin"
+        ip_ckpt = "../ip-adapter-faceid_sdxl.bin"
         device = "cuda"
 
-        pipe = StableDiffusionXLPipeline.from_pretrained(
-            "stablediffusionapi/protovision-xl-high-fidel",
-            torch_dtype=torch.float16,
-            add_watermarker=False,
-        )
-        # pipe.load_lora_weights("Qolaba/Lora_Models",  weight_name="Vector cartoon illustration-000008.safetensors")
-
         self.ip_model = IPAdapterFaceIDXL(pipe, ip_ckpt, device)
-
-        from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
-        from transformers import CLIPFeatureExtractor
-
-        self.safety_checker = StableDiffusionSafetyChecker.from_pretrained(
-            "CompVis/stable-diffusion-safety-checker"
-        )
-        self.feature_extractor = CLIPFeatureExtractor()
-
+        
+        self.safety_checker = SafetyChecker()
         self.container_execution_time = time.time() - st
 
-    def generate_image_urls(self, image_data):
-        import io, base64, requests
-
-        url = "https://qolaba-server-production-caff.up.railway.app/api/v1/uploadToCloudinary/image"
-        image_urls = []
-        for im in range(0, len(image_data["images"])):
-            filtered_image = io.BytesIO()
-            if image_data["Has_NSFW_Content"][im]:
-                pass
-            else:
-                image_data["images"][im].save(filtered_image, "JPEG")
-                myobj = {
-                    "image": "data:image/png;base64,"
-                    + (base64.b64encode(filtered_image.getvalue()).decode("utf8"))
-                }
-                rps = requests.post(
-                    url, json=myobj, headers={"Content-Type": "application/json"}
-                )
-                im_url = rps.json()["data"]["secure_url"]
-                image_urls.append(im_url)
-        return image_urls
-
     @method()
-    def run_inference(self, file_url, prompt, height, width, batch):
-        import torch
-        import time
-        import numpy as np
-        from PIL import Image
-        from insightface.utils import face_align
-
+    def run_inference(self, parameters : dict) -> dict:
         st = time.time()
-        print("hi")
 
-        face_img = np.array(file_url)
+        parameters : FaceConsistentParameters = FaceConsistentParameters(**parameters)
+
+        parameters.image = get_image_from_url(parameters.image, resize = True)
+
+        parameters.image = parameters.image.convert("RGB")
+
+        face_img=np.array(parameters.image)
+
         faces = self.app.get(face_img)
-        face_image = face_align.norm_crop(
-            face_img, landmark=faces[0].kps, image_size=224
-        )
 
         faceid_embeds = torch.from_numpy(faces[0].normed_embedding).unsqueeze(0)
+        face_image = face_align.norm_crop(face_img, landmark=faces[0].kps, image_size=224)
 
-        # negative_prompt = "monochrome, lowres, bad anatomy, worst quality, low quality, blurry"
-        negative_prompt = "disfigured, kitsch, ugly, oversaturated, greain, low-res, Deformed, blurry, bad anatomy, poorly drawn face, mutation, mutated, extra limb, poorly drawn hands, missing limb, floating limbs, disconnected limbs, malformed hands, blur, out of focus, long neck, long body, disgusting, poorly drawn, childish, mutilated, mangled, old, surreal, calligraphy, sign, writing, watermark, text, body out of frame, extra legs, extra arms, extra feet, out of frame, poorly drawn feet, cross-eye"
+        images = []
 
-        image = []
-
-        for i in range(0, batch):
-
-            img = self.ip_model.generate(
-                prompt=prompt,
-                negative_prompt=negative_prompt,
+        for i in range(0, parameters.batch):
+            image = self.ip_model.generate(
+                prompt = parameters.prompt,
+                negative_prompt = parameters.negative_prompt,
                 face_image=face_image,
                 faceid_embeds=faceid_embeds,
-                num_samples=1,
-                width=width,
-                height=height,
-                num_inference_steps=30,
-                s_scale=3,
+                width=parameters.width, 
+                height=parameters.height,
+                num_inference_steps = parameters.num_inference_steps,
+                denoising_end = 0.8,
+                guidance_scale = parameters.guidance_scale,
+                output_type="latent",
+                s_scale = parameters.strength,
+                num_samples = 1
             )
-            image.append(img[0])
-        torch.cuda.empty_cache()
+            torch.cuda.empty_cache()
 
-        # safety_checker_input = self.feature_extractor(
-        #         image, return_tensors="pt"
-        #     ).to("cuda")
-        # image, has_nsfw_concept = self.safety_checker(
-        #                 images=[np.array(i) for i in image], clip_input=safety_checker_input.pixel_values
-        #             )
-        # image=[ Image.fromarray(np.uint8(i)) for i in image]
-        has_nsfw_concept = [False] * batch
-        image_data = {"images": image, "Has_NSFW_Content": has_nsfw_concept}
-        image_urls = self.generate_image_urls(image_data)
+            image = self.refiner(
+                prompt = parameters.prompt,
+                num_inference_steps = parameters.num_inference_steps,
+                guidance_scale = parameters.guidance_scale,
+                denoising_start=0.8,
+                image=image[0],
+            ).images[0]
+
+            torch.cuda.empty_cache()
+            images.append(image)
+
+        image_urls, has_nsfw_content = generate_image_urls(images, self.safety_checker)
 
         self.runtime = time.time() - st
-        return {
-            "result": image_urls,
-            "Has_NSFW_Content": has_nsfw_concept,
-            "time": {
-                "startup_time": self.container_execution_time,
-                "runtime": self.runtime,
-            },
-        }
+
+        return prepare_response(image_urls, has_nsfw_content, self.container_execution_time, self.runtime)
+

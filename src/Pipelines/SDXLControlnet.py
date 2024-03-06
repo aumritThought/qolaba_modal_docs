@@ -69,7 +69,13 @@ def download_base_sdxl():
         )
     url = "https://res.cloudinary.com/qolaba/image/upload/v1695690455/kxug1tmiolt1dtsvv5br.jpg"
     image = load_image(url)
-    controlnet_class = ContrloNetImageGeneration(image, [CANNY, DEPTH, SKETCH, OPENPOSE])
+    controlnet_class = ContrloNetImageGeneration(image, CANNY)
+    controlnet_class.prepare_images()
+    controlnet_class = ContrloNetImageGeneration(image, DEPTH)
+    controlnet_class.prepare_images()
+    controlnet_class = ContrloNetImageGeneration(image, SKETCH)
+    controlnet_class.prepare_images()
+    controlnet_class = ContrloNetImageGeneration(image, OPENPOSE)
     controlnet_class.prepare_images()
 
 
@@ -89,6 +95,8 @@ class stableDiffusion:
     def __init__(self, init_parameters : dict) -> None:
         self.init_parameters : InitParameters = InitParameters(**init_parameters)
         st = time.time()
+        if(self.init_parameters.controlnet_model == None or self.init_parameters.controlnet_model == ""):
+            raise Exception("Please provide controlnet")
 
         controlnet_model = T2IAdapter.from_pretrained(
                     controlnet_model_list[self.init_parameters.controlnet_model],
@@ -104,8 +112,8 @@ class stableDiffusion:
 
         self.refiner = get_refiner(self.pipe)
 
-        self.pipe.enable_xformers_memory_efficient_attention()
-        self.refiner.enable_xformers_memory_efficient_attention()
+        # self.pipe.enable_xformers_memory_efficient_attention()
+        # self.refiner.enable_xformers_memory_efficient_attention()
         self.safety_checker = SafetyChecker()
         self.container_execution_time = time.time() - st
 

@@ -104,3 +104,11 @@ MIN_BATCH = 1
 #Image_To_Image Configuration
 MAX_STRENGTH = 1
 MIN_STRENGTH = 0
+
+#Background removal Configuration
+MAX_COLOR = 255
+MIN_COLOR = 0
+
+#stable video configuration
+MAX_FPS = 30
+MIN_FPS = 5
