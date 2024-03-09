@@ -1,0 +1,53 @@
+from data_models.Schemas import Text2ImageParameters
+import threading, os
+from src.utils.Globals import timing_decorator, upload_to_cloudinary, make_request
+from openai import OpenAI
+from src.utils.Constants import DALLE_SUPPORTED_HW
+from typing import List
+from src.services.ApiServices.IService import IService
+
+
+class DalleText2Image(IService):
+    def __init__(self) -> None:
+        super().__init__()
+        self.client = OpenAI(self.openai_api_key)
+
+    def make_dalle_api_request( self, prompt: str, Height_width: str, quality: str) -> str:
+        response = self.client.images.generate(
+            model="dall-e-3", prompt=prompt, size=Height_width, quality=quality, n=1
+        )
+
+        response = make_request(response.data[0].url, "GET")
+
+        return upload_to_cloudinary(bytes(response.content))
+
+    @timing_decorator
+    def remote(self, parameters: Text2ImageParameters) -> dict:
+
+        Height_width = f"{parameters.height}x{parameters.width}"
+
+        if not (Height_width in DALLE_SUPPORTED_HW):
+            raise Exception(
+                f"Height and width should be {str(DALLE_SUPPORTED_HW)}",
+                "Dalle API error",
+            )
+        threads: List[threading.Thread] = []
+        results = []
+
+        for _ in range(parameters.batch):
+            thread = threading.Thread(
+                target = lambda: results.append(
+                    self.make_dalle_api_request(
+                        parameters.prompt, Height_width, parameters.quality
+                    )
+                )
+            )
+            threads.append(thread)
+            thread.start()
+
+        for thread in threads:
+            thread.join()
+
+        Has_NSFW_Content = [False] * parameters.batch
+
+        return {"result": results, "Has_NSFW_Content": Has_NSFW_Content}

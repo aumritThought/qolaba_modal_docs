@@ -25,6 +25,7 @@ class StubNames(BaseModel):
     background_removal : str = "BackGround_Removal"
     stable_video_diffusion : str = "Stable_Video_Diffusion"
     illusion_diffusion : str = "Illusion_Diffusion"
+    qr_code_generation : str = "QRCode_Generation"
 
 class StubConfiguration(BaseModel):
     memory : int

@@ -1,0 +1,38 @@
+FROM python:3.11.5
+
+RUN apt-get update && apt-get install ffmpeg libsm6 libxext6 supervisor -y
+
+RUN apt install lsb-release curl gpg -y
+
+RUN curl -fsSL https://packages.redis.io/gpg | gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg
+
+RUN echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/redis.list
+
+RUN apt-get update
+
+RUN apt-get install redis -y
+
+RUN pip install fastapi uvicorn Pillow modal requests python-dotenv gTTS elevenlabs pydub ffmpeg-python celery[redis] redis numpy psutil python-multipart pillow-heif cached_property einops 
+
+RUN pip install cachetools
+
+RUN mkdir app
+
+ADD ./app /root/app
+
+ARG TOKEN_ID
+ENV API_KEY=$TOKEN_ID
+ARG TOKEN_SECRET
+ENV API_KEY=$TOKEN_SECRET
+
+
+ARG API_KEY
+ENV API_KEY=$API_KEY
+ARG CLOUDINARY_URL
+ENV CLOUDINARY_URL=$CLOUDINARY_URL
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+
+RUN modal token set --token-id $TOKEN_ID --token-secret $TOKEN_SECRET
+
+CMD ["supervisord", "-n", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

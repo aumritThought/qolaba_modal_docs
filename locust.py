@@ -187,24 +187,25 @@ from modal import Cls
 import time
 
 init_parameters = {
-    "model" : "Realistic",
+    "model" : "SDXL Turbo",
     "controlnet_model" : "canny"
 }
+extra_negative_prompt = "disfigured, kitsch, ugly, oversaturated, greain, low-res, Deformed, blurry, bad anatomy, poorly drawn face, mutation, mutated, extra limb, poorly drawn hands, missing limb, floating limbs, disconnected limbs, malformed hands, blur, out of focus, long neck, long body, disgusting, poorly drawn, childish, mutilated, mangled, old, surreal, calligraphy, sign, writing, watermark, text, body out of frame, extra legs, extra arms, extra feet, out of frame, poorly drawn feet, cross-eye"
 
 parameters = {
     "height": 1024,
     "width": 1024,
-    "num_inference_steps": 30, 
-    "guidance_scale":  13,
+    "num_inference_steps": 20, 
+    "guidance_scale":  8,
     "batch":  1,
-    "prompt": "cute dog",
-    "negative_prompt": "blurry",
+    "prompt": "High resolution, close-up photograph of live bread making on oven, steams coming out",
+    "negative_prompt": extra_negative_prompt,
     "lora_scale" : 0.5,
-    "image" : "https://res.cloudinary.com/qolaba/image/upload/v1709715234/toxu6q3dc1nlsupl6lax.png",
-    "strength" : 1,
-    "prompt" : "a man with black background",
+    "image" : "https://res.cloudinary.com/qolaba/image/upload/v1705612740/jbsewrunbccplqd19y4p.png",
+    "controlnet_scale" : 0.8,
     "bg_img" : "https://res.cloudinary.com/qolaba/image/upload/v1705612740/jbsewrunbccplqd19y4p.png",
-    "controlnet_scale" : 2.5
+    "controlnet_scale" : 1.5,
+    "strength" : 0.5,
 }
 # image : str | Any
 #     bg_img : Optional[str] = None
@@ -216,10 +217,10 @@ parameters = {
 #     strength : float = Query(ge = MIN_STRENGTH, le = MAX_STRENGTH)
 st = time.time()
 Model = Cls.lookup("Illusion_Diffusion", "stableDiffusion", environment_name = "dev")  # returns a class-like object
-
+print(time.time() - st)
 m = Model(init_parameters)
 print("model obtained")
-print(time.time() - st)
+
 
 print(time.time()-st)
 print(m.run_inference.remote(parameters))
