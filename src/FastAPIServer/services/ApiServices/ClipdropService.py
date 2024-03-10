@@ -1,8 +1,9 @@
 import io
-from data_models.Schemas import Image2ImageParameters
-from src.utils.Globals import timing_decorator, upload_to_cloudinary, make_request, generate_image_from_url, invert_bw_image_color
-from src.services.ApiServices.IService import IService
-
+from src.data_models.ModalAppSchemas import ClipDropCleanUpParameters, ClipDropRemoveTextParameters, ClipDropReplaceBackgroundParameters, ClipDropUncropParameters
+from src.utils.Globals import timing_decorator, upload_cloudinary_image, make_request, get_image_from_url, invert_bw_image_color
+from src.FastAPIServer.services.ApiServices.IService import IService
+from requests import Response
+from PIL.Image import Image as Imagetype
 
 class ClipdropUncropImage2image(IService):
     def __init__(self) -> None:
@@ -11,8 +12,9 @@ class ClipdropUncropImage2image(IService):
         self.api_key = self.clipdrop_api_key
 
     @timing_decorator
-    def remote(self, parameters: Image2ImageParameters) -> dict:
-        img = generate_image_from_url(parameters.file_url)
+    def remote(self, parameters: dict) -> dict:
+        parameters : ClipDropUncropParameters = ClipDropUncropParameters(**parameters)
+        img : Imagetype = get_image_from_url(parameters.image)
 
         img = img.resize((parameters.width, parameters.height))
         filtered_image = io.BytesIO()
@@ -30,13 +32,11 @@ class ClipdropUncropImage2image(IService):
 
         headers = {"x-api-key": self.api_key}
 
-        response = make_request(
+        response : Response = make_request(
             self.url, "POST", json_data=data, headers=headers, files=files
         )
 
-        image_bytes = io.BytesIO(response.content)
-
-        image_urls = upload_to_cloudinary(image_bytes)
+        image_urls = upload_cloudinary_image(response.content)
 
         return {"result": [image_urls], "Has_NSFW_Content": [False]}
 
@@ -48,15 +48,16 @@ class ClipdropCleanupImage2image(IService):
         self.api_key = self.clipdrop_api_key
 
     @timing_decorator
-    def remote(self, parameters: Image2ImageParameters) -> dict:
+    def remote(self, parameters: dict) -> dict:
+        parameters : ClipDropCleanUpParameters = ClipDropCleanUpParameters(**parameters)
 
-        img = generate_image_from_url(parameters.file_url, resize=True)
+        img : Imagetype = get_image_from_url(parameters.image, resize=True)
 
         filtered_image = io.BytesIO()
 
         img.save(filtered_image, "JPEG")
 
-        mask = generate_image_from_url(parameters.mask_url, resize=True)
+        mask : Imagetype = get_image_from_url(parameters.mask_image, resize=True)
 
         mask = invert_bw_image_color(mask)
 
@@ -73,11 +74,9 @@ class ClipdropCleanupImage2image(IService):
 
         headers = {"x-api-key": self.api_key}
 
-        response = make_request(self.url, "POST", headers=headers, files=files)
+        response : Response = make_request(self.url, "POST", headers=headers, files=files)
 
-        image_bytes = io.BytesIO(response.content)
-
-        image_urls = upload_to_cloudinary(image_bytes)
+        image_urls = upload_cloudinary_image(response.content)
 
         return {"result": [image_urls], "Has_NSFW_Content": [False]}
 
@@ -89,8 +88,10 @@ class ClipdropReplaceBackgroundImage2Image(IService):
         self.api_key = self.clipdrop_api_key
 
     @timing_decorator
-    def remote(self, parameters: Image2ImageParameters) -> dict:
-        img = generate_image_from_url( parameters.file_url, resize=True)
+    def remote(self, parameters: dict) -> dict:
+        parameters : ClipDropReplaceBackgroundParameters = ClipDropReplaceBackgroundParameters(**parameters)
+
+        img = get_image_from_url( parameters.image, resize=True)
 
         filtered_image = io.BytesIO()
         img.save(filtered_image, "JPEG")
@@ -102,13 +103,11 @@ class ClipdropReplaceBackgroundImage2Image(IService):
 
         headers = {"x-api-key": self.api_key}
 
-        response = make_request(
+        response : Response = make_request(
             self.url, "POST", files=files, json_data=json_data, headers=headers
         )
 
-        image_bytes = io.BytesIO(response.content)
-
-        image_urls = upload_to_cloudinary(image_bytes)
+        image_urls = upload_cloudinary_image(response.content)
 
         return {"result": [image_urls], "Has_NSFW_Content": [False]}
 
@@ -120,10 +119,10 @@ class ClipdropRemoveTextImage2Image(IService):
         self.api_key = self.clipdrop_api_key
 
     @timing_decorator
-    def remote(self, parameters: Image2ImageParameters) -> dict:
-
-        img = generate_image_from_url(
-            parameters.file_url, resize=True
+    def remote(self, parameters: dict) -> dict:
+        parameters : ClipDropRemoveTextParameters = ClipDropRemoveTextParameters(**parameters)
+        img = get_image_from_url(
+            parameters.image, resize=True
         )
 
         filtered_image = io.BytesIO()
@@ -132,11 +131,10 @@ class ClipdropRemoveTextImage2Image(IService):
         files = {"image_file": ("image.jpg", filtered_image.getvalue(), "image/jpeg")}
         headers = {"x-api-key": self.api_key}
 
-        response = make_request(
+        response : Response = make_request(
             self.url, "POST", files=files, headers=headers
         )
-        image_bytes = io.BytesIO(response.content)
 
-        image_urls = upload_to_cloudinary(image_bytes)
+        image_urls = upload_cloudinary_image(response.content)
 
         return {"result": [image_urls], "Has_NSFW_Content": [False]}

@@ -1,11 +1,11 @@
 import os, tempfile
 from elevenlabs import VoiceClone, generate, Voice, VoiceSettings, generate, set_api_key, VoiceDesign
 from pydub import AudioSegment
-from data_models.Schemas import AudioParameters
+from src.data_models.ModalAppSchemas import ElevenLabsParameters
 from pydub import AudioSegment
 from io import BytesIO
 from src.utils.Globals import timing_decorator, upload_to_cloudinary, make_request
-from src.services.ApiServices.IService import IService
+from src.FastAPIServer.services.ApiServices.IService import IService
 
 
 class ElvenLabsAudio(IService):
@@ -29,15 +29,15 @@ class ElvenLabsAudio(IService):
         return temp_file_audio.name
 
 
-    def generate_audio(self, parameters: AudioParameters) -> dict:
+    def generate_audio(self, parameters: ElevenLabsParameters) -> dict:
 
         voice = Voice(
-            voice_id = parameters.audio_parameters.voice_id,
+            voice_id = parameters.voice_id,
             settings=VoiceSettings(
-                stability = parameters.audio_parameters.stability,
-                similarity_boost = parameters.audio_parameters.similarity_boost,
-                style = parameters.audio_parameters.style,
-                use_speaker_boost = parameters.audio_parameters.use_speaker_boost,
+                stability = parameters.stability,
+                similarity_boost = parameters.similarity_boost,
+                style = parameters.style,
+                use_speaker_boost = parameters.use_speaker_boost,
             ),
         )
 
@@ -54,11 +54,11 @@ class ElvenLabsAudio(IService):
             "Has_NSFW_Content": [False],
         }
 
-    def voice_clone(self, parameters: AudioParameters) -> dict:
+    def voice_clone(self, parameters: ElevenLabsParameters) -> dict:
 
         list_of_saved_audios = []
 
-        for url in parameters.clone_parameters.list_of_files:
+        for url in parameters.list_of_files:
             file_name = self.get_audio_file(url)
             
             audio_length = self.get_audio_length(file_name)
@@ -75,8 +75,8 @@ class ElvenLabsAudio(IService):
             raise Exception("Provide at least one proper audio URL", "Internal Error")
 
         clone_settings = VoiceClone(
-            name = parameters.clone_parameters.name,
-            description = parameters.clone_parameters.description,
+            name = parameters.name,
+            description = parameters.description,
             files = list_of_saved_audios
         )
 
@@ -93,16 +93,16 @@ class ElvenLabsAudio(IService):
             "Has_NSFW_Content": [False],
         }
 
-    def voice_design(self, parameters: AudioParameters) -> dict:
+    def voice_design(self, parameters: ElevenLabsParameters) -> dict:
 
         design = VoiceDesign(
-            name=parameters.design_parameters.name,
+            name=parameters.name,
             text="x" * 100,  # some random string is given as it is required
-            voice_description=parameters.design_parameters.description,
-            gender=parameters.design_parameters.gender,
-            age=parameters.design_parameters.age,
-            accent=parameters.design_parameters.accent,
-            accent_strength=parameters.design_parameters.accent_strength,
+            voice_description=parameters.description,
+            gender=parameters.gender,
+            age=parameters.age,
+            accent=parameters.accent,
+            accent_strength=parameters.accent_strength,
         )
         voice = Voice.from_design(design)
 
@@ -112,7 +112,8 @@ class ElvenLabsAudio(IService):
         }
 
     @timing_decorator
-    def remote(self, parameters: AudioParameters) -> dict:
+    def remote(self, parameters: dict) -> dict:
+        parameters : ElevenLabsParameters = ElevenLabsParameters(**parameters)
         if parameters.clone == True:
             return self.voice_clone(parameters)
         elif parameters.voice_design == True:

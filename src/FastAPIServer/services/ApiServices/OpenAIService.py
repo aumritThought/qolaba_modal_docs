@@ -1,10 +1,10 @@
-from data_models.Schemas import Text2ImageParameters
-import threading, os
+from src.data_models.ModalAppSchemas import DalleParameters
+import threading
 from src.utils.Globals import timing_decorator, upload_to_cloudinary, make_request
 from openai import OpenAI
 from src.utils.Constants import DALLE_SUPPORTED_HW
 from typing import List
-from src.services.ApiServices.IService import IService
+from src.FastAPIServer.services.ApiServices.IService import IService
 
 
 class DalleText2Image(IService):
@@ -22,7 +22,8 @@ class DalleText2Image(IService):
         return upload_to_cloudinary(bytes(response.content))
 
     @timing_decorator
-    def remote(self, parameters: Text2ImageParameters) -> dict:
+    def remote(self, parameters: dict) -> dict:
+        parameters : DalleParameters = DalleParameters(**parameters)
 
         Height_width = f"{parameters.height}x{parameters.width}"
 

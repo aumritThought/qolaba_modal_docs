@@ -2,13 +2,8 @@ from celery import Celery
 import modal, time, os
 from celery.signals import worker_init, worker_process_init
 from src.utils.Constants import REDIS_URL, CELERY_RESULT_EXPIRATION_TIME, CELERY_MAX_RETRY, CELERY_SOFT_LIMIT
-from src.utils.Globals import get_modal_apps, BuildTaskResponse, ParametersModification
-from data_models.Schemas import (
-    Text2ImageParameters,
-    Image2ImageParameters,
-    Text2TextParameters,
-    VideoParameters,
-)
+# from src.utils.Globals import
+from src.data_models.ModalAppSchemas import APIInput, APITaskResponse 
 from typing import Union
 from src.utils.Constants import api_apps
 from dotenv import load_dotenv
@@ -52,12 +47,9 @@ celery.conf.CELERY_TASK_TIME_LIMIT = CELERY_RESULT_EXPIRATION_TIME
 
 
 @celery.task( name="AI_task", time_limit = CELERY_RESULT_EXPIRATION_TIME, max_retries = CELERY_MAX_RETRY, soft_time_limit = CELERY_SOFT_LIMIT)
-def create_task( parameters: Union[Text2ImageParameters, Image2ImageParameters, Text2TextParameters, VideoParameters]) -> dict:
+def create_task( parameters: APIInput) -> dict:
 
     st = time.time()
-
-    param_builder = ParametersModification(parameters)
-    app_parameters, parameters = param_builder.get_app_specific_input_parameters()
 
     if parameters.app_id in api_apps.keys():
         dict_data = app_functions[parameters.app_id].remote(parameters)

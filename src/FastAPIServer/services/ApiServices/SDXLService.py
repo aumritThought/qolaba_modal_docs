@@ -1,6 +1,5 @@
 import io, base64
-from src.utils.Constants import STABILITY_API, SDXL_ENGINE_ID
-from data_models.Schemas import Text2ImageParameters, Image2ImageParameters
+from src.data_models.ModalAppSchemas import SDXLAPITextToImageParameters, SDXLAPIImageToImageParameters
 from src.utils.Globals import timing_decorator, make_request, upload_to_cloudinary, generate_image_from_url
 from services.ApiServices.IService import IService
 
@@ -13,7 +12,8 @@ class SDXLText2Image(IService):
         self.url = f"{self.api_host}/v1/generation/{self.engine_id}/text-to-image"
 
     @timing_decorator
-    def remote(self, parameters: Text2ImageParameters) -> dict:
+    def remote(self, parameters: dict) -> dict:
+        parameters : SDXLAPITextToImageParameters = SDXLAPITextToImageParameters(**parameters)
         headers = {
             "Content-Type": "application/json",
             "Accept": "application/json",
@@ -57,10 +57,10 @@ class SDXLImage2Image(IService):
         self.url = f"{self.api_host}/v1/generation/{self.engine_id}/image-to-image"
 
     @timing_decorator
-    def remote(self, parameters: Image2ImageParameters) -> dict:
-
+    def remote(self, parameters: dict) -> dict:
+        parameters : SDXLAPIImageToImageParameters = SDXLAPIImageToImageParameters(**parameters)
         image = generate_image_from_url(
-            parameters.file_url, resize=False
+            parameters.image, resize=False
         )
 
         image = image.resize((parameters.width, parameters.height)).convert("RGB")

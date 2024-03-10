@@ -112,3 +112,55 @@ MIN_COLOR = 0
 #stable video configuration
 MAX_FPS = 30
 MIN_FPS = 5
+
+#Clipdrop side increase parameters
+MIN_INCREASE_SIDE = 0
+MAX_INCREASE_SIDE = 2048
+
+#Did api configuration
+DID_TALK_API = "https://api.d-id.com/talks"
+DID_AVATAR_STYLES = ["circle", "normal", "closeUp"]
+did_avatar_styles = constr(pattern = '|'.join(DID_AVATAR_STYLES))
+DID_EXPRESSION_LIST = ["surprise", "happy", "serious", "neutral" ]
+did_expression_list = constr(pattern = '|'.join(DID_EXPRESSION_LIST))
+
+#SDXL API configuration
+STABILITY_API = "https://api.stability.ai"
+SDXL_ENGINE_ID = "stable-diffusion-xl-1024-v1-0"
+SDXL_DEFAULT_PRESET = "enhance"
+SDXL_STYLE_PRESET_LIST = ["3d-model", "analog-film", "anime", "cinematic", "comic-book", "digital-art", "enhance", "fantasy-art", "isometric", "line-art", "low-poly", "modeling-compound", "neon-punk", "origami", "photographic", "pixel-art", "tile-texture"]
+sdxl_preset_list = constr(pattern = '|'.join(SDXL_STYLE_PRESET_LIST))
+
+#clipdrop api configuration
+CLIPDROP_UNCROP_URL = "https://clipdrop-api.co/uncrop/v1"
+CLIPDROP_CLEANUP_URL = "https://clipdrop-api.co/cleanup/v1"
+CLIPDROP_REPLACE_BACKGROUND_URL = "https://clipdrop-api.co/replace-background/v1"
+CLIPDROP_REMOVE_TEXT_URL = "https://clipdrop-api.co/remove-text/v1"
+
+
+#Elevenlabs configuration
+MAX_SUPPORTED_AUDIO_FILE_ELEVENLABS = 3
+MIN_SUPPORTED_AUDIO_FILE_ELEVENLABS = 1
+ELEVENLABS_GENDER_LIST = ["female","male"]
+ELEVENLABS_AGE_LIST = ['young', 'middle_aged', 'old']
+ELEVENLABS_ACCENT_LIST = ['british', 'american', 'african', 'australian', 'indian']
+elevenlabs_age_list = constr(pattern = '|'.join(ELEVENLABS_AGE_LIST))
+elevenlabs_accent_list = constr(pattern = '|'.join(ELEVENLABS_ACCENT_LIST))
+elevenlabs_gender_list = constr(pattern = '|'.join(ELEVENLABS_GENDER_LIST))
+
+#Dalle configuration
+DALLE_SUPPORTED_HW = ["1024x1024", "1024x1792", "1792x1024"]
+DALLE_SUPPORTED_QUALITY = ["hd", "standard"]
+dalle_supported_quality = constr(pattern = '|'.join(DALLE_SUPPORTED_QUALITY))
+
+
+# Celery configuration
+CELERY_RESULT_EXPIRATION_TIME = 14400
+REDIS_URL = "redis://localhost:6379/0"
+CELERY_MAX_RETRY = 1
+CELERY_SOFT_LIMIT = 7200
+
+#Modal app cache configuration
+MAX_TIME_MODAL_APP_CACHE =  3600
+
+#

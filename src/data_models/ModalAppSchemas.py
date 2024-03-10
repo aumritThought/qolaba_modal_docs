@@ -1,6 +1,6 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from fastapi import Query
-from typing import  Optional, Any
+from typing import  Optional, Any, List
 from src.utils.Constants import (
     MIN_HEIGHT, MAX_HEIGHT, 
     MAX_INFERENCE_STEPS, 
@@ -11,8 +11,13 @@ from src.utils.Constants import (
     MAX_STRENGTH,
     MIN_STRENGTH,
     MAX_COLOR, MIN_COLOR,
-    MAX_FPS, MIN_FPS)
+    MAX_FPS, MIN_FPS,
+    MIN_INCREASE_SIDE, MAX_INCREASE_SIDE,
+    MIN_SUPPORTED_AUDIO_FILE_ELEVENLABS, MAX_SUPPORTED_AUDIO_FILE_ELEVENLABS,
+    elevenlabs_accent_list, elevenlabs_age_list, elevenlabs_gender_list, dalle_supported_quality, sdxl_preset_list)
 from src.utils.Constants import sdxl_model_string, controlnet_models
+from elevenlabs import voices, Voice, set_api_key
+import os
 
 
 class StubNames(BaseModel):
@@ -112,6 +117,90 @@ class IllusionDuiffusion(SDXLImage2ImageParameters):
     controlnet_scale : float = Query(ge=0, le=4)
     num_inference_steps: int = Query(ge = MIN_INFERENCE_STEPS, le = MAX_INFERENCE_STEPS) 
 
+class ClipDropUncropParameters(BaseModel):
+    image : str | Any
+    height: int = Query(ge = MIN_HEIGHT, le = MAX_HEIGHT)
+    width: int = Query(ge=MIN_HEIGHT, le = MAX_HEIGHT)
+    right: int = Query(ge = MIN_INCREASE_SIDE, le = MAX_INCREASE_SIDE)
+    left: int = Query(ge = MIN_INCREASE_SIDE, le = MAX_INCREASE_SIDE)
+    top: int = Query(ge = MIN_INCREASE_SIDE, le = MAX_INCREASE_SIDE)
+    bottom: int = Query(ge = MIN_INCREASE_SIDE, le = MAX_INCREASE_SIDE)
 
+class ClipDropCleanUpParameters(BaseModel):
+    image : str | Any
+    mask_image : str | Any
+
+class ClipDropReplaceBackgroundParameters(BaseModel):
+    image : str | Any
+    prompt : str
+
+class ClipDropRemoveTextParameters(BaseModel):
+    image : str | Any
+
+class DIDVideoParameters(BaseModel):
+    image: str | Any
+    expression : Optional[did_expression_list] = "neutral" # type: ignore
+    expression_intesity : float = Query(default=1, ge=0, le=1)
+    voice_id: Optional[str] = "d7bbcdd6964c47bdaae26decade4a933"
+    prompt: Optional[str] = "Hey, welcome to Qolaba"
+
+class ElevenLabsParameters(BaseModel):
+    prompt: str = Query(default="Hi, we are in Qolaba", max_length=2500, min_length=1) 
+    clone: Optional[bool]= False
+    name: Optional[str] = "Cloned Voice"
+    description : Optional[str] = "description"
+    list_of_files: List[str] = Query(default=["None"], max_length = MAX_SUPPORTED_AUDIO_FILE_ELEVENLABS, min_length = MIN_SUPPORTED_AUDIO_FILE_ELEVENLABS)
+    voice_design: Optional[bool] = False 
+    gender: Optional[elevenlabs_gender_list]="female" # type: ignore
+    age: Optional[elevenlabs_age_list]="young" # type: ignore
+    accent: Optional[elevenlabs_accent_list]="american" # type: ignore
+    accent_strength: float = Query(default = 1, ge = 0.3, le = 2)
+    generate_audio : Optional[bool]= True
+    voice_id : Optional[str] = "21m00Tcm4TlvDq8ikWAM"
+    stability: float = Query(default=0.5,ge=0, le=1)
+    similarity_boost: float = Query(default=0.75,ge=0, le=1)
+    style: float = Query(default=0.0,ge=0, le=1)
+    use_speaker_boost : Optional[bool] = True 
 
     
+    @model_validator(mode='after')
+    def validate_params(self):
+        total_sum=sum([self.clone, self.voice_design, self.generate_audio])
+        if(not(total_sum==1)):
+            raise ValueError("Only one of 'clone', 'voicedesign','list_of_voices', or 'generate_audio' must be True")
+        return self
+    
+    @field_validator("voice_id")
+    def validate_voice_id(cls, v):
+        set_api_key(os.environ["ELEVENLABS_API_KEY"])
+        voices_data : List[Voice] = voices()
+        voice_dict=[]
+        for i in voices_data:
+            voice_dict.append(i.voice_id)
+        if v not in voice_dict:
+            raise ValueError("Invalid input. The parameter must be one of: " + ", ".join(voice_dict))
+        return v
+    
+class DalleParameters(SDXLText2ImageParameters):
+    quality : Optional[dalle_supported_quality] = "hd"  # type: ignore
+
+class SDXLAPITextToImageParameters(SDXLText2ImageParameters):
+    style_preset = Field(pattern=sdxl_preset_list)
+
+class SDXLAPIImageToImageParameters(SDXLImage2ImageParameters):
+    style_preset = Field(pattern=sdxl_preset_list)
+    height: int = Query(ge = MIN_HEIGHT, le = MAX_HEIGHT)
+    width: int = Query(ge=MIN_HEIGHT, le = MAX_HEIGHT)
+    num_inference_steps: int = Query(ge = MIN_INFERENCE_STEPS, le = MAX_INFERENCE_STEPS) 
+
+class APITaskResponse(BaseModel):
+    result : list[str | dict] 
+    Has_NSFW_Content : list[bool]
+    time : TimeData
+
+class APIInput(BaseModel):
+    parameters : dict
+    init_parameters : dict
+    ref_id: Optional[str] = ""
+    celery: Optional[bool] = False 
+

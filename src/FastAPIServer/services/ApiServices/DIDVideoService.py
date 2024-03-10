@@ -1,8 +1,7 @@
 import io, time, os
-from data_models.Schemas import VideoParameters
-from src.utils.Globals import timing_decorator,  upload_to_cloudinary, make_request
-from src.utils.Constants import DID_TALK_API
-from src.services.ApiServices.IService import IService
+from src.data_models.ModalAppSchemas import DIDVideoParameters
+from src.utils.Globals import timing_decorator,  upload_cloudinary_image, make_request
+from src.FastAPIServer.services.ApiServices.IService import IService
 
 class DIDVideo(IService):
     def __init__(self) -> None:
@@ -36,8 +35,8 @@ class DIDVideo(IService):
         return response.json()["result_url"]
 
     @timing_decorator
-    def remote(self, parameters: VideoParameters) -> dict:
-
+    def remote(self, parameters: dict) -> dict:
+        parameters : DIDVideoParameters = DIDVideoParameters(**parameters)
         payload = {
             "script": {
                 "type": "text",
@@ -60,7 +59,7 @@ class DIDVideo(IService):
                     ]
                 },
             },
-            "source_url": parameters.file_url,
+            "source_url": parameters.image,
         }
 
         headers = {
@@ -83,6 +82,6 @@ class DIDVideo(IService):
 
         video_bytes = io.BytesIO(response.content)
 
-        cld_vid_url = upload_to_cloudinary(video_bytes)
+        cld_vid_url = upload_cloudinary_image(video_bytes)
 
         return {"result": [cld_vid_url], "Has_NSFW_Content": [False]}

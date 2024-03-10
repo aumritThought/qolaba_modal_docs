@@ -1,5 +1,5 @@
 from dependency_injector import containers, providers
-from src.services.ApiServices.IService import IService
+from src.FastAPIServer.services.ApiServices.IService import IService
 from src.utils.Globals import get_clean_name
 from fastapi import HTTPException
 

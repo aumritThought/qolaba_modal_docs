@@ -1,16 +1,18 @@
 from src.data_models.ModalAppSchemas import TaskResponse, TimeData
-from modal import Image
+from modal import Image as MIM
 import cloudinary
 import cloudinary.uploader
-from io import BytesIO
-import os
-from PIL import Image as PIM
-import requests
+from PIL import Image, ImageOps
+from PIL.Image import Image as Imagetype
 from diffusers import DiffusionPipeline, StableDiffusionXLPipeline
 from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
 from transformers import CLIPImageProcessor
-import torch
+import torch, time, os, requests, re, io
 from src.utils.Constants import BASE_IMAGE_COMMANDS, PYTHON_VERSION, REQUIREMENT_FILE_PATH, MAX_HEIGHT, MIN_HEIGHT, SDXL_REFINER_MODEL_PATH
+from fastapi import HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials
+from requests import Response
+
 
 class SafetyChecker:
     def __init__(self) -> None:
@@ -19,7 +21,7 @@ class SafetyChecker:
         ).to("cuda")
         self.feature_extractor = CLIPImageProcessor()
 
-    def check_nsfw_content(self, image : PIM) -> list[bool]:
+    def check_nsfw_content(self, image : Imagetype) -> list[bool]:
         
         safety_checker_input = self.feature_extractor(image, return_tensors="pt").to("cuda")
 
@@ -52,7 +54,7 @@ def prepare_response(result: list[str] | dict, Has_NSFW_content : list[bool], ti
     return task_response.model_dump()
 
 
-def upload_cloudinary_image(image : PIM, format : str = "JPEG") -> str:
+def upload_cloudinary_image(image : Imagetype | str, format : str = "JPEG") -> str:
     cloudinary.config(
         cloud_name=os.environ["CLOUD_NAME"],
         api_key=os.environ["CLOUDINARY_API_KEY"],
@@ -60,9 +62,12 @@ def upload_cloudinary_image(image : PIM, format : str = "JPEG") -> str:
     )
 
     try:
-        with BytesIO() as buffer:
-            image.save(buffer, format=format)
-            image_bytes = buffer.getvalue()
+        if(type(image) == Imagetype):
+            with io.BytesIO() as buffer:
+                image.save(buffer, format=format)
+                image_bytes = buffer.getvalue()
+        else:
+            image_bytes = io.BytesIO(image)
 
         response = cloudinary.uploader.upload(
             file=image_bytes,
@@ -89,7 +94,7 @@ def upload_cloudinary_video(video_path : str) -> str:
         raise Exception(f"Error uploading image to Cloudinary: {e}")
 
 
-def resize_image(img: PIM) -> PIM:
+def resize_image(img: Imagetype) -> Imagetype:
     img = img.resize((64 * round(img.size[0] / 64), 64 * round(img.size[1] / 64)))
 
     if ( img.size[0] > MAX_HEIGHT or img.size[0] < MIN_HEIGHT or img.size[1] > MAX_HEIGHT or img.size[1] < MIN_HEIGHT):
@@ -104,17 +109,42 @@ def resize_image(img: PIM) -> PIM:
         img = img.resize((width, height))
     return img
 
+def make_request(url: str, method: str, json_data: dict = None, headers: dict = None) -> Response:
 
-def get_image_from_url(url: str, resize : bool) -> PIM:
+    method = method.upper()
 
-    response = requests.get(url)
-    response.raise_for_status()  # Raise an HTTPError for bad responses
-    image_data = BytesIO(response.content)
-    image = PIM.open(image_data).convert("RGB")
+    if method not in ["GET", "POST"]:
+        raise Exception(
+            "Invalid request method", "Please check method input given with URL"
+        )
+
+    response = None
+    if method == "GET":
+        response = requests.get(url, headers=headers)
+    elif method == "POST":
+        response = requests.post(url, json=json_data, headers=headers)
+
+    response.raise_for_status()
+
+    return response
+
+def get_image_from_url(url: str, resize : bool) -> Imagetype:
+
+    response : Response = make_request(url) 
+    image_data = io.BytesIO(response.content)
+    image = Image.open(image_data).convert("RGB")
     if(resize == True):
         image = resize_image(image)
     return image
 
+def invert_bw_image_color(img: Imagetype) -> Imagetype:
+    white_background = Image.new("RGB", img.size, (255, 255, 255))
+
+    white_background.paste(img, mask=img.split()[3])
+
+    img = ImageOps.invert(white_background)
+
+    return img
 
 
 def get_seed_generator(seed: int) -> torch.Generator:
@@ -125,10 +155,8 @@ def get_seed_generator(seed: int) -> torch.Generator:
 def download_safety_checker():
     SafetyChecker()
 
-def get_base_image() -> Image:
-    return Image.debian_slim(python_version = PYTHON_VERSION).run_commands(BASE_IMAGE_COMMANDS).pip_install_from_requirements(REQUIREMENT_FILE_PATH).run_function(download_safety_checker, gpu = "t4")
-
-
+def get_base_image() -> MIM:
+    return MIM.debian_slim(python_version = PYTHON_VERSION).run_commands(BASE_IMAGE_COMMANDS).pip_install_from_requirements(REQUIREMENT_FILE_PATH).run_function(download_safety_checker, gpu = "t4")
 
     
 def get_refiner(pipe : StableDiffusionXLPipeline) -> DiffusionPipeline:
@@ -141,3 +169,43 @@ def get_refiner(pipe : StableDiffusionXLPipeline) -> DiffusionPipeline:
             variant = "fp16",
         ).to("cuda")
     
+
+def timing_decorator(func: callable) -> callable:
+    def wrapper(*args, **kwargs):
+
+        start_time = time.time()
+        result = func(*args, **kwargs)
+
+        execution_time = time.time() - start_time
+
+        time_data = {"runtime": execution_time, "startup_time": 0}
+        result["time"] = time_data
+
+        return result
+
+    return wrapper
+
+
+def check_token(api_key: HTTPAuthorizationCredentials):
+    if api_key.credentials != os.environ["API_KEY"]:
+
+        response = requests.post(
+            url=os.environ["QOLABA_B2B_API_URL"],
+            data={"keysHashedValue": api_key.credentials},
+        )
+
+        response.raise_for_status()
+
+        data = response.json()
+        if data["response"] == False:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect bearer token",
+            )
+
+def get_clean_name(name : str) -> str:
+    pattern = re.compile('[^a-zA-Z0-9]')
+    cleaned_string = pattern.sub('', name)
+    return cleaned_string.lower()
+
+
