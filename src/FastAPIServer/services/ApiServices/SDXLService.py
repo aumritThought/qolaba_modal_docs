@@ -1,7 +1,7 @@
 import io, base64
 from src.data_models.ModalAppSchemas import SDXLAPITextToImageParameters, SDXLAPIImageToImageParameters
-from src.utils.Globals import timing_decorator, make_request, upload_to_cloudinary, generate_image_from_url
-from services.ApiServices.IService import IService
+from src.utils.Globals import timing_decorator, make_request, upload_cloudinary_image, get_image_from_url, prepare_response
+from src.FastAPIServer.services.IService import IService
 
 class SDXLText2Image(IService):
     def __init__(self) -> None:
@@ -40,12 +40,11 @@ class SDXLText2Image(IService):
         image_urls = []
         for image in data["artifacts"]:
             image_urls.append(
-                upload_to_cloudinary(
+                upload_cloudinary_image(
                     base64.b64decode(image["base64"])
                 )
             )
-
-        return {"result": image_urls, "Has_NSFW_Content": Has_NSFW_Content}
+        return prepare_response(image_urls, Has_NSFW_Content, 0, 0)
 
 
 class SDXLImage2Image(IService):
@@ -59,7 +58,7 @@ class SDXLImage2Image(IService):
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
         parameters : SDXLAPIImageToImageParameters = SDXLAPIImageToImageParameters(**parameters)
-        image = generate_image_from_url(
+        image = get_image_from_url(
             parameters.image, resize=False
         )
 
@@ -95,10 +94,10 @@ class SDXLImage2Image(IService):
         image_urls = []
         for image in data["artifacts"]:
             image_urls.append(
-                upload_to_cloudinary(
+                upload_cloudinary_image(
                     base64.b64decode(image["base64"])
                 )
             )
 
-        return {"result": image_urls, "Has_NSFW_Content": Has_NSFW_Content}
+        return prepare_response(image_urls, Has_NSFW_Content, 0, 0)
 

@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, field_validator, model_validator
 from fastapi import Query
-from typing import  Optional, Any, List
+from typing import  Optional, Any, List, Literal
 from src.utils.Constants import (
     MIN_HEIGHT, MAX_HEIGHT, 
     MAX_INFERENCE_STEPS, 
@@ -14,7 +14,7 @@ from src.utils.Constants import (
     MAX_FPS, MIN_FPS,
     MIN_INCREASE_SIDE, MAX_INCREASE_SIDE,
     MIN_SUPPORTED_AUDIO_FILE_ELEVENLABS, MAX_SUPPORTED_AUDIO_FILE_ELEVENLABS,
-    elevenlabs_accent_list, elevenlabs_age_list, elevenlabs_gender_list, dalle_supported_quality, sdxl_preset_list)
+    elevenlabs_accent_list, elevenlabs_age_list, elevenlabs_gender_list, dalle_supported_quality, sdxl_preset_list, did_expression_list)
 from src.utils.Constants import sdxl_model_string, controlnet_models
 from elevenlabs import voices, Voice, set_api_key
 import os
@@ -42,7 +42,7 @@ class TimeData(BaseModel):
     runtime : int | float
 
 class TaskResponse(BaseModel):
-    result : list[str | dict] 
+    result : list[str] | dict 
     Has_NSFW_Content : list[bool]
     time : TimeData
 
@@ -185,22 +185,28 @@ class DalleParameters(SDXLText2ImageParameters):
     quality : Optional[dalle_supported_quality] = "hd"  # type: ignore
 
 class SDXLAPITextToImageParameters(SDXLText2ImageParameters):
-    style_preset = Field(pattern=sdxl_preset_list)
+    style_preset : Optional[sdxl_preset_list] # type: ignore
 
 class SDXLAPIImageToImageParameters(SDXLImage2ImageParameters):
-    style_preset = Field(pattern=sdxl_preset_list)
+    style_preset : Optional[sdxl_preset_list] # type: ignore
     height: int = Query(ge = MIN_HEIGHT, le = MAX_HEIGHT)
     width: int = Query(ge=MIN_HEIGHT, le = MAX_HEIGHT)
     num_inference_steps: int = Query(ge = MIN_INFERENCE_STEPS, le = MAX_INFERENCE_STEPS) 
 
+
 class APITaskResponse(BaseModel):
-    result : list[str | dict] 
-    Has_NSFW_Content : list[bool]
-    time : TimeData
+    time_required : Optional[dict] = {}
+    error: Optional[str] = None
+    error_data : Optional[str | dict] = None
+    input: Optional[dict] = {}
+    output: Optional[dict | list] = {}
+    task_id: Optional[str] = None
+    status: Literal["SUCCESS", "FAILED", "PENDING"] = "PENDING"
 
 class APIInput(BaseModel):
+    app_id : str
     parameters : dict
-    init_parameters : dict
+    init_parameters : Optional[dict] = {}
     ref_id: Optional[str] = ""
     celery: Optional[bool] = False 
 

@@ -1,10 +1,10 @@
 from src.data_models.ModalAppSchemas import DalleParameters
 import threading
-from src.utils.Globals import timing_decorator, upload_to_cloudinary, make_request
+from src.utils.Globals import timing_decorator, upload_cloudinary_image, make_request, prepare_response
 from openai import OpenAI
 from src.utils.Constants import DALLE_SUPPORTED_HW
 from typing import List
-from src.FastAPIServer.services.ApiServices.IService import IService
+from src.FastAPIServer.services.IService import IService
 
 
 class DalleText2Image(IService):
@@ -19,7 +19,7 @@ class DalleText2Image(IService):
 
         response = make_request(response.data[0].url, "GET")
 
-        return upload_to_cloudinary(bytes(response.content))
+        return upload_cloudinary_image(response.content)
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
@@ -51,4 +51,4 @@ class DalleText2Image(IService):
 
         Has_NSFW_Content = [False] * parameters.batch
 
-        return {"result": results, "Has_NSFW_Content": Has_NSFW_Content}
+        return prepare_response(results, Has_NSFW_Content, 0, 0)

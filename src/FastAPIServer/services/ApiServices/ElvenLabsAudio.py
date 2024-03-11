@@ -4,8 +4,8 @@ from pydub import AudioSegment
 from src.data_models.ModalAppSchemas import ElevenLabsParameters
 from pydub import AudioSegment
 from io import BytesIO
-from src.utils.Globals import timing_decorator, upload_to_cloudinary, make_request
-from src.FastAPIServer.services.ApiServices.IService import IService
+from src.utils.Globals import timing_decorator, upload_cloudinary_image, make_request, prepare_response
+from src.FastAPIServer.services.IService import IService
 
 
 class ElvenLabsAudio(IService):
@@ -47,12 +47,10 @@ class ElvenLabsAudio(IService):
 
         audio_length = self.get_audio_length(BytesIO(audio))
 
-        url = upload_to_cloudinary(BytesIO(audio))
+        url = upload_cloudinary_image(audio)
 
-        return {
-            "result": {"Audio url": url, "Audio length": audio_length},
-            "Has_NSFW_Content": [False],
-        }
+        return prepare_response({"Audio url": url, "Audio length": audio_length}, [False], 0, 0)
+
 
     def voice_clone(self, parameters: ElevenLabsParameters) -> dict:
 

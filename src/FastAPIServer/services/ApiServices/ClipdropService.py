@@ -1,7 +1,7 @@
-import io
+import io, time
 from src.data_models.ModalAppSchemas import ClipDropCleanUpParameters, ClipDropRemoveTextParameters, ClipDropReplaceBackgroundParameters, ClipDropUncropParameters
-from src.utils.Globals import timing_decorator, upload_cloudinary_image, make_request, get_image_from_url, invert_bw_image_color
-from src.FastAPIServer.services.ApiServices.IService import IService
+from src.utils.Globals import timing_decorator, upload_cloudinary_image, make_request, get_image_from_url, invert_bw_image_color, prepare_response
+from src.FastAPIServer.services.IService import IService
 from requests import Response
 from PIL.Image import Image as Imagetype
 
@@ -14,7 +14,7 @@ class ClipdropUncropImage2image(IService):
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
         parameters : ClipDropUncropParameters = ClipDropUncropParameters(**parameters)
-        img : Imagetype = get_image_from_url(parameters.image)
+        img : Imagetype = get_image_from_url(parameters.image, resize=False)
 
         img = img.resize((parameters.width, parameters.height))
         filtered_image = io.BytesIO()
@@ -38,7 +38,7 @@ class ClipdropUncropImage2image(IService):
 
         image_urls = upload_cloudinary_image(response.content)
 
-        return {"result": [image_urls], "Has_NSFW_Content": [False]}
+        return prepare_response([image_urls], [False], 0, 0)
 
 
 class ClipdropCleanupImage2image(IService):
@@ -78,7 +78,7 @@ class ClipdropCleanupImage2image(IService):
 
         image_urls = upload_cloudinary_image(response.content)
 
-        return {"result": [image_urls], "Has_NSFW_Content": [False]}
+        return prepare_response([image_urls], [False], 0, 0)
 
 
 class ClipdropReplaceBackgroundImage2Image(IService):
@@ -109,7 +109,7 @@ class ClipdropReplaceBackgroundImage2Image(IService):
 
         image_urls = upload_cloudinary_image(response.content)
 
-        return {"result": [image_urls], "Has_NSFW_Content": [False]}
+        return prepare_response([image_urls], [False], 0, 0)
 
 
 class ClipdropRemoveTextImage2Image(IService):
@@ -137,4 +137,4 @@ class ClipdropRemoveTextImage2Image(IService):
 
         image_urls = upload_cloudinary_image(response.content)
 
-        return {"result": [image_urls], "Has_NSFW_Content": [False]}
+        return prepare_response([image_urls], [False], 0, 0)

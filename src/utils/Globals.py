@@ -13,6 +13,7 @@ from fastapi import HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials
 from requests import Response
 
+#Safety Checker Utils
 
 class SafetyChecker:
     def __init__(self) -> None:
@@ -30,7 +31,27 @@ class SafetyChecker:
         )
 
         return has_nsfw_concept
+    
+def download_safety_checker():
+    SafetyChecker()
 
+#Modal image Utils
+def get_base_image() -> MIM:
+    return MIM.debian_slim(python_version = PYTHON_VERSION).run_commands(BASE_IMAGE_COMMANDS).pip_install_from_requirements(REQUIREMENT_FILE_PATH).run_function(download_safety_checker, gpu = "t4")
+
+#Modal app utils
+def get_refiner(pipe : StableDiffusionXLPipeline) -> DiffusionPipeline:
+    return DiffusionPipeline.from_pretrained(
+            SDXL_REFINER_MODEL_PATH,
+            text_encoder_2 = pipe.text_encoder_2,
+            vae = pipe.vae,
+            torch_dtype = torch.float16,
+            use_safetensors = True,
+            variant = "fp16",
+        ).to("cuda")
+
+
+#Modal App Output relataed utils
 def generate_image_urls(image_data, safety_checker : SafetyChecker, format : str = "JPEG") -> tuple[list[str], list[bool]]:
     image_urls = []
     has_nsfw_content = []
@@ -53,7 +74,28 @@ def prepare_response(result: list[str] | dict, Has_NSFW_content : list[bool], ti
     )
     return task_response.model_dump()
 
+#Completing request 
+def make_request(url: str, method: str, json_data: dict = None, headers: dict = None, files : dict = None) -> Response:
 
+    method = method.upper()
+
+    if method not in ["GET", "POST"]:
+        raise Exception(
+            "Invalid request method", "Please check method input given with URL"
+        )
+
+    response = None
+    if method == "GET":
+        response = requests.get(url, headers=headers)
+    elif method == "POST":
+        response = requests.post(url, json=json_data, headers=headers, files = files)
+
+    if(response.status_code != 200):
+        raise Exception(str(response.text), "API Error")
+
+    return response
+
+#Cloudinary
 def upload_cloudinary_image(image : Imagetype | str, format : str = "JPEG") -> str:
     cloudinary.config(
         cloud_name=os.environ["CLOUD_NAME"],
@@ -93,7 +135,7 @@ def upload_cloudinary_video(video_path : str) -> str:
     except Exception as e:
         raise Exception(f"Error uploading image to Cloudinary: {e}")
 
-
+#Image operations
 def resize_image(img: Imagetype) -> Imagetype:
     img = img.resize((64 * round(img.size[0] / 64), 64 * round(img.size[1] / 64)))
 
@@ -109,28 +151,11 @@ def resize_image(img: Imagetype) -> Imagetype:
         img = img.resize((width, height))
     return img
 
-def make_request(url: str, method: str, json_data: dict = None, headers: dict = None) -> Response:
 
-    method = method.upper()
-
-    if method not in ["GET", "POST"]:
-        raise Exception(
-            "Invalid request method", "Please check method input given with URL"
-        )
-
-    response = None
-    if method == "GET":
-        response = requests.get(url, headers=headers)
-    elif method == "POST":
-        response = requests.post(url, json=json_data, headers=headers)
-
-    response.raise_for_status()
-
-    return response
 
 def get_image_from_url(url: str, resize : bool) -> Imagetype:
 
-    response : Response = make_request(url) 
+    response : Response = make_request(url, method = "GET") 
     image_data = io.BytesIO(response.content)
     image = Image.open(image_data).convert("RGB")
     if(resize == True):
@@ -152,24 +177,13 @@ def get_seed_generator(seed: int) -> torch.Generator:
     generator.manual_seed(seed)
     return generator
 
-def download_safety_checker():
-    SafetyChecker()
 
-def get_base_image() -> MIM:
-    return MIM.debian_slim(python_version = PYTHON_VERSION).run_commands(BASE_IMAGE_COMMANDS).pip_install_from_requirements(REQUIREMENT_FILE_PATH).run_function(download_safety_checker, gpu = "t4")
+
 
     
-def get_refiner(pipe : StableDiffusionXLPipeline) -> DiffusionPipeline:
-    return DiffusionPipeline.from_pretrained(
-            SDXL_REFINER_MODEL_PATH,
-            text_encoder_2 = pipe.text_encoder_2,
-            vae = pipe.vae,
-            torch_dtype = torch.float16,
-            use_safetensors = True,
-            variant = "fp16",
-        ).to("cuda")
-    
 
+    
+#API app utils
 def timing_decorator(func: callable) -> callable:
     def wrapper(*args, **kwargs):
 
@@ -178,8 +192,7 @@ def timing_decorator(func: callable) -> callable:
 
         execution_time = time.time() - start_time
 
-        time_data = {"runtime": execution_time, "startup_time": 0}
-        result["time"] = time_data
+        result["time"]["runtime"] = execution_time
 
         return result
 

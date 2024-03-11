@@ -1,7 +1,7 @@
 import io, time, os
 from src.data_models.ModalAppSchemas import DIDVideoParameters
-from src.utils.Globals import timing_decorator,  upload_cloudinary_image, make_request
-from src.FastAPIServer.services.ApiServices.IService import IService
+from src.utils.Globals import timing_decorator,  upload_cloudinary_image, make_request, prepare_response
+from src.FastAPIServer.services.IService import IService
 
 class DIDVideo(IService):
     def __init__(self) -> None:
@@ -83,5 +83,6 @@ class DIDVideo(IService):
         video_bytes = io.BytesIO(response.content)
 
         cld_vid_url = upload_cloudinary_image(video_bytes)
+        
+        return prepare_response([cld_vid_url], [False], 0, 0)
 
-        return {"result": [cld_vid_url], "Has_NSFW_Content": [False]}
