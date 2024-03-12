@@ -22,7 +22,7 @@ ADD ./ /root/app
 
 WORKDIR /root/app
 
-RUN RUN pip install -r requirements.txt
+RUN pip install -r requirements.txt
 
 ARG TOKEN_ID
 ENV API_KEY=$TOKEN_ID
@@ -30,7 +30,6 @@ ARG TOKEN_SECRET
 ENV API_KEY=$TOKEN_SECRET
 
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
 
 RUN modal token set --token-id $TOKEN_ID --token-secret $TOKEN_SECRET
 
