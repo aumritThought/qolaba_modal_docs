@@ -59,7 +59,7 @@ class DIDVideo(IService):
                     ]
                 },
             },
-            "source_url": parameters.image,
+            "source_url": parameters.file_url,
         }
 
         headers = {

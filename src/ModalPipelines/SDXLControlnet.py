@@ -122,9 +122,9 @@ class stableDiffusion:
 
         parameters : SDXLControlNetParameters = SDXLControlNetParameters(**parameters)
 
-        parameters.image = get_image_from_url(parameters.image, resize = True)
+        parameters.file_url = get_image_from_url(parameters.file_url, resize = True)
 
-        controlnet_image_model = ContrloNetImageGeneration(parameters.image, self.init_parameters.controlnet_model)
+        controlnet_image_model = ContrloNetImageGeneration(parameters.file_url, self.init_parameters.controlnet_model)
         controlnet_image = controlnet_image_model.prepare_images()
 
         st = time.time()

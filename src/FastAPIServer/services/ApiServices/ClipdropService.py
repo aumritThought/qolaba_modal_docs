@@ -14,7 +14,7 @@ class ClipdropUncropImage2image(IService):
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
         parameters : ClipDropUncropParameters = ClipDropUncropParameters(**parameters)
-        img : Imagetype = get_image_from_url(parameters.image, resize=False)
+        img : Imagetype = get_image_from_url(parameters.file_url, resize=False)
 
         img = img.resize((parameters.width, parameters.height))
         filtered_image = io.BytesIO()
@@ -51,7 +51,7 @@ class ClipdropCleanupImage2image(IService):
     def remote(self, parameters: dict) -> dict:
         parameters : ClipDropCleanUpParameters = ClipDropCleanUpParameters(**parameters)
 
-        img : Imagetype = get_image_from_url(parameters.image, resize=True)
+        img : Imagetype = get_image_from_url(parameters.file_url, resize=True)
 
         filtered_image = io.BytesIO()
 
@@ -91,7 +91,7 @@ class ClipdropReplaceBackgroundImage2Image(IService):
     def remote(self, parameters: dict) -> dict:
         parameters : ClipDropReplaceBackgroundParameters = ClipDropReplaceBackgroundParameters(**parameters)
 
-        img = get_image_from_url( parameters.image, resize=True)
+        img = get_image_from_url( parameters.file_url, resize=True)
 
         filtered_image = io.BytesIO()
         img.save(filtered_image, "JPEG")
@@ -122,7 +122,7 @@ class ClipdropRemoveTextImage2Image(IService):
     def remote(self, parameters: dict) -> dict:
         parameters : ClipDropRemoveTextParameters = ClipDropRemoveTextParameters(**parameters)
         img = get_image_from_url(
-            parameters.image, resize=True
+            parameters.file_url, resize=True
         )
 
         filtered_image = io.BytesIO()

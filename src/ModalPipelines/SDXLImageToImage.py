@@ -41,8 +41,8 @@ class stableDiffusion:
 
         self.refiner = get_refiner(self.pipe)
 
-        # self.pipe.enable_xformers_memory_efficient_attention()
-        # self.refiner.enable_xformers_memory_efficient_attention()
+        self.pipe.enable_xformers_memory_efficient_attention()
+        self.refiner.enable_xformers_memory_efficient_attention()
         
         self.safety_checker = SafetyChecker()
         self.container_execution_time = time.time() - st
@@ -52,7 +52,7 @@ class stableDiffusion:
 
         parameters : SDXLImage2ImageParameters = SDXLImage2ImageParameters(**parameters)
 
-        parameters.image = get_image_from_url(parameters.image, resize = True)
+        parameters.file_url = get_image_from_url(parameters.file_url, resize = True)
 
         st = time.time()
 
@@ -63,7 +63,7 @@ class stableDiffusion:
                 prompt = parameters.prompt,
                 negative_prompt = parameters.negative_prompt,
                 strength=parameters.strength,
-                image=parameters.image,
+                image=parameters.file_url,
                 denoising_end = 0.8,
                 guidance_scale = parameters.guidance_scale,
                 output_type="latent",

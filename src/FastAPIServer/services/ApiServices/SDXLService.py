@@ -60,7 +60,7 @@ class SDXLImage2Image(IService):
     def remote(self, parameters: dict) -> dict:
         parameters : SDXLAPIImageToImageParameters = SDXLAPIImageToImageParameters(**parameters)
         image = get_image_from_url(
-            parameters.image, resize=False
+            parameters.file_url, resize=False
         )
 
         image = image.resize((parameters.width, parameters.height)).convert("RGB")

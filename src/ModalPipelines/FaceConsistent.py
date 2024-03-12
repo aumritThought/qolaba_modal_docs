@@ -72,11 +72,9 @@ class stableDiffusion:
 
         parameters : FaceConsistentParameters = FaceConsistentParameters(**parameters)
 
-        parameters.image = get_image_from_url(parameters.image, resize = True)
+        parameters.file_url = get_image_from_url(parameters.file_url, resize = True)
 
-        parameters.image = parameters.image.convert("RGB")
-
-        face_img=np.array(parameters.image)
+        face_img=np.array(parameters.file_url)
 
         faces = self.app.get(face_img)
 

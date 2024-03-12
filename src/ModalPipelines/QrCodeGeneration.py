@@ -59,7 +59,7 @@ class stableDiffusion:
 
         parameters : IllusionDuiffusion = IllusionDuiffusion(**parameters)
 
-        parameters.image = get_image_from_url(parameters.image, resize = True)
+        parameters.file_url = get_image_from_url(parameters.file_url, resize = True)
 
         st = time.time()
 
@@ -70,7 +70,7 @@ class stableDiffusion:
                 prompt = parameters.prompt,
                 negative_prompt = parameters.negative_prompt,
                 controlnet_conditioning_scale = [0.85, 0.35],
-                image=[parameters.image, parameters.image],
+                image=[parameters.file_url, parameters.file_url],
                 guidance_scale = parameters.guidance_scale,
                 batch = 1,
                 num_inference_steps = parameters.num_inference_steps,

@@ -64,9 +64,8 @@ class stableDiffusion:
 
         parameters : VariationParameters = VariationParameters(**parameters)
 
-        parameters.image = get_image_from_url(parameters.image, resize = True)
+        parameters.file_url = get_image_from_url(parameters.file_url, resize = True)
 
-        parameters.image = parameters.image.convert("RGB")
 
         images = []
         if(parameters.prompt == None or parameters.prompt == ""):
@@ -80,9 +79,9 @@ class stableDiffusion:
                 denoising_end = 0.8,
                 guidance_scale = parameters.guidance_scale,
                 output_type="latent",
-                height = parameters.image.size[1],
-                width = parameters.image.size[0],
-                pil_image = parameters.image,
+                height = parameters.file_url.size[1],
+                width = parameters.file_url.size[0],
+                pil_image = parameters.file_url,
                 scale = parameters.strength,
                 num_samples = 1
             )

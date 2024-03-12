@@ -74,7 +74,7 @@ class SDXLText2ImageParameters(BaseModel):
     lora_scale : float = Query(default = 0.5, gt = 0, le = 1)
 
 class SDXLImage2ImageParameters(BaseModel):
-    image : str | Any
+    file_url : str | Any
     strength : float = Query(gt = MIN_STRENGTH, le = MAX_STRENGTH)
     guidance_scale:  float = Query( ge = MIN_GUIDANCE_SCALE, le = MAX_GUIDANCE_SCALE)
     batch:  int = Query( ge = MIN_BATCH, le = MAX_BATCH)
@@ -86,13 +86,13 @@ class SDXLControlNetParameters(SDXLImage2ImageParameters):
     num_inference_steps: int = Query(ge = MIN_INFERENCE_STEPS, le = MAX_INFERENCE_STEPS)
 
 class UpscaleParameters(BaseModel):
-    image : str | Any
+    file_url : str | Any
 
 class VariationParameters(SDXLControlNetParameters):
     prompt: Optional[str] = None
 
 class FaceConsistentParameters(SDXLText2ImageParameters):
-    image : str | Any
+    file_url : str | Any
     strength : float = Query(gt = MIN_STRENGTH, le = MAX_STRENGTH) 
 
 class InitParameters(BaseModel):
@@ -101,7 +101,7 @@ class InitParameters(BaseModel):
     controlnet_model : Optional[str] = Field(default=None, pattern = controlnet_models)
 
 class BackGroundRemoval(BaseModel):
-    image : str | Any
+    file_url : str | Any
     bg_img : Optional[str] = None
     bg_color : Optional[bool] = False 
     r_color: int = Query(default=MIN_COLOR,ge=MIN_COLOR, le=MAX_COLOR)
@@ -110,7 +110,7 @@ class BackGroundRemoval(BaseModel):
     blur: Optional[bool] = False  
 
 class StableVideoDiffusion(BaseModel):
-    image : str | Any
+    file_url : str | Any
     fps : int = Query(default=MIN_FPS,ge=MIN_FPS, le=MAX_FPS)
 
 class IllusionDuiffusion(SDXLImage2ImageParameters):
@@ -118,7 +118,7 @@ class IllusionDuiffusion(SDXLImage2ImageParameters):
     num_inference_steps: int = Query(ge = MIN_INFERENCE_STEPS, le = MAX_INFERENCE_STEPS) 
 
 class ClipDropUncropParameters(BaseModel):
-    image : str | Any
+    file_url : str | Any
     height: int = Query(ge = MIN_HEIGHT, le = MAX_HEIGHT)
     width: int = Query(ge=MIN_HEIGHT, le = MAX_HEIGHT)
     right: int = Query(ge = MIN_INCREASE_SIDE, le = MAX_INCREASE_SIDE)
@@ -127,18 +127,18 @@ class ClipDropUncropParameters(BaseModel):
     bottom: int = Query(ge = MIN_INCREASE_SIDE, le = MAX_INCREASE_SIDE)
 
 class ClipDropCleanUpParameters(BaseModel):
-    image : str | Any
+    file_url : str | Any
     mask_image : str | Any
 
 class ClipDropReplaceBackgroundParameters(BaseModel):
-    image : str | Any
+    file_url : str | Any
     prompt : str
 
 class ClipDropRemoveTextParameters(BaseModel):
-    image : str | Any
+    file_url : str | Any
 
 class DIDVideoParameters(BaseModel):
-    image: str | Any
+    file_url: str | Any
     expression : Optional[did_expression_list] = "neutral" # type: ignore
     expression_intesity : float = Query(default=1, ge=0, le=1)
     voice_id: Optional[str] = "d7bbcdd6964c47bdaae26decade4a933"

@@ -43,13 +43,13 @@ class stableDiffusion:
     def run_inference(self, parameters : dict) -> dict:
         st = time.time()
         parameters : StableVideoDiffusion = StableVideoDiffusion(**parameters)
-        parameters.image = get_image_from_url(parameters.image, resize = True)
-        has_nsfw_concept = self.safety_checker.check_nsfw_content(parameters.image)
+        parameters.file_url = get_image_from_url(parameters.file_url, resize = True)
+        has_nsfw_concept = self.safety_checker.check_nsfw_content(parameters.file_url)
         
         if(has_nsfw_concept[0] == True):
             raise Exception("Provided image contains NSFW content")
 
-        frames = self.pipe(parameters.image, decode_chunk_size=8).frames[0]
+        frames = self.pipe(parameters.file_url, decode_chunk_size=8).frames[0]
         torch.cuda.empty_cache()
 
         random_string = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(10))

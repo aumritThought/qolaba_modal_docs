@@ -57,11 +57,11 @@ class stableDiffusion:
 
         parameters : UpscaleParameters = UpscaleParameters(**parameters)
 
-        parameters.image = get_image_from_url(parameters.image, resize = True)
+        parameters.file_url = get_image_from_url(parameters.file_url, resize = True)
 
-        parameters.image = parameters.image.convert("RGB")
+        parameters.file_url = parameters.file_url.convert("RGB")
 
-        np_img = np.array(parameters.image, dtype=np.uint8)
+        np_img = np.array(parameters.file_url, dtype=np.uint8)
         upsampler_output, img_mode = self.upsampler.enhance(
             np_img[:, :, ::-1]
         )

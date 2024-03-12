@@ -40,26 +40,25 @@ class stableDiffusion:
 
         parameters : BackGroundRemoval = BackGroundRemoval(**parameters)
 
-        parameters.image = get_image_from_url(parameters.image, resize = True)
+        parameters.file_url = get_image_from_url(parameters.file_url, resize = True)
 
-        parameters.image = parameters.image.convert("RGB")
         try:
             parameters.bg_img = get_image_from_url(parameters.bg_img, resize = True)
             parameters.bg_img = parameters.bg_img.convert("RGB")
-            parameters.bg_img = parameters.bg_img.resize(parameters.image.size)
+            parameters.bg_img = parameters.bg_img.resize(parameters.file_url.size)
         except Exception as e:
             print(e)
             parameters.bg_img = None
         
         if parameters.blur == True:
-            image = self.remover.process(parameters.image, type="blur")
+            image = self.remover.process(parameters.file_url, type="blur")
 
         elif not (parameters.bg_img == None):
             temp_file_img = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
             parameters.bg_img.save(temp_file_img, format="JPEG")
 
             image = self.remover.process(
-                parameters.image, type=temp_file_img.name
+                parameters.file_url, type=temp_file_img.name
             )  # use another image as a background
             print(os.path.exists(temp_file_img.name))
             try:
@@ -72,10 +71,10 @@ class stableDiffusion:
             print(os.path.exists(temp_file_img.name))
         elif parameters.bg_color == True:
             image = self.remover.process(
-                parameters.image, type=str([parameters.r_color, parameters.g_color, parameters.b_color])
+                parameters.file_url, type=str([parameters.r_color, parameters.g_color, parameters.b_color])
             )
         else:
-            image = self.remover.process(parameters.image, type="rgba")
+            image = self.remover.process(parameters.file_url, type="rgba")
         torch.cuda.empty_cache()
 
 
