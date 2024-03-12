@@ -25,9 +25,8 @@ WORKDIR /root/app
 RUN pip install -r requirements.txt
 
 ARG TOKEN_ID
-ENV API_KEY=$TOKEN_ID
+
 ARG TOKEN_SECRET
-ENV API_KEY=$TOKEN_SECRET
 
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
