@@ -183,88 +183,88 @@
 # print(sr_image.size)
 
 
-# from modal import Cls
-# import time
+from modal import Cls
+import time
 
-# init_parameters = {
-#     "model" : "SDXL Turbo",
-#     "controlnet_model" : "canny"
-# }
-# extra_negative_prompt = "disfigured, kitsch, ugly, oversaturated, greain, low-res, Deformed, blurry, bad anatomy, poorly drawn face, mutation, mutated, extra limb, poorly drawn hands, missing limb, floating limbs, disconnected limbs, malformed hands, blur, out of focus, long neck, long body, disgusting, poorly drawn, childish, mutilated, mangled, old, surreal, calligraphy, sign, writing, watermark, text, body out of frame, extra legs, extra arms, extra feet, out of frame, poorly drawn feet, cross-eye"
-
-# parameters = {
-#     "height": 1024,
-#     "width": 1024,
-#     "num_inference_steps": 20, 
-#     "guidance_scale":  8,
-#     "batch":  1,
-#     "prompt": "High resolution, close-up photograph of live bread making on oven, steams coming out",
-#     "negative_prompt": extra_negative_prompt,
-#     "lora_scale" : 0.5,
-#     "image" : "https://res.cloudinary.com/qolaba/image/upload/v1705612740/jbsewrunbccplqd19y4p.png",
-#     "controlnet_scale" : 0.8,
-#     "bg_img" : "https://res.cloudinary.com/qolaba/image/upload/v1705612740/jbsewrunbccplqd19y4p.png",
-#     "controlnet_scale" : 1.5,
-#     "strength" : 0.5,
-# }
-# # image : str | Any
-# #     bg_img : Optional[str] = None
-# #     bg_color : Optional[bool] = False 
-# #     r_color: int = Query(default=MIN_COLOR,ge=MIN_COLOR, le=MAX_COLOR)
-# #     g_color: int = Query(default=MIN_COLOR,ge=MIN_COLOR, le=MAX_COLOR)
-# #     b_color: int = Query(default=MIN_COLOR,ge=MIN_COLOR, le=MAX_COLOR)
-# #     blur: Optional[bool] = False  
-# #     strength : float = Query(ge = MIN_STRENGTH, le = MAX_STRENGTH)
-# st = time.time()
-# Model = Cls.lookup("Illusion_Diffusion", "stableDiffusion", environment_name = "dev")  # returns a class-like object
-# print(time.time() - st)
-# m = Model(init_parameters)
-# print("model obtained")
-
-
-# print(time.time()-st)
-# print(m.run_inference.remote(parameters))
-# print(time.time() - st)
-
-from google.cloud import storage
-from google.oauth2 import service_account
-import io
-from dotenv import load_dotenv
-load_dotenv()
-
-# Replace the following with your GCP information
-bucket_name = 'your-bucket-name'
-destination_blob_name = 'your-destination-object-name'
-image_path = 'path-to-your-image-file.jpg'
-
-# Service account info (replace with your own credentials)
-credentials_info = {
-    "type": "service_account",
-    "project_id": "your-project-id",
-    "private_key_id": "your-private-key-id",
-    "private_key": "your-private-key",
-    "client_email": "your-service-account-email",
-    "client_id": "your-client-id",
-    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-    "token_uri": "https://oauth2.googleapis.com/token",
-    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-    "client_x509_cert_url": "your-x509-cert-url"
+init_parameters = {
+    "model" : "Colorful",
+    "controlnet_model" : "canny"
 }
+extra_negative_prompt = "disfigured, kitsch, ugly, oversaturated, greain, low-res, Deformed, blurry, bad anatomy, poorly drawn face, mutation, mutated, extra limb, poorly drawn hands, missing limb, floating limbs, disconnected limbs, malformed hands, blur, out of focus, long neck, long body, disgusting, poorly drawn, childish, mutilated, mangled, old, surreal, calligraphy, sign, writing, watermark, text, body out of frame, extra legs, extra arms, extra feet, out of frame, poorly drawn feet, cross-eye"
 
-# Create credentials object from the service account info
-credentials = service_account.Credentials.from_service_account_info(credentials_info)
+parameters = {
+    "height": 1024,
+    "width": 1024,
+    "num_inference_steps": 20, 
+    "guidance_scale":  8,
+    "batch":  1,
+    "prompt": "black plain background,  VECTOR CARTOON ILLUSTRATION, half-body shot portrait male,  5 o clock shadow, 3d bitmoji avatar render, pixar, high def textures 8k, highly detailed, 3d render, award winning, no background elements",
+    "negative_prompt": extra_negative_prompt,
+    "lora_scale" : 0.5,
+    "file_url" : "https://res.cloudinary.com/qolaba/image/upload/v1710263511/ldioa1ncn4pn8r1gtfho.png",
+    "controlnet_scale" : 0.8,
+    "bg_img" : "https://res.cloudinary.com/qolaba/image/upload/v1705612740/jbsewrunbccplqd19y4p.png",
+    "controlnet_scale" : 1.5,
+    "strength" : 0.5,
+}
+# image : str | Any
+#     bg_img : Optional[str] = None
+#     bg_color : Optional[bool] = False 
+#     r_color: int = Query(default=MIN_COLOR,ge=MIN_COLOR, le=MAX_COLOR)
+#     g_color: int = Query(default=MIN_COLOR,ge=MIN_COLOR, le=MAX_COLOR)
+#     b_color: int = Query(default=MIN_COLOR,ge=MIN_COLOR, le=MAX_COLOR)
+#     blur: Optional[bool] = False  
+#     strength : float = Query(ge = MIN_STRENGTH, le = MAX_STRENGTH)
+st = time.time()
+Model = Cls.lookup("IPAdapter_face_consistent", "stableDiffusion", environment_name = "dev")  # returns a class-like object
+print(time.time() - st)
+m = Model(init_parameters)
+print("model obtained")
 
-# Create a Cloud Storage client with the credentials
-storage_client = storage.Client(credentials=credentials, project=credentials_info['project_id'])
 
-# Get the bucket object
-bucket = storage_client.bucket(bucket_name)
+print(time.time()-st)
+print(m.run_inference.remote(parameters))
+print(time.time() - st)
 
-# Create a blob object from the bucket and assign the destination file name
-blob = bucket.blob(destination_blob_name)
+# from google.cloud import storage
+# from google.oauth2 import service_account
+# import io
+# from dotenv import load_dotenv
+# load_dotenv()
 
-# Upload the image
-with open(image_path, 'rb') as image_file:
-    blob.upload_from_file(image_file)
+# # Replace the following with your GCP information
+# bucket_name = 'your-bucket-name'
+# destination_blob_name = 'your-destination-object-name'
+# image_path = 'path-to-your-image-file.jpg'
 
-print(f"File {image_path} uploaded to {destination_blob_name}.")
+# # Service account info (replace with your own credentials)
+# credentials_info = {
+#     "type": "service_account",
+#     "project_id": "your-project-id",
+#     "private_key_id": "your-private-key-id",
+#     "private_key": "your-private-key",
+#     "client_email": "your-service-account-email",
+#     "client_id": "your-client-id",
+#     "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+#     "token_uri": "https://oauth2.googleapis.com/token",
+#     "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+#     "client_x509_cert_url": "your-x509-cert-url"
+# }
+
+# # Create credentials object from the service account info
+# credentials = service_account.Credentials.from_service_account_info(credentials_info)
+
+# # Create a Cloud Storage client with the credentials
+# storage_client = storage.Client(credentials=credentials, project=credentials_info['project_id'])
+
+# # Get the bucket object
+# bucket = storage_client.bucket(bucket_name)
+
+# # Create a blob object from the bucket and assign the destination file name
+# blob = bucket.blob(destination_blob_name)
+
+# # Upload the image
+# with open(image_path, 'rb') as image_file:
+#     blob.upload_from_file(image_file)
+
+# print(f"File {image_path} uploaded to {destination_blob_name}.")

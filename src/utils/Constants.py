@@ -411,6 +411,7 @@ app_dict = {
     "ap-SwsTOsD7STxJ0obCkskUHw": {
         "app_id" : "IPAdapter_face_consistent_modal",
         "init_parameters" : {
+            "model" : "Colorful"
         },
         "model_name" : "face_consistent_image2image"
     },
@@ -423,6 +424,7 @@ app_dict = {
     "ap-kNvCpegQY2HiDHmk5X7X6F": {
         "app_id" : "IPAdapter_image_variation_modal",
         "init_parameters" : {
+            "model" : "Colorful"
         },
         "model_name" : "variation_image2image" 
     },
