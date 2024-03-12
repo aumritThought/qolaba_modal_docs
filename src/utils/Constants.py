@@ -163,4 +163,274 @@ CELERY_SOFT_LIMIT = 7200
 #Modal app cache configuration
 MAX_TIME_MODAL_APP_CACHE =  3600
 
-#
+#Parameter dictionary
+app_dict = {
+    "ap-JOsvgUBfInC2UQnz0FQFkG": {
+        "app_id" : "SDXL_Text_To_Image_modal",
+        "init_parameters" : {
+            "model" : "SDXL Turbo"
+        },
+        "model_name" : "sdxl_turbo_text2image" 
+    },
+    "ap-9ccz5olHjWxCVWjGTpLhr6": {
+        "app_id" : "SDXL_Text_To_Image_modal",
+        "init_parameters" : {
+            "model" : "rev-anim"
+        },
+        "model_name" : "revanim_text2image" 
+    },
+    "ap-PZYd1Bb5QH57Rw4BF0dPA4": {
+        "app_id" : "SDXL_Text_To_Image_modal",
+        "init_parameters" : {
+            "model" : "Vibrant"
+        },
+        "model_name" : "pixela_text2image" 
+    },
+    "ap-RmIIykpGUHWzTZRmF0U4bH": {
+        "app_id" : "SDXL_Text_To_Image_modal",
+        "init_parameters" : {
+            "model" : "3D Cartoon"
+        },
+        "model_name" : "3D_cartoon_text2image" 
+    },
+    "ap-VbAWaTpRHAcfqywOmcjN2y": {
+        "app_id" : "SDXL_Text_To_Image_modal",
+        "init_parameters" : {
+            "model" : "Cartoon"
+        },
+        "model_name" : "cartoon_text2image" 
+    },
+    "ap-z5opn6mGtcHtSh5kCTje1C": {
+        "app_id" : "SDXL_Text_To_Image_modal",
+        "init_parameters" : {
+            "model" : "Colorful"
+        },
+        "model_name" : "colorful_text2image" 
+    },
+    "ap-7vTmulaxjyiCzQEj1BOOvJ": {
+        "app_id" : "SDXL_Text_To_Image_modal",
+        "init_parameters" : {
+            "model" : "Anime"
+        },
+        "model_name" : "anime_text2image" 
+    },
+    "ap-onCEEZdTFZF4X8XJjYOHGR": {
+        "app_id" : "SDXL_Text_To_Image_modal",
+        "init_parameters" : {
+            "model" : "Anime 2"
+        },
+        "model_name" : "anime_2_text2image" 
+    },
+    "ap-uU4Xo4z6KgFHFjW9gnAl3q": {
+        "app_id" : "SDXL_Text_To_Image_modal",
+        "init_parameters" : {
+            "model" : "Realistic"
+        },
+        "model_name" : "realistic_text2image" 
+    },
+    "ap-9TlukeWaO8uJmjZsPzqmKB": {
+        "app_id" : "SDXL_Text_To_Image_modal",
+        "init_parameters" : {
+            "model" : "Realistic 2"
+        },
+        "model_name" : "realistic_2_text2image" 
+    },
+
+    "ap-oDVXRQ7bCaWW05O52P1mlA": {
+        "app_id" : "sdxltext2image_api",
+        "init_parameters" : {
+        },
+        "model_name" : "SDXL_text2image" 
+    },
+    "ap-sdSyd0idsndjnsnsndjsds": {
+        "app_id" : "dalletext2image_api",
+        "init_parameters" : {
+        },
+        "model_name" : "dalle_text2image" 
+    },
+
+    "ap-9QVYLtWxXRzGH0qk97iG03": {
+        "app_id" : "SDXL_Image_To_Image_modal",
+        "init_parameters" : {
+            "model" : "rev-anim"
+        },
+        "model_name" : "revanim_image2image" 
+    },
+    "ap-vcbg1l7bBuScbDuUOk3Shl": {
+        "app_id" : "SDXL_Image_To_Image_modal",
+        "init_parameters" : {
+            "model" : "Vibrant"
+        },
+        "model_name" : "pixela_image2image" 
+    },
+    "ap-1dONyJCjssrvvXLufmvGWJ": {
+        "app_id" : "SDXL_Image_To_Image_modal",
+        "init_parameters" : {
+            "model" : "3D Cartoon"
+        },
+        "model_name" : "3D_cartoon_image2image" 
+    },
+    "ap-Rgtph3LFS9rRT5X7XREazo": {
+        "app_id" : "SDXL_Image_To_Image_modal",
+        "init_parameters" : {
+            "model" : "Cartoon"
+        },
+        "model_name" : "cartoon_image2image" 
+    },
+    "ap-wVf86rypMYb2pyMY46ikxw": {
+        "app_id" : "SDXL_Image_To_Image_modal",
+        "init_parameters" : {
+            "model" : "Colorful"
+        },
+        "model_name" : "colorful_image2image" 
+    },
+    "ap-Zj2zfXKq52zvpib7jGqYFp": {
+        "app_id" : "SDXL_Image_To_Image_modal",
+        "init_parameters" : {
+            "model" : "Anime"
+        },
+        "model_name" : "anime_image2image" 
+    },
+    "ap-ATG5IQ5s9jjrILhBbRNp4h": {
+        "app_id" : "SDXL_Image_To_Image_modal",
+        "init_parameters" : {
+            "model" : "Anime 2"
+        },
+        "model_name" : "anime_2_image2image" 
+    },
+    "ap-nM68b4WwQ6VzdNwwXBrOHE": {
+        "app_id" : "SDXL_Image_To_Image_modal",
+        "init_parameters" : {
+            "model" : "Realistic"
+        },
+        "model_name" : "realistic_image2image" 
+    },
+    "ap-6xdUez7nEduEYqDan7NTrh": {
+        "app_id" : "SDXL_Image_To_Image_modal",
+        "init_parameters" : {
+            "model" : "Realistic 2"
+        },
+        "model_name" : "realistic_2_image2image" 
+    },
+
+    "ap-eRSyl0imzrUrbvgdAYwDTl": {
+        "app_id" : "sdxlimage2image_api",
+        "init_parameters" : {
+        },
+        "model_name" : "SDXL_image2image" 
+    },
+
+    "ap-ssndjnidsierrsnsnd223d": {
+        "app_id" : "didvideo_api",
+        "init_parameters" : {
+        },
+        "model_name" : "did_video" 
+    },
+
+    "ap-m9XvuyMHQI0W5K0aE13N9t": {
+        "app_id" : "Stable_Video_Diffusion_modal",
+        "init_parameters" : {
+        },
+        "model_name" : "stable_diffusion_video" 
+    },
+
+    "ap-a1Syd0inzrUrbvgdAbcser": {
+        "app_id" : "elvenlabsaudio_api",
+        "init_parameters" : {
+        },
+        "model_name" : "Elven_labs_audio" 
+    },
+    "ap-a1b2c3d4e5f6g7h8i9j0kq": {
+        "app_id" : "SDXL_controlnet_modal",
+        "init_parameters" : {
+            "model" : "Colorful",
+            "controlnet_model" : "openpose"
+        },
+        "model_name" : "Openpose_controlnet__image2image" 
+    },
+    "ap-1us0FK21Ach6eiWxo22is8": {
+        "app_id" : "SDXL_controlnet_modal",
+        "init_parameters" : {
+            "model" : "Colorful",
+            "controlnet_model" : "canny"
+        },
+        "model_name" : "Canny_controlnet__image2image" 
+    },
+    "ap-WrXnJBXy23XpPh6IlH5tRX": {
+        "app_id" : "SDXL_controlnet_modal",
+        "init_parameters" :{
+            "model" : "Colorful",
+            "controlnet_model" : "depth"
+        },
+        "model_name" : "depth_controlnet__image2image" 
+    },
+    "ap-ebD8V0XxzAuKSu696A11nd": {
+        "app_id" : "SDXL_controlnet_modal",
+        "init_parameters" : {
+            "model" : "Colorful",
+            "controlnet_model" : "sketch"
+        },
+        "model_name" : "sketch_controlnet__image2image" 
+    },
+    "ap-7yMwQ4XtC3ZrP2jLHJ8bB1": {
+        "app_id" : "clipdropuncropimage2image_api",
+        "init_parameters" : {
+        },
+        "model_name" : "clipdrop_uncrop_image2image" 
+    },
+    "ap-7XmHk4LtVgFJq2cQoE3yB8": {
+        "app_id" : "clipdropcleanupimage2image_api",
+        "init_parameters" : {
+        },
+        "model_name" : "clipdrop_cleanup_image2image" 
+    },
+    "ap-L4vHj7YbXeT2qKoU1fW3G7": {
+        "app_id" : "clipdropreplacebackgroundimage2image_api",
+        "init_parameters" : {
+        },
+        "model_name" : "clipdrop_Replace_background_image2image" 
+    },
+    "ap-9k8P3v6zBq2s5T1rXwQm45": {
+        "app_id" : "clipdropremovetextimage2image_api",
+        "init_parameters" : {
+        },
+        "model_name" : "clipdrop_remove_text_image2image" 
+    },
+    "ap-TYMECaYPMCcOyK2ZgNHgqQ": {
+        "app_id" : "QRCode_Generation_modal", 
+        "init_parameters" : {
+        },
+        "model_name" : "QR_code_image2image" 
+    },
+    "ap-lpocU0cB9szyuvta9lZ83B": {
+        "app_id" : "Illusion_Diffusion_modal",
+        "init_parameters" : {
+        },
+        "model_name" : "Illusion_Diffusion_image2image"  
+    },
+    "ap-SwsTOsD7STxJ0obCkskUHw": {
+        "app_id" : "IPAdapter_face_consistent_modal",
+        "init_parameters" : {
+        },
+        "model_name" : "face_consistent_image2image"
+    },
+    "ap-kV3kwXL9QXJxYS6jV1VtkT": {
+        "app_id" : "BackGround_Removal_modal",
+        "init_parameters" : {
+        },
+        "model_name" : "Background_removal_image2image"
+    },
+    "ap-kNvCpegQY2HiDHmk5X7X6F": {
+        "app_id" : "IPAdapter_image_variation_modal",
+        "init_parameters" : {
+        },
+        "model_name" : "variation_image2image" 
+    },
+    "ap-NFDMz1Rn9UlpS6zMl2FNpm": {
+        "app_id" : "Ultrasharp_Upscaler_modal",
+        "init_parameters" : {
+        },
+        "model_name" : "upscaling_image2image" 
+    }
+}
+

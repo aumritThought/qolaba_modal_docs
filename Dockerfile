@@ -18,18 +18,13 @@ RUN pip install cachetools
 
 RUN mkdir app
 
-ADD ./app /root/app
+ADD ./ /root/app
 
 ARG TOKEN_ID
 ENV API_KEY=$TOKEN_ID
 ARG TOKEN_SECRET
 ENV API_KEY=$TOKEN_SECRET
 
-
-ARG API_KEY
-ENV API_KEY=$API_KEY
-ARG CLOUDINARY_URL
-ENV CLOUDINARY_URL=$CLOUDINARY_URL
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 

@@ -185,7 +185,8 @@ class DalleParameters(SDXLText2ImageParameters):
     quality : Optional[dalle_supported_quality] = "hd"  # type: ignore
 
 class SDXLAPITextToImageParameters(SDXLText2ImageParameters):
-    style_preset : Optional[sdxl_preset_list] # type: ignore
+    style_preset : Optional[sdxl_preset_list] = "enhance" # type: ignore
+    seed : int
 
 class SDXLAPIImageToImageParameters(SDXLImage2ImageParameters):
     style_preset : Optional[sdxl_preset_list] # type: ignore
@@ -205,8 +206,11 @@ class APITaskResponse(BaseModel):
 
 class APIInput(BaseModel):
     app_id : str
-    parameters : dict
+    parameters : Optional[dict] = {}
     init_parameters : Optional[dict] = {}
     ref_id: Optional[str] = ""
     celery: Optional[bool] = False 
 
+class TaskStatus(BaseModel):
+    task_id: Optional[str] = None
+    ref_id: Optional[str] = ""

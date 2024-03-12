@@ -1,30 +1,27 @@
 from celery import Celery
-import modal, time, os
+import time
 from celery.signals import worker_init, worker_process_init
 from src.utils.Constants import REDIS_URL, CELERY_RESULT_EXPIRATION_TIME, CELERY_MAX_RETRY, CELERY_SOFT_LIMIT
 from src.data_models.ModalAppSchemas import APIInput, APITaskResponse, TaskResponse
-from dotenv import load_dotenv
 from celery.result import AsyncResult
 from src.FastAPIServer.services.ServiceContainer import ServiceContainer, ServiceRegistry
-from src.FastAPIServer.services.IService import IService
-load_dotenv()
-
-# celery = Celery(
-#     "task_scheduler",
-#     broker = REDIS_URL,
-#     backend = REDIS_URL,
-# )
-
-# celery.conf.update(
-#     result_expires = CELERY_RESULT_EXPIRATION_TIME
-# )
-
-# celery.conf.CELERY_TASK_SOFT_TIME_LIMIT = CELERY_RESULT_EXPIRATION_TIME
-
-# celery.conf.CELERY_TASK_TIME_LIMIT = CELERY_RESULT_EXPIRATION_TIME
 
 
-# @celery.task( name="AI_task", time_limit = CELERY_RESULT_EXPIRATION_TIME, max_retries = CELERY_MAX_RETRY, soft_time_limit = CELERY_SOFT_LIMIT)
+celery = Celery(
+    "task_scheduler",
+    broker = REDIS_URL,
+    backend = REDIS_URL,
+)
+
+celery.conf.update(
+    result_expires = CELERY_RESULT_EXPIRATION_TIME
+)
+
+celery.conf.CELERY_TASK_SOFT_TIME_LIMIT = CELERY_RESULT_EXPIRATION_TIME
+
+celery.conf.CELERY_TASK_TIME_LIMIT = CELERY_RESULT_EXPIRATION_TIME
+
+
 
 container = ServiceContainer()
 service_registry = ServiceRegistry(container)
@@ -34,9 +31,11 @@ def get_service_list()-> dict:
     task_response = APITaskResponse(output=service_registry.get_available_services())
     return task_response.model_dump()
 
-def create_task(parameters: APIInput) -> dict:
+@celery.task( name="AI_task", time_limit = CELERY_RESULT_EXPIRATION_TIME, max_retries = CELERY_MAX_RETRY, soft_time_limit = CELERY_SOFT_LIMIT)
+def create_task(parameters: dict) -> dict:
 
     st = time.time()
+    parameters : APIInput = APIInput(**parameters)
 
     app = service_registry.get_service(parameters.app_id)
     if(parameters.app_id in service_registry.api_services):
@@ -67,16 +66,20 @@ def create_task(parameters: APIInput) -> dict:
 
 def task_gen(parameters: APIInput) -> dict:
 
-    # if parameters.celery == True:
-    #     task: AsyncResult = create_task.delay(parameters)
+    if parameters.celery == True:
+        task: AsyncResult = create_task.delay(parameters.model_dump())
 
-    #     task_response = BuildTaskResponse(
-    #         task_id=task.id, parameters=parameters, status=task.status
-    #     ).prepare_response()
+        task_response = APITaskResponse(
+            task_id=task.id, input=parameters.model_dump(), status=task.status
+        ).model_dump()
 
-    #     return task_response
-    # else:
-        return create_task(parameters)
+        return task_response
+    else:
+        return create_task(parameters.model_dump())
+    
+def get_task_status(id : str):
+    task_update = celery.AsyncResult(id)
+    return task_update
 
 
 

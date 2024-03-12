@@ -29,6 +29,7 @@ class SDXLText2Image(IService):
             "samples": parameters.batch,
             "steps": parameters.num_inference_steps,
             "style_preset": parameters.style_preset,
+            "seed": parameters.seed
         }
         response = make_request(
             self.url, "POST", json_data=json_data, headers=headers
