@@ -118,6 +118,8 @@ def upload_cloudinary_image(image : Imagetype | str, format : str = "JPEG") -> s
 
     except Exception as e:
         raise Exception(f"Error uploading image to Cloudinary: {e}")
+    
+
 
 def upload_cloudinary_video(video_path : str) -> str:
     cloudinary.config(

@@ -162,3 +162,4 @@ dependency-injector
 cachetools
 openai
 loguru
+google-cloud-storage
