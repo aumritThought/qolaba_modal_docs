@@ -24,7 +24,6 @@ Cython==3.0.8
 diffusers[torch]==0.25.0
 dnspython==2.6.1
 easydict==1.12
-torch==2.2.1
 einops==0.7.0
 fastapi==0.109.2
 ffmpeg-python==0.2.0
@@ -116,6 +115,7 @@ tifffile==2024.2.12
 timm==0.9.16
 tokenizers==0.15.2
 toml==0.10.2
+torch==2.2.1
 torchvision
 tqdm==4.66.2
 transformers

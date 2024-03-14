@@ -12,6 +12,8 @@ RUN apt-get update
 
 RUN apt-get install redis -y
 
+RUN pip install torch torchvision torchaudio
+
 # RUN pip install fastapi uvicorn Pillow modal requests python-dotenv gTTS elevenlabs pydub ffmpeg-python celery[redis] redis numpy psutil python-multipart pillow-heif cached_property einops 
 
 # RUN pip install cachetools
