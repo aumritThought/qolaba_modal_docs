@@ -21,11 +21,23 @@ celery.conf.CELERY_TASK_SOFT_TIME_LIMIT = CELERY_RESULT_EXPIRATION_TIME
 
 celery.conf.CELERY_TASK_TIME_LIMIT = CELERY_RESULT_EXPIRATION_TIME
 
+celery.conf.worker_init = worker_init
 
 
-container = ServiceContainer()
-service_registry = ServiceRegistry(container)
-service_registry.register_internal_services() 
+
+
+def initialize_shared_object():
+    global service_registry
+    
+    container = ServiceContainer()
+    service_registry = ServiceRegistry(container)
+    service_registry.register_internal_services() 
+    
+    pass
+
+@worker_process_init.connect
+def on_worker_init(**kwargs):
+    initialize_shared_object()
 
 def get_service_list()-> dict:
     task_response = APITaskResponse(output=service_registry.get_available_services())
@@ -33,10 +45,8 @@ def get_service_list()-> dict:
 
 @celery.task( name="AI_task", time_limit = CELERY_RESULT_EXPIRATION_TIME, max_retries = CELERY_MAX_RETRY, soft_time_limit = CELERY_SOFT_LIMIT)
 def create_task(parameters: dict) -> dict:
-
     st = time.time()
     parameters : APIInput = APIInput(**parameters)
-
     app = service_registry.get_service(parameters.app_id)
     if(parameters.app_id in service_registry.api_services):
         output_data = app().remote(parameters.parameters)

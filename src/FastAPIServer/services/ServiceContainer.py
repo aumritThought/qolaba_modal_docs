@@ -64,6 +64,7 @@ class ServiceRegistry:
         if not service_provider:
             self.register_new_modal_service(service_name)
             service_provider = getattr(self.container, service_name, None)
+            print(service_provider)
         return service_provider
     
     def get_available_services(self) -> list:

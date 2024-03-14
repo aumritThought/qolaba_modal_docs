@@ -163,6 +163,12 @@ OUTPUT_IMAGE_EXTENSION = "png"
 OUTPUT_AUDIO_EXTENSION = "mp3"
 OUTPUT_VIDEO_EXTENSION = "mp4"
 
+content_type = {
+    OUTPUT_IMAGE_EXTENSION : "image/jpeg",
+    OUTPUT_AUDIO_EXTENSION : "audio/mpeg",
+    OUTPUT_VIDEO_EXTENSION : "video/mp4"
+}
+
 extra_negative_prompt="disfigured, kitsch, ugly, oversaturated, greain, low-res, Deformed, blurry, bad anatomy, poorly drawn face, mutation, mutated, extra limb, poorly drawn hands, missing limb, floating limbs, disconnected limbs, malformed hands, blur, out of focus, long neck, long body, disgusting, poorly drawn, childish, mutilated, mangled, old, surreal, calligraphy, sign, writing, watermark, text, body out of frame, extra legs, extra arms, extra feet, out of frame, poorly drawn feet, cross-eye"
 
 gender_word = "gender"

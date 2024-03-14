@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi import Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from src.data_models.ModalAppSchemas import APIInput, APITaskResponse, TaskStatus
-from src.FastAPIServer.celery.Worker import task_gen, get_task_status
+from src.FastAPIServer.celery.Worker import task_gen, get_task_status, initialize_shared_object
 from src.utils.Globals import check_token
 from src.utils.Constants import app_dict
 from src.utils.Exceptions import handle_Request_exceptions, handle_exceptions
@@ -15,6 +15,9 @@ app = FastAPI()
 app.exception_handler(RequestValidationError)(handle_Request_exceptions)
 auth_scheme = HTTPBearer()
 
+@app.on_event("startup")
+def startup_event():
+    initialize_shared_object()
 
 @app.post("/generate_content", response_model=APITaskResponse)
 @handle_exceptions
@@ -35,7 +38,9 @@ def get_app_list(
     api_key: HTTPAuthorizationCredentials = Depends(auth_scheme),
 ):
     check_token(api_key)
-    return app_dict
+    task_response = APITaskResponse()
+    task_response.output = app_dict
+    return task_response.model_dump()
 
 
 @app.post("/tasks", response_model=APITaskResponse)

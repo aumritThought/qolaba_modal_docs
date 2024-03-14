@@ -1,13 +1,13 @@
 from src.data_models.ModalAppSchemas import TaskResponse, TimeData
 from modal import Image as MIM
 from modal import Secret
-from PIL import Image, ImageOps
+from PIL import Image
 from PIL.Image import Image as Imagetype
 from diffusers import DiffusionPipeline, StableDiffusionXLPipeline
 from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
 from transformers import CLIPImageProcessor
 import torch, time, os, requests, re, io, datetime, uuid
-from src.utils.Constants import BASE_IMAGE_COMMANDS, PYTHON_VERSION, REQUIREMENT_FILE_PATH, MAX_HEIGHT, MIN_HEIGHT, SDXL_REFINER_MODEL_PATH, google_credentials_info, BUCKET_NAME, OUTPUT_IMAGE_EXTENSION, SECRET_NAME
+from src.utils.Constants import BASE_IMAGE_COMMANDS, PYTHON_VERSION, REQUIREMENT_FILE_PATH, MAX_HEIGHT, MIN_HEIGHT, SDXL_REFINER_MODEL_PATH, google_credentials_info, BUCKET_NAME, OUTPUT_IMAGE_EXTENSION, SECRET_NAME, content_type
 from fastapi import HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials
 from requests import Response
@@ -117,6 +117,10 @@ def upload_data_gcp(data : Imagetype | str, extension : str) -> str:
         bucket = storage_client.bucket(BUCKET_NAME)
 
         blob = bucket.blob(destination_blob_name)
+
+        blob.content_type = content_type[extension]
+
+        blob.content_disposition = "inline"
 
         blob.upload_from_file(byte_data)
 
