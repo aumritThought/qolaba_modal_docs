@@ -57,7 +57,7 @@ def create_task(parameters: dict) -> dict:
     task_response = APITaskResponse(
          status="SUCCESS",
          input = parameters.model_dump(),
-         output = {"result" : output_data.result, "Has_NSFW_Content" : output_data.time},
+         output = {"result" : output_data.result, "Has_NSFW_Content" : output_data.Has_NSFW_Content},
          time_required = output_data.time.model_dump()
     )
 

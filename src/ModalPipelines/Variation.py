@@ -64,7 +64,7 @@ class stableDiffusion:
 
         parameters : VariationParameters = VariationParameters(**parameters)
 
-        parameters.file_url = get_image_from_url(parameters.file_url, resize = True)
+        parameters.file_url = get_image_from_url(parameters.file_url)
 
 
         images = []

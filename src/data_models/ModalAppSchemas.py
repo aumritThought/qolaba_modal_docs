@@ -75,7 +75,7 @@ class SDXLText2ImageParameters(BaseModel):
 
 class SDXLImage2ImageParameters(BaseModel):
     file_url : str | Any
-    strength : float = Query(gt = MIN_STRENGTH, le = MAX_STRENGTH)
+    strength : float = Query(default = 0.7, gt = MIN_STRENGTH, le = MAX_STRENGTH)
     guidance_scale:  float = Query( ge = MIN_GUIDANCE_SCALE, le = MAX_GUIDANCE_SCALE)
     batch:  int = Query( ge = MIN_BATCH, le = MAX_BATCH)
     prompt: str
@@ -114,7 +114,7 @@ class StableVideoDiffusion(BaseModel):
     fps : int = Query(default=MIN_FPS,ge=MIN_FPS, le=MAX_FPS)
 
 class IllusionDuiffusion(SDXLImage2ImageParameters):
-    controlnet_scale : float = Query(ge=0, le=4)
+    controlnet_scale : float = Query(default= 1.5, ge=0, le=4)
     num_inference_steps: int = Query(ge = MIN_INFERENCE_STEPS, le = MAX_INFERENCE_STEPS) 
 
 class ClipDropUncropParameters(BaseModel):
@@ -128,7 +128,7 @@ class ClipDropUncropParameters(BaseModel):
 
 class ClipDropCleanUpParameters(BaseModel):
     file_url : str | Any
-    mask_image : str | Any
+    mask_url : str | Any
 
 class ClipDropReplaceBackgroundParameters(BaseModel):
     file_url : str | Any
@@ -144,32 +144,27 @@ class DIDVideoParameters(BaseModel):
     voice_id: Optional[str] = "d7bbcdd6964c47bdaae26decade4a933"
     prompt: Optional[str] = "Hey, welcome to Qolaba"
 
-class ElevenLabsParameters(BaseModel):
-    prompt: str = Query(default="Hi, we are in Qolaba", max_length=2500, min_length=1) 
-    clone: Optional[bool]= False
+class CloneParameters(BaseModel):
     name: Optional[str] = "Cloned Voice"
     description : Optional[str] = "description"
-    list_of_files: List[str] = Query(default=["None"], max_length = MAX_SUPPORTED_AUDIO_FILE_ELEVENLABS, min_length = MIN_SUPPORTED_AUDIO_FILE_ELEVENLABS)
-    voice_design: Optional[bool] = False 
+    list_of_files: List[str] = Query(default=["None"], max_length = MIN_SUPPORTED_AUDIO_FILE_ELEVENLABS, min_length = MIN_SUPPORTED_AUDIO_FILE_ELEVENLABS)
+
+class DesignParameters(BaseModel):
+    name: Optional[str] = "Designed Voice"
+    description : Optional[str] = "description"
     gender: Optional[elevenlabs_gender_list]="female" # type: ignore
     age: Optional[elevenlabs_age_list]="young" # type: ignore
     accent: Optional[elevenlabs_accent_list]="american" # type: ignore
     accent_strength: float = Query(default = 1, ge = 0.3, le = 2)
-    generate_audio : Optional[bool]= True
+    
+
+class AudioParameters(BaseModel):
     voice_id : Optional[str] = "21m00Tcm4TlvDq8ikWAM"
     stability: float = Query(default=0.5,ge=0, le=1)
     similarity_boost: float = Query(default=0.75,ge=0, le=1)
     style: float = Query(default=0.0,ge=0, le=1)
     use_speaker_boost : Optional[bool] = True 
 
-    
-    @model_validator(mode='after')
-    def validate_params(self):
-        total_sum=sum([self.clone, self.voice_design, self.generate_audio])
-        if(not(total_sum==1)):
-            raise ValueError("Only one of 'clone', 'voicedesign','list_of_voices', or 'generate_audio' must be True")
-        return self
-    
     @field_validator("voice_id")
     def validate_voice_id(cls, v):
         set_api_key(os.environ["ELEVENLABS_API_KEY"])
@@ -180,13 +175,78 @@ class ElevenLabsParameters(BaseModel):
         if v not in voice_dict:
             raise ValueError("Invalid input. The parameter must be one of: " + ", ".join(voice_dict))
         return v
+
+class VoiceData(BaseModel):
+    category: Optional[List[str]]=["premade"]
+    description : Optional[str] = "Voice description"
+    @field_validator("category")
+    def validate_category(cls, v):
+        choices = set(["cloned", "generated", "premade"])
+        v=set(v)
+        if not(v.issubset(choices)):
+            raise ValueError("Invalid input. The parameter must be one of: " + ", ".join(choices))
+        return list(v)
+
+class ElevenLabsParameters(BaseModel):
+    prompt: str = Query(default="Hi, we are in Qolaba", max_length=2500, min_length=1) 
+    clone: Optional[bool]= False
+    clone_parameters : Optional[CloneParameters] = Field(default_factory=CloneParameters)
+    voice_design: Optional[bool] = False 
+    design_parameters : Optional[DesignParameters] = Field(default_factory=DesignParameters)
+    generate_audio : Optional[bool]= True
+    audio_parameters : Optional[AudioParameters] = Field(default_factory=AudioParameters)
+
+    @model_validator(mode='after')
+    def validate_params(self):
+        total_sum=sum([self.clone, self.voice_design, self.generate_audio])
+        if(not(total_sum==1)):
+            raise ValueError("Only one of 'clone', 'voicedesign','list_of_voices', or 'generate_audio' must be True")
+        return self
+
+
+# class ElevenLabsParameters(BaseModel):
+#     prompt: str = Query(default="Hi, we are in Qolaba", max_length=2500, min_length=1) 
+#     clone: Optional[bool]= False
+#     name: Optional[str] = "Cloned Voice"
+#     description : Optional[str] = "description"
+#     list_of_files: List[str] = Query(default=["None"], max_length = MAX_SUPPORTED_AUDIO_FILE_ELEVENLABS, min_length = MIN_SUPPORTED_AUDIO_FILE_ELEVENLABS)
+#     voice_design: Optional[bool] = False 
+#     gender: Optional[elevenlabs_gender_list]="female" # type: ignore
+#     age: Optional[elevenlabs_age_list]="young" # type: ignore
+#     accent: Optional[elevenlabs_accent_list]="american" # type: ignore
+#     accent_strength: float = Query(default = 1, ge = 0.3, le = 2)
+#     generate_audio : Optional[bool]= True
+#     voice_id : Optional[str] = "21m00Tcm4TlvDq8ikWAM"
+#     stability: float = Query(default=0.5,ge=0, le=1)
+#     similarity_boost: float = Query(default=0.75,ge=0, le=1)
+#     style: float = Query(default=0.0,ge=0, le=1)
+#     use_speaker_boost : Optional[bool] = True 
+
+    
+#     @model_validator(mode='after')
+#     def validate_params(self):
+#         total_sum=sum([self.clone, self.voice_design, self.generate_audio])
+#         if(not(total_sum==1)):
+#             raise ValueError("Only one of 'clone', 'voicedesign','list_of_voices', or 'generate_audio' must be True")
+#         return self
+    
+#     @field_validator("voice_id")
+#     def validate_voice_id(cls, v):
+#         set_api_key(os.environ["ELEVENLABS_API_KEY"])
+#         voices_data : List[Voice] = voices()
+#         voice_dict=[]
+#         for i in voices_data:
+#             voice_dict.append(i.voice_id)
+#         if v not in voice_dict:
+#             raise ValueError("Invalid input. The parameter must be one of: " + ", ".join(voice_dict))
+#         return v
     
 class DalleParameters(SDXLText2ImageParameters):
     quality : Optional[dalle_supported_quality] = "hd"  # type: ignore
 
 class SDXLAPITextToImageParameters(SDXLText2ImageParameters):
     style_preset : Optional[sdxl_preset_list] = "enhance" # type: ignore
-    seed : int
+    # seed : Optionalint
 
 class SDXLAPIImageToImageParameters(SDXLImage2ImageParameters):
     style_preset : Optional[sdxl_preset_list] # type: ignore

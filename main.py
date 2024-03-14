@@ -1,6 +1,5 @@
 from dotenv import load_dotenv
 load_dotenv()
-
 from fastapi import FastAPI
 from fastapi import Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials

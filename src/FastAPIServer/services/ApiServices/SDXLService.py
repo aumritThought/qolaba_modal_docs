@@ -1,7 +1,8 @@
 import io, base64
 from src.data_models.ModalAppSchemas import SDXLAPITextToImageParameters, SDXLAPIImageToImageParameters
-from src.utils.Globals import timing_decorator, make_request, upload_cloudinary_image, get_image_from_url, prepare_response
+from src.utils.Globals import timing_decorator, make_request, upload_data_gcp, get_image_from_url, prepare_response
 from src.FastAPIServer.services.IService import IService
+from src.utils.Constants import OUTPUT_IMAGE_EXTENSION
 
 class SDXLText2Image(IService):
     def __init__(self) -> None:
@@ -28,8 +29,7 @@ class SDXLText2Image(IService):
             "width": parameters.width,
             "samples": parameters.batch,
             "steps": parameters.num_inference_steps,
-            "style_preset": parameters.style_preset,
-            "seed": parameters.seed
+            "style_preset": parameters.style_preset
         }
         response = make_request(
             self.url, "POST", json_data=json_data, headers=headers
@@ -41,9 +41,7 @@ class SDXLText2Image(IService):
         image_urls = []
         for image in data["artifacts"]:
             image_urls.append(
-                upload_cloudinary_image(
-                    base64.b64decode(image["base64"])
-                )
+                upload_data_gcp(base64.b64decode(image["base64"]), OUTPUT_IMAGE_EXTENSION)
             )
         return prepare_response(image_urls, Has_NSFW_Content, 0, 0)
 
@@ -60,7 +58,7 @@ class SDXLImage2Image(IService):
     def remote(self, parameters: dict) -> dict:
         parameters : SDXLAPIImageToImageParameters = SDXLAPIImageToImageParameters(**parameters)
         image = get_image_from_url(
-            parameters.file_url, resize=False
+            parameters.file_url
         )
 
         image = image.resize((parameters.width, parameters.height)).convert("RGB")
@@ -95,9 +93,7 @@ class SDXLImage2Image(IService):
         image_urls = []
         for image in data["artifacts"]:
             image_urls.append(
-                upload_cloudinary_image(
-                    base64.b64decode(image["base64"])
-                )
+                upload_data_gcp(base64.b64decode(image["base64"]), OUTPUT_IMAGE_EXTENSION)
             )
 
         return prepare_response(image_urls, Has_NSFW_Content, 0, 0)

@@ -1,26 +1,5 @@
-# CONTROLNET_COMMANDS = [
-#     "apt-get update && apt-get install ffmpeg libsm6 libxext6 git -y",
-#     "apt-get update && apt-get install wget -y",
-#     "wget https://civitai.com/api/download/models/182077",
-#     "pip install diffusers --upgrade",
-#     "pip install controlnet_aux invisible_watermark transformers accelerate safetensors xformers==0.0.22 omegaconf pydantic cloudinary",
-#     "mv 182077 Starlight.safetensors",
-# ]
-
-# NORMAL_CONTROLNET_COMMANDS = [
-#             "apt-get update && apt-get install ffmpeg libsm6 libxext6  -y",
-#             "pip install diffusers transformers accelerate opencv-python Pillow xformers controlnet_aux matplotlib cloudinary",
-#         ]
-
-# STARLIGHT_SAFETENSORS_PATH = "../Starlight.safetensors"
-# QOLABA_SERVER_UPLOAD_CLOUDINARY_URL = "https://qolaba-server-production-caff.up.railway.app/api/v1/uploadToCloudinary/image"
-# CLOUDINARY_SECRET = "cloudinary-secrets"
-# CANNY_CONTROLNET_IMAGETOIMAGE = "canny_controlnet_image2image"
-# DEPTH_CONTROLNET_IMAGETOIMAGE = "depth_controlnet_image2image"
-# SD_REVANIM = "stablediffusionapi/rev-anim"
-# NORMAL_CONTROLNET_IMAGETOIMAGE = "normal_controlnet_image2image"
-
 from pydantic import constr
+import os
 
 #Volume variables
 VOLUME_NAME = "SDXL-LORA-Volume"
@@ -92,8 +71,8 @@ ULTRASHARP_MODEL = "/SDXL_models/4x-UltraSharp.pth"
 
 
 # Text_To_Image Configuration
-MAX_HEIGHT = 2048
-MIN_HEIGHT = 512
+MAX_HEIGHT = 1536
+MIN_HEIGHT = 256
 MAX_INFERENCE_STEPS = 50
 MIN_INFERENCE_STEPS = 5
 MAX_GUIDANCE_SCALE = 30
@@ -162,6 +141,27 @@ CELERY_SOFT_LIMIT = 7200
 
 #Modal app cache configuration
 MAX_TIME_MODAL_APP_CACHE =  3600
+
+
+#GOOGLE credential info
+google_credentials_info = {
+    "type": os.environ["GCP_TYPE"],
+    "project_id": os.environ["GCP_PROJECT_ID"],
+    "private_key_id": os.environ["GCP_PRIVATE_KEY_ID"],
+    "private_key": os.environ["GCP_PRIVATE_KEY"].encode('utf-8').decode('unicode_escape'),
+    "client_email": os.environ["GCP_CLIENT_EMAIL"],
+    "client_id": os.environ["GCP_CLIENT_ID"],
+    "auth_uri": os.environ["GCP_AUTH_URI"],
+    "token_uri": os.environ["GCP_TOKEN_URI"],
+    "auth_provider_x509_cert_url": os.environ["GCP_AUTH_PROVIDER_X509_CERT_URL"],
+    "client_x509_cert_url": os.environ["GCP_CLIENT_X509_CERT_URL"],
+    # "universe_domain": os.environ["GCP_UNIVERSE_DOMAIN"]
+}
+
+BUCKET_NAME = "qolaba"
+OUTPUT_IMAGE_EXTENSION = "png"
+OUTPUT_AUDIO_EXTENSION = "mp3"
+OUTPUT_VIDEO_EXTENSION = "mp4"
 
 #Parameter dictionary
 app_dict = {

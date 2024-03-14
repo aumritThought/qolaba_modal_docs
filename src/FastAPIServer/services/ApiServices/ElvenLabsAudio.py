@@ -4,9 +4,9 @@ from pydub import AudioSegment
 from src.data_models.ModalAppSchemas import ElevenLabsParameters
 from pydub import AudioSegment
 from io import BytesIO
-from src.utils.Globals import timing_decorator, upload_cloudinary_image, make_request, prepare_response
+from src.utils.Globals import timing_decorator, upload_data_gcp, make_request, prepare_response
 from src.FastAPIServer.services.IService import IService
-
+from src.utils.Constants import OUTPUT_AUDIO_EXTENSION
 
 class ElvenLabsAudio(IService):
     def __init__(self) -> None:
@@ -32,12 +32,12 @@ class ElvenLabsAudio(IService):
     def generate_audio(self, parameters: ElevenLabsParameters) -> dict:
 
         voice = Voice(
-            voice_id = parameters.voice_id,
+            voice_id = parameters.audio_parameters.voice_id,
             settings=VoiceSettings(
-                stability = parameters.stability,
-                similarity_boost = parameters.similarity_boost,
-                style = parameters.style,
-                use_speaker_boost = parameters.use_speaker_boost,
+                stability = parameters.audio_parameters.stability,
+                similarity_boost = parameters.audio_parameters.similarity_boost,
+                style = parameters.audio_parameters.style,
+                use_speaker_boost = parameters.audio_parameters.use_speaker_boost,
             ),
         )
 
@@ -46,8 +46,9 @@ class ElvenLabsAudio(IService):
         )
 
         audio_length = self.get_audio_length(BytesIO(audio))
+        print(type(audio))
 
-        url = upload_cloudinary_image(audio)
+        url = upload_data_gcp(audio, OUTPUT_AUDIO_EXTENSION)
 
         return prepare_response({"Audio url": url, "Audio length": audio_length}, [False], 0, 0)
 
@@ -56,7 +57,7 @@ class ElvenLabsAudio(IService):
 
         list_of_saved_audios = []
 
-        for url in parameters.list_of_files:
+        for url in parameters.clone_parameters.list_of_files:
             file_name = self.get_audio_file(url)
             
             audio_length = self.get_audio_length(file_name)
@@ -73,8 +74,8 @@ class ElvenLabsAudio(IService):
             raise Exception("Provide at least one proper audio URL", "Internal Error")
 
         clone_settings = VoiceClone(
-            name = parameters.name,
-            description = parameters.description,
+            name = parameters.clone_parameters.name,
+            description = parameters.clone_parameters.description,
             files = list_of_saved_audios
         )
 
@@ -94,13 +95,13 @@ class ElvenLabsAudio(IService):
     def voice_design(self, parameters: ElevenLabsParameters) -> dict:
 
         design = VoiceDesign(
-            name=parameters.name,
+            name=parameters.design_parameters.name,
             text="x" * 100,  # some random string is given as it is required
-            voice_description=parameters.description,
-            gender=parameters.gender,
-            age=parameters.age,
-            accent=parameters.accent,
-            accent_strength=parameters.accent_strength,
+            voice_description=parameters.design_parameters.description,
+            gender=parameters.design_parameters.gender,
+            age=parameters.design_parameters.age,
+            accent=parameters.design_parameters.accent,
+            accent_strength=parameters.design_parameters.accent_strength,
         )
         voice = Voice.from_design(design)
 

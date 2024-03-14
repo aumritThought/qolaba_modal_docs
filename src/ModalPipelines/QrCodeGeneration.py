@@ -23,7 +23,7 @@ def download_base_sdxl():
 
 vol = Volume.persisted(VOLUME_NAME)
 
-image = get_base_image().run_function(download_base_sdxl)
+image = get_base_image().run_function(download_base_sdxl, secrets= [Secret.from_name(SECRET_NAME)])
 
 stub.image = image
 
@@ -48,7 +48,7 @@ class stableDiffusion:
         )
         self.pipe.to("cuda")
 
-        self.pipe.enable_xformers_memory_efficient_attention()
+        # self.pipe.enable_xformers_memory_efficient_attention()
         # self.refiner.enable_xformers_memory_efficient_attention()
         
         self.safety_checker = SafetyChecker()
@@ -59,7 +59,7 @@ class stableDiffusion:
 
         parameters : IllusionDuiffusion = IllusionDuiffusion(**parameters)
 
-        parameters.file_url = get_image_from_url(parameters.file_url, resize = True)
+        parameters.file_url = get_image_from_url(parameters.file_url)
 
         st = time.time()
 

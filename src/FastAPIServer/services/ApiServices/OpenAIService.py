@@ -1,16 +1,17 @@
 from src.data_models.ModalAppSchemas import DalleParameters
 import threading
-from src.utils.Globals import timing_decorator, upload_cloudinary_image, make_request, prepare_response
+from src.utils.Globals import timing_decorator, upload_data_gcp, make_request, prepare_response
 from openai import OpenAI
 from src.utils.Constants import DALLE_SUPPORTED_HW
 from typing import List
 from src.FastAPIServer.services.IService import IService
+from src.utils.Constants import OUTPUT_IMAGE_EXTENSION
 
 
 class DalleText2Image(IService):
     def __init__(self) -> None:
         super().__init__()
-        self.client = OpenAI(self.openai_api_key)
+        self.client = OpenAI(api_key = self.openai_api_key)
 
     def make_dalle_api_request( self, prompt: str, Height_width: str, quality: str) -> str:
         response = self.client.images.generate(
@@ -19,7 +20,7 @@ class DalleText2Image(IService):
 
         response = make_request(response.data[0].url, "GET")
 
-        return upload_cloudinary_image(response.content)
+        return upload_data_gcp(response.content, OUTPUT_IMAGE_EXTENSION)
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:

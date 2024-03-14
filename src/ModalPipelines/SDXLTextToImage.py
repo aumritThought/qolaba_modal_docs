@@ -17,7 +17,7 @@ def download_base_sdxl():
 
 vol = Volume.persisted(VOLUME_NAME)
 
-image = get_base_image().run_function(download_base_sdxl)
+image = get_base_image().run_function(download_base_sdxl, secrets= [Secret.from_name(SECRET_NAME)])
 
 stub.image = image
 
@@ -42,8 +42,8 @@ class stableDiffusion:
 
         self.refiner = get_refiner(self.pipe)
 
-        self.pipe.enable_xformers_memory_efficient_attention()
-        self.refiner.enable_xformers_memory_efficient_attention()
+        # self.pipe.enable_xformers_memory_efficient_attention()
+        # self.refiner.enable_xformers_memory_efficient_attention()
         
         self.safety_checker = SafetyChecker()
         self.container_execution_time = time.time() - st

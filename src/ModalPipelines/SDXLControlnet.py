@@ -81,7 +81,7 @@ def download_base_sdxl():
 
 vol = Volume.persisted(VOLUME_NAME)
 
-image = get_base_image().run_function(download_base_sdxl, gpu = "t4")
+image = get_base_image().run_function(download_base_sdxl, gpu = "t4", secrets= [Secret.from_name(SECRET_NAME)])
 
 stub.image = image
 
@@ -122,13 +122,13 @@ class stableDiffusion:
 
         parameters : SDXLControlNetParameters = SDXLControlNetParameters(**parameters)
 
-        parameters.file_url = get_image_from_url(parameters.file_url, resize = True)
+        parameters.file_url = get_image_from_url(parameters.file_url)
 
         controlnet_image_model = ContrloNetImageGeneration(parameters.file_url, self.init_parameters.controlnet_model)
         controlnet_image = controlnet_image_model.prepare_images()
 
         st = time.time()
-
+        
         images = []
 
         for i in range(0, parameters.batch):

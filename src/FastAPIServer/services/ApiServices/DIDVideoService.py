@@ -1,7 +1,8 @@
 import io, time, os
 from src.data_models.ModalAppSchemas import DIDVideoParameters
-from src.utils.Globals import timing_decorator,  upload_cloudinary_image, make_request, prepare_response
+from src.utils.Globals import timing_decorator,  upload_data_gcp, make_request, prepare_response
 from src.FastAPIServer.services.IService import IService
+from src.utils.Constants import OUTPUT_VIDEO_EXTENSION
 
 class DIDVideo(IService):
     def __init__(self) -> None:
@@ -80,9 +81,7 @@ class DIDVideo(IService):
 
         response = make_request(vid_url, "GET")
 
-        video_bytes = io.BytesIO(response.content)
-
-        cld_vid_url = upload_cloudinary_image(video_bytes)
+        cld_vid_url = upload_data_gcp(response.content, OUTPUT_VIDEO_EXTENSION)
         
         return prepare_response([cld_vid_url], [False], 0, 0)
 

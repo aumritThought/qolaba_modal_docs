@@ -22,7 +22,7 @@ def download_face_model():
 image = get_base_image().run_commands(
     "git clone https://github.com/tencent-ailab/IP-Adapter.git",
     "wget https://huggingface.co/h94/IP-Adapter-FaceID/resolve/main/ip-adapter-faceid_sdxl.bin"
-).run_function(download_face_model)
+).run_function(download_face_model, secrets= [Secret.from_name(SECRET_NAME)])
 
 stub.image = image
 
@@ -72,7 +72,7 @@ class stableDiffusion:
 
         parameters : FaceConsistentParameters = FaceConsistentParameters(**parameters)
 
-        parameters.file_url = get_image_from_url(parameters.file_url, resize = True)
+        parameters.file_url = get_image_from_url(parameters.file_url)
 
         face_img=np.array(parameters.file_url)
 

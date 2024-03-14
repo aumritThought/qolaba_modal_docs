@@ -1,18 +1,19 @@
 from src.data_models.ModalAppSchemas import TaskResponse, TimeData
 from modal import Image as MIM
-import cloudinary
-import cloudinary.uploader
+from modal import Secret
 from PIL import Image, ImageOps
 from PIL.Image import Image as Imagetype
 from diffusers import DiffusionPipeline, StableDiffusionXLPipeline
 from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
 from transformers import CLIPImageProcessor
-import torch, time, os, requests, re, io
-from src.utils.Constants import BASE_IMAGE_COMMANDS, PYTHON_VERSION, REQUIREMENT_FILE_PATH, MAX_HEIGHT, MIN_HEIGHT, SDXL_REFINER_MODEL_PATH
+import torch, time, os, requests, re, io, datetime, uuid
+from src.utils.Constants import BASE_IMAGE_COMMANDS, PYTHON_VERSION, REQUIREMENT_FILE_PATH, MAX_HEIGHT, MIN_HEIGHT, SDXL_REFINER_MODEL_PATH, google_credentials_info, BUCKET_NAME, OUTPUT_IMAGE_EXTENSION, SECRET_NAME
 from fastapi import HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials
 from requests import Response
-
+from google.cloud import storage
+from google.oauth2 import service_account
+import numpy as np
 #Safety Checker Utils
 
 class SafetyChecker:
@@ -24,10 +25,10 @@ class SafetyChecker:
 
     def check_nsfw_content(self, image : Imagetype) -> list[bool]:
         
-        safety_checker_input = self.feature_extractor(image, return_tensors="pt").to("cuda")
+        safety_checker_input = self.feature_extractor(np.array(image), return_tensors="pt").to("cuda")
 
         image, has_nsfw_concept = self.safety_checker(
-            images=image, clip_input=safety_checker_input.pixel_values
+            images= np.array(image), clip_input=safety_checker_input.pixel_values
         )
 
         return has_nsfw_concept
@@ -37,7 +38,7 @@ def download_safety_checker():
 
 #Modal image Utils
 def get_base_image() -> MIM:
-    return MIM.debian_slim(python_version = PYTHON_VERSION).run_commands(BASE_IMAGE_COMMANDS).pip_install_from_requirements(REQUIREMENT_FILE_PATH).run_function(download_safety_checker, gpu = "t4")
+    return MIM.debian_slim(python_version = PYTHON_VERSION).run_commands(BASE_IMAGE_COMMANDS).pip_install_from_requirements(REQUIREMENT_FILE_PATH).run_function(download_safety_checker, gpu = "t4", secrets = [Secret.from_name(SECRET_NAME)])
 
 #Modal app utils
 def get_refiner(pipe : StableDiffusionXLPipeline) -> DiffusionPipeline:
@@ -52,7 +53,7 @@ def get_refiner(pipe : StableDiffusionXLPipeline) -> DiffusionPipeline:
 
 
 #Modal App Output relataed utils
-def generate_image_urls(image_data, safety_checker : SafetyChecker, format : str = "JPEG") -> tuple[list[str], list[bool]]:
+def generate_image_urls(image_data, safety_checker : SafetyChecker) -> tuple[list[str], list[bool]]:
     image_urls = []
     has_nsfw_content = []
     for im in range(0, len(image_data)):
@@ -60,7 +61,7 @@ def generate_image_urls(image_data, safety_checker : SafetyChecker, format : str
         if nsfw_content[0]:
             has_nsfw_content.append(nsfw_content[0])
         else:
-            im_url = upload_cloudinary_image(image_data[im], format)
+            im_url = upload_data_gcp(image_data[im], OUTPUT_IMAGE_EXTENSION)
             image_urls.append(im_url)
             has_nsfw_content.append(nsfw_content[0])
     return image_urls, has_nsfw_content
@@ -88,7 +89,7 @@ def make_request(url: str, method: str, json_data: dict = None, headers: dict = 
     if method == "GET":
         response = requests.get(url, headers=headers)
     elif method == "POST":
-        response = requests.post(url, json=json_data, headers=headers, files = files)
+        response = requests.post(url, data=json_data, headers=headers, files = files)
 
     if(response.status_code != 200):
         raise Exception(str(response.text), "API Error")
@@ -96,82 +97,68 @@ def make_request(url: str, method: str, json_data: dict = None, headers: dict = 
     return response
 
 #Cloudinary
-def upload_cloudinary_image(image : Imagetype | str, format : str = "JPEG") -> str:
-    cloudinary.config(
-        cloud_name=os.environ["CLOUD_NAME"],
-        api_key=os.environ["CLOUDINARY_API_KEY"],
-        api_secret=os.environ["CLOUDINARY_API_SECRET"],
-    )
-
+def upload_data_gcp(data : Imagetype | str, extension : str) -> str:
     try:
-        if(type(image) == Imagetype):
+        current_time = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        random_string = str(uuid.uuid4())
+
+        destination_blob_name = f"{current_time}_{random_string}.{extension}"
+        if(type(data) == Imagetype):
             with io.BytesIO() as buffer:
-                image.save(buffer, format=format)
-                image_bytes = buffer.getvalue()
-        else:
-            image_bytes = io.BytesIO(image)
+                data.save(buffer, format="PNG")
+                data = buffer.getvalue()
 
-        response = cloudinary.uploader.upload(
-            file=image_bytes,
-        )
-        return response["secure_url"]
+        byte_data = io.BytesIO(data)
 
-    except Exception as e:
-        raise Exception(f"Error uploading image to Cloudinary: {e}")
-    
+        credentials = service_account.Credentials.from_service_account_info(google_credentials_info)
 
+        storage_client = storage.Client(credentials=credentials, project=google_credentials_info['project_id'])
 
-def upload_cloudinary_video(video_path : str) -> str:
-    cloudinary.config(
-        cloud_name=os.environ["CLOUD_NAME"],
-        api_key=os.environ["CLOUDINARY_API_KEY"],
-        api_secret=os.environ["CLOUDINARY_API_SECRET"],
-    )
+        bucket = storage_client.bucket(BUCKET_NAME)
 
-    try:
-        response = cloudinary.uploader.upload(
-                file=video_path,  resource_type="video"
-            )
-        return response["secure_url"]
+        blob = bucket.blob(destination_blob_name)
+
+        blob.upload_from_file(byte_data)
+
+        return blob.public_url
 
     except Exception as e:
-        raise Exception(f"Error uploading image to Cloudinary: {e}")
+        raise Exception(f"Error uploading to GCP: {e}")
+
 
 #Image operations
 def resize_image(img: Imagetype) -> Imagetype:
     img = img.resize((64 * round(img.size[0] / 64), 64 * round(img.size[1] / 64)))
+    if(img.size[0]*img.size[1] > MAX_HEIGHT*MAX_HEIGHT):
+        # if ( img.size[0] > MAX_HEIGHT or img.size[0] < MIN_HEIGHT or img.size[1] > MAX_HEIGHT or img.size[1] < MIN_HEIGHT):
+            if img.size[1] >= img.size[0]:
+                height = MAX_HEIGHT
+                width = ((int(img.size[0]* MAX_HEIGHT/ img.size[1]))// 64) * 64
+            else:
+                width = MAX_HEIGHT
+                height = ((int(img.size[1]*MAX_HEIGHT/ img.size[0]))// 64) * 64
 
-    if ( img.size[0] > MAX_HEIGHT or img.size[0] < MIN_HEIGHT or img.size[1] > MAX_HEIGHT or img.size[1] < MIN_HEIGHT):
-
-        if img.size[1] >= img.size[0]:
-            height = MAX_HEIGHT
-            width = ((int(img.size[0]* MAX_HEIGHT/ img.size[1]))// 64) * 64
-        else:
-            width = MAX_HEIGHT
-            height = ((int(img.size[1]*MAX_HEIGHT/ img.size[0]))// 64) * 64
-
-        img = img.resize((width, height))
+            img = img.resize((width, height))
     return img
 
 
 
-def get_image_from_url(url: str, resize : bool) -> Imagetype:
+def get_image_from_url(url: str) -> Imagetype:
 
     response : Response = make_request(url, method = "GET") 
     image_data = io.BytesIO(response.content)
     image = Image.open(image_data).convert("RGB")
-    if(resize == True):
-        image = resize_image(image)
+    image = resize_image(image)
     return image
 
 def invert_bw_image_color(img: Imagetype) -> Imagetype:
-    white_background = Image.new("RGB", img.size, (255, 255, 255))
+    mask_array = np.array(img)
 
-    white_background.paste(img, mask=img.split()[3])
+    inverted_mask_array = 255 - mask_array
 
-    img = ImageOps.invert(white_background)
-
-    return img
+    inverted_mask = Image.fromarray(inverted_mask_array)
+    
+    return inverted_mask
 
 
 def get_seed_generator(seed: int) -> torch.Generator:
