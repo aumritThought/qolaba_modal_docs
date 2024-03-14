@@ -2,7 +2,7 @@ from modal import Stub, method, Volume, Secret
 from src.data_models.Configuration import stub_dictionary
 from src.data_models.ModalAppSchemas import StubNames, IllusionDuiffusion
 from src.utils.Globals import get_base_image, SafetyChecker, generate_image_urls, prepare_response, get_image_from_url
-from src.utils.Constants import VOLUME_NAME, VOLUME_PATH, SECRET_NAME
+from src.utils.Constants import VOLUME_NAME, VOLUME_PATH, SECRET_NAME, extra_negative_prompt
 from diffusers import StableDiffusionControlNetPipeline, ControlNetModel
 import torch, time
         
@@ -59,6 +59,8 @@ class stableDiffusion:
 
         parameters : IllusionDuiffusion = IllusionDuiffusion(**parameters)
 
+        parameters.negative_prompt = parameters.negative_prompt + extra_negative_prompt
+        
         parameters.file_url = get_image_from_url(parameters.file_url)
 
         st = time.time()

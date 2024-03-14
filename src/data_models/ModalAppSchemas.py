@@ -13,7 +13,7 @@ from src.utils.Constants import (
     MAX_COLOR, MIN_COLOR,
     MAX_FPS, MIN_FPS,
     MIN_INCREASE_SIDE, MAX_INCREASE_SIDE,
-    MIN_SUPPORTED_AUDIO_FILE_ELEVENLABS, MAX_SUPPORTED_AUDIO_FILE_ELEVENLABS,
+    MIN_SUPPORTED_AUDIO_FILE_ELEVENLABS, MAX_SUPPORTED_AUDIO_FILE_ELEVENLABS, gender_word,
     elevenlabs_accent_list, elevenlabs_age_list, elevenlabs_gender_list, dalle_supported_quality, sdxl_preset_list, did_expression_list)
 from src.utils.Constants import sdxl_model_string, controlnet_models
 from elevenlabs import voices, Voice, set_api_key
@@ -31,6 +31,7 @@ class StubNames(BaseModel):
     stable_video_diffusion : str = "Stable_Video_Diffusion"
     illusion_diffusion : str = "Illusion_Diffusion"
     qr_code_generation : str = "QRCode_Generation"
+    frnd_face_consistent : str = "IPAdapter_FRND_face_consistent"
 
 class StubConfiguration(BaseModel):
     memory : int
@@ -95,6 +96,20 @@ class FaceConsistentParameters(SDXLText2ImageParameters):
     file_url : str | Any
     strength : float = Query(gt = MIN_STRENGTH, le = MAX_STRENGTH) 
 
+class FRNDFaceAvatarParameters(BaseModel):
+    height: int = Query(default=1024, ge=MIN_HEIGHT, le=1024)
+    width: int = Query(default=1024, ge=MIN_HEIGHT, le=1024)
+    num_inference_steps: int = Query(default=30, ge=MIN_INFERENCE_STEPS, le=40)
+    guidance_scale: float = Query(default=7.5, ge=MIN_GUIDANCE_SCALE, le=MAX_GUIDANCE_SCALE)
+    batch: int = Query(default=1, ge=MIN_BATCH, le=MAX_BATCH)
+    prompt: str | None = f"black plain background,  VECTOR CARTOON ILLUSTRATION, half-body shot portrait {gender_word},  5 o clock shadow, 3d bitmoji avatar render, pixar, high def textures 8k, highly detailed, 3d render, award winning, no background elements"
+    negative_prompt: str | None = " "
+    file_url: str | Any
+    strength: float = Query(default= 1, gt=MIN_STRENGTH, le=MAX_STRENGTH)
+    gender : Literal["male", "female"]
+    remove_background : bool
+
+
 class InitParameters(BaseModel):
     model : str = Field(pattern = sdxl_model_string)  
     lora_model : Optional[str] = None
@@ -147,7 +162,7 @@ class DIDVideoParameters(BaseModel):
 class CloneParameters(BaseModel):
     name: Optional[str] = "Cloned Voice"
     description : Optional[str] = "description"
-    list_of_files: List[str] = Query(default=["None"], max_length = MIN_SUPPORTED_AUDIO_FILE_ELEVENLABS, min_length = MIN_SUPPORTED_AUDIO_FILE_ELEVENLABS)
+    list_of_files: List[str] = Query(default=["None"], max_length = MAX_SUPPORTED_AUDIO_FILE_ELEVENLABS, min_length = MIN_SUPPORTED_AUDIO_FILE_ELEVENLABS)
 
 class DesignParameters(BaseModel):
     name: Optional[str] = "Designed Voice"

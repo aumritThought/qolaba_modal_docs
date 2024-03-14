@@ -72,7 +72,6 @@ class stableDiffusion:
             image = self.remover.process(parameters.file_url, type="rgba")
         torch.cuda.empty_cache()
 
-        print(image)
         image_urls, has_nsfw_content = generate_image_urls([image], self.safety_checker)
 
         self.runtime = time.time() - st

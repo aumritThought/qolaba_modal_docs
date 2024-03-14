@@ -163,6 +163,10 @@ OUTPUT_IMAGE_EXTENSION = "png"
 OUTPUT_AUDIO_EXTENSION = "mp3"
 OUTPUT_VIDEO_EXTENSION = "mp4"
 
+extra_negative_prompt="disfigured, kitsch, ugly, oversaturated, greain, low-res, Deformed, blurry, bad anatomy, poorly drawn face, mutation, mutated, extra limb, poorly drawn hands, missing limb, floating limbs, disconnected limbs, malformed hands, blur, out of focus, long neck, long body, disgusting, poorly drawn, childish, mutilated, mangled, old, surreal, calligraphy, sign, writing, watermark, text, body out of frame, extra legs, extra arms, extra feet, out of frame, poorly drawn feet, cross-eye"
+
+gender_word = "gender"
+
 #Parameter dictionary
 app_dict = {
     "ap-JOsvgUBfInC2UQnz0FQFkG": {
@@ -414,6 +418,12 @@ app_dict = {
             "model" : "Colorful"
         },
         "model_name" : "face_consistent_image2image"
+    },
+    "ap-jL9u1wFpY5sRv2XmN3aQ44": {
+        "app_id" : "IPAdapter_FRND_face_consistent_modal",
+        "init_parameters" : {
+        },
+        "model_name" : "face_consistent_FRND_image2image"
     },
     "ap-kV3kwXL9QXJxYS6jV1VtkT": {
         "app_id" : "BackGround_Removal_modal",

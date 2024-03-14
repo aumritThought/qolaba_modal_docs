@@ -2,7 +2,7 @@ from modal import Stub, method, Volume, Secret
 from src.data_models.Configuration import stub_dictionary
 from src.data_models.ModalAppSchemas import StubNames, SDXLText2ImageParameters, InitParameters
 from src.utils.Globals import get_base_image, get_refiner, SafetyChecker, generate_image_urls, prepare_response
-from src.utils.Constants import sdxl_model_list, VOLUME_NAME, VOLUME_PATH, SECRET_NAME
+from src.utils.Constants import sdxl_model_list, VOLUME_NAME, VOLUME_PATH, SECRET_NAME, extra_negative_prompt
 from diffusers import StableDiffusionXLPipeline
 import torch, time
 
@@ -54,6 +54,8 @@ class stableDiffusion:
         parameters : SDXLText2ImageParameters = SDXLText2ImageParameters(**parameters)
 
         images = []
+
+        parameters.negative_prompt = parameters.negative_prompt + extra_negative_prompt
 
         for i in range(0, parameters.batch):
             image = self.pipe(

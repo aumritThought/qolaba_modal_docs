@@ -2,7 +2,7 @@ from modal import Stub, method, Volume, Secret
 from src.data_models.Configuration import stub_dictionary
 from src.data_models.ModalAppSchemas import StubNames, InitParameters, VariationParameters
 from src.utils.Globals import get_base_image, SafetyChecker, generate_image_urls, prepare_response, get_image_from_url, get_refiner
-from src.utils.Constants import VOLUME_NAME, VOLUME_PATH, SECRET_NAME, sdxl_model_list
+from src.utils.Constants import VOLUME_NAME, VOLUME_PATH, SECRET_NAME, sdxl_model_list, extra_negative_prompt
 import torch, time, os, sys
 from diffusers import StableDiffusionXLPipeline
 
@@ -66,6 +66,7 @@ class stableDiffusion:
 
         parameters.file_url = get_image_from_url(parameters.file_url)
 
+        parameters.negative_prompt = parameters.negative_prompt + extra_negative_prompt
 
         images = []
         if(parameters.prompt == None or parameters.prompt == ""):

@@ -1,15 +1,17 @@
 from modal import Stub, method, Volume, Secret
 from src.data_models.Configuration import stub_dictionary
-from src.data_models.ModalAppSchemas import StubNames, InitParameters, FaceConsistentParameters
+from src.data_models.ModalAppSchemas import StubNames, FRNDFaceAvatarParameters
 from src.utils.Globals import get_base_image, SafetyChecker, generate_image_urls, prepare_response, get_image_from_url, get_refiner
-from src.utils.Constants import VOLUME_NAME, VOLUME_PATH, SECRET_NAME, sdxl_model_list, extra_negative_prompt
+from src.utils.Constants import VOLUME_NAME, VOLUME_PATH, SECRET_NAME, sdxl_model_list, extra_negative_prompt, gender_word
 import torch, time, os, sys
 from diffusers import StableDiffusionXLPipeline
 from insightface.app import FaceAnalysis
 from insightface.utils import face_align
 import numpy as np
+from transparent_background import Remover
 
-stub_name = StubNames().face_consistent
+
+stub_name = StubNames().frnd_face_consistent
 
 stub = Stub(stub_name)
 
@@ -18,6 +20,7 @@ vol = Volume.persisted(VOLUME_NAME)
 def download_face_model():
     app = FaceAnalysis(name="buffalo_l", providers=['CUDAExecutionProvider', 'CPUExecutionProvider'])
     app.prepare(ctx_id=0, det_size=(640, 640))
+    Remover()
 
 image = get_base_image().run_commands(
     "git clone https://github.com/tencent-ailab/IP-Adapter.git",
@@ -41,14 +44,11 @@ class stableDiffusion:
 
         from ip_adapter.ip_adapter_faceid import IPAdapterFaceIDXL
 
-        init_parameters : InitParameters = InitParameters(**init_parameters)
         
         pipe = StableDiffusionXLPipeline.from_single_file(
-            sdxl_model_list.get(init_parameters.model), torch_dtype=torch.float16, use_safetensors=True, variant="fp16"
+            sdxl_model_list.get("Colorful"), torch_dtype=torch.float16, use_safetensors=True, variant="fp16"
         )
         pipe.to("cuda")
-        if(init_parameters.lora_model):
-            pipe.load_lora_weights(init_parameters.lora_model)
 
         self.refiner = get_refiner(pipe)
 
@@ -62,6 +62,8 @@ class stableDiffusion:
         device = "cuda"
 
         self.ip_model = IPAdapterFaceIDXL(pipe, ip_ckpt, device)
+
+        self.remover = Remover()
         
         self.safety_checker = SafetyChecker()
         self.container_execution_time = time.time() - st
@@ -70,9 +72,11 @@ class stableDiffusion:
     def run_inference(self, parameters : dict) -> dict:
         st = time.time()
 
-        parameters : FaceConsistentParameters = FaceConsistentParameters(**parameters)
+        parameters : FRNDFaceAvatarParameters = FRNDFaceAvatarParameters(**parameters)
 
         parameters.negative_prompt = parameters.negative_prompt + extra_negative_prompt
+
+        parameters.prompt = parameters.prompt.replace(gender_word, parameters.gender)
 
         parameters.file_url = get_image_from_url(parameters.file_url)
 
@@ -110,8 +114,13 @@ class stableDiffusion:
                 image=image[0],
             ).images[0]
 
+            if (parameters.remove_background == True):
+                image = self.remover.process(image, type="rgba")
+
             torch.cuda.empty_cache()
+
             images.append(image)
+
 
         image_urls, has_nsfw_content = generate_image_urls(images, self.safety_checker)
 

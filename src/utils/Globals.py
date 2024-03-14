@@ -24,7 +24,7 @@ class SafetyChecker:
         self.feature_extractor = CLIPImageProcessor()
 
     def check_nsfw_content(self, image : Imagetype) -> list[bool]:
-        
+        image = image.convert("RGB")
         safety_checker_input = self.feature_extractor(np.array(image), return_tensors="pt").to("cuda")
 
         image, has_nsfw_concept = self.safety_checker(
@@ -76,7 +76,7 @@ def prepare_response(result: list[str] | dict, Has_NSFW_content : list[bool], ti
     return task_response.model_dump()
 
 #Completing request 
-def make_request(url: str, method: str, json_data: dict = None, headers: dict = None, files : dict = None) -> Response:
+def make_request(url: str, method: str, json_data: dict = None, headers: dict = None, files : dict = None, json : dict = None) -> Response:
 
     method = method.upper()
 
@@ -89,7 +89,7 @@ def make_request(url: str, method: str, json_data: dict = None, headers: dict = 
     if method == "GET":
         response = requests.get(url, headers=headers)
     elif method == "POST":
-        response = requests.post(url, data=json_data, headers=headers, files = files)
+        response = requests.post(url, data=json_data, headers=headers, files = files, json = json)
 
     if(response.status_code != 200):
         raise Exception(str(response.text), "API Error")

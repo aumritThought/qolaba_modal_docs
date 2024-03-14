@@ -2,7 +2,7 @@ from modal import Stub, method, Volume, Secret
 from src.data_models.Configuration import stub_dictionary
 from src.data_models.ModalAppSchemas import StubNames, SDXLControlNetParameters, InitParameters
 from src.utils.Globals import get_base_image, get_refiner, SafetyChecker, generate_image_urls, prepare_response, get_image_from_url
-from src.utils.Constants import sdxl_model_list, VOLUME_NAME, VOLUME_PATH, SECRET_NAME, controlnet_model_list
+from src.utils.Constants import sdxl_model_list, VOLUME_NAME, VOLUME_PATH, SECRET_NAME, controlnet_model_list, extra_negative_prompt
 from diffusers import StableDiffusionXLAdapterPipeline, T2IAdapter
 import torch, time
 from PIL import Image
@@ -121,6 +121,8 @@ class stableDiffusion:
     def run_inference(self, parameters : dict) -> dict:
 
         parameters : SDXLControlNetParameters = SDXLControlNetParameters(**parameters)
+
+        parameters.negative_prompt = parameters.negative_prompt + extra_negative_prompt
 
         parameters.file_url = get_image_from_url(parameters.file_url)
 

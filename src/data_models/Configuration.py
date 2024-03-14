@@ -13,6 +13,7 @@ stub_dictionary : dict[str, StubConfiguration] = {
     stub_names.stable_video_diffusion : StubConfiguration(gpu = "a100", memory = 20000, container_idle_timeout = 200),
     stub_names.illusion_diffusion : StubConfiguration(gpu = "a10g", memory = 11000, container_idle_timeout = 200),
     stub_names.qr_code_generation : StubConfiguration(gpu = "a10g", memory = 11000, container_idle_timeout = 200),
+    stub_names.frnd_face_consistent : StubConfiguration(gpu = "a10g", memory = 11000, container_idle_timeout = 200),
 }
 
 

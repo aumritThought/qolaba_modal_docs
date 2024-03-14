@@ -32,7 +32,7 @@ class SDXLText2Image(IService):
             "style_preset": parameters.style_preset
         }
         response = make_request(
-            self.url, "POST", json_data=json_data, headers=headers
+            self.url, "POST", json=json_data, headers=headers
         )
 
         Has_NSFW_Content = [False] * parameters.batch
@@ -84,7 +84,7 @@ class SDXLImage2Image(IService):
         }
 
         response = make_request(
-            self.url, "POST", json_data=json_data, headers=headers, files=files
+            self.url, "POST", json=json_data, headers=headers, files=files
         )
 
         Has_NSFW_Content = [False] * parameters.batch
