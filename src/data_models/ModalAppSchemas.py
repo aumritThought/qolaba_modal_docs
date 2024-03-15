@@ -12,7 +12,7 @@ from src.utils.Constants import (
     MIN_STRENGTH,
     MAX_COLOR, MIN_COLOR,
     MAX_FPS, MIN_FPS,
-    MIN_INCREASE_SIDE, MAX_INCREASE_SIDE,
+    MIN_INCREASE_SIDE, MAX_INCREASE_SIDE, HW_MULTIPLE,
     MIN_SUPPORTED_AUDIO_FILE_ELEVENLABS, MAX_SUPPORTED_AUDIO_FILE_ELEVENLABS, gender_word,
     elevenlabs_accent_list, elevenlabs_age_list, elevenlabs_gender_list, dalle_supported_quality, sdxl_preset_list, did_expression_list)
 from src.utils.Constants import sdxl_model_string, controlnet_models
@@ -74,6 +74,13 @@ class SDXLText2ImageParameters(BaseModel):
     negative_prompt: Optional[str] = " "
     lora_scale : float = Query(default = 0.5, gt = 0, le = 1)
 
+    @model_validator(mode='after')
+    def validate_params(self):
+        self.height = self.height - (self.height % HW_MULTIPLE)
+        self.width = self.width - (self.width % HW_MULTIPLE)
+        return self
+
+
 class SDXLImage2ImageParameters(BaseModel):
     file_url : str | Any
     strength : float = Query(default = 0.7, gt = MIN_STRENGTH, le = MAX_STRENGTH)
@@ -96,6 +103,12 @@ class FaceConsistentParameters(SDXLText2ImageParameters):
     file_url : str | Any
     strength : float = Query(gt = MIN_STRENGTH, le = MAX_STRENGTH) 
 
+    @model_validator(mode='after')
+    def validate_params(self):
+        self.height = self.height - (self.height % HW_MULTIPLE)
+        self.width = self.width - (self.width % HW_MULTIPLE)
+        return self
+
 class FRNDFaceAvatarParameters(BaseModel):
     height: int = Query(default=1024, ge=MIN_HEIGHT, le=1024)
     width: int = Query(default=1024, ge=MIN_HEIGHT, le=1024)
@@ -108,6 +121,12 @@ class FRNDFaceAvatarParameters(BaseModel):
     strength: float = Query(default= 1, gt=MIN_STRENGTH, le=MAX_STRENGTH)
     gender : Literal["male", "female"]
     remove_background : bool
+
+    @model_validator(mode='after')
+    def validate_params(self):
+        self.height = self.height - (self.height % HW_MULTIPLE)
+        self.width = self.width - (self.width % HW_MULTIPLE)
+        return self
 
 
 class InitParameters(BaseModel):
@@ -140,6 +159,12 @@ class ClipDropUncropParameters(BaseModel):
     left: int = Query(ge = MIN_INCREASE_SIDE, le = MAX_INCREASE_SIDE)
     top: int = Query(ge = MIN_INCREASE_SIDE, le = MAX_INCREASE_SIDE)
     bottom: int = Query(ge = MIN_INCREASE_SIDE, le = MAX_INCREASE_SIDE)
+
+    @model_validator(mode='after')
+    def validate_params(self):
+        self.height = self.height - (self.height % HW_MULTIPLE)
+        self.width = self.width - (self.width % HW_MULTIPLE)
+        return self
 
 class ClipDropCleanUpParameters(BaseModel):
     file_url : str | Any

@@ -7,7 +7,7 @@ from diffusers import DiffusionPipeline, StableDiffusionXLPipeline
 from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
 from transformers import CLIPImageProcessor
 import torch, time, os, requests, re, io, datetime, uuid
-from src.utils.Constants import BASE_IMAGE_COMMANDS, PYTHON_VERSION, REQUIREMENT_FILE_PATH, MAX_HEIGHT, MEAN_HEIGHT, SDXL_REFINER_MODEL_PATH, google_credentials_info, BUCKET_NAME, OUTPUT_IMAGE_EXTENSION, SECRET_NAME, content_type
+from src.utils.Constants import BASE_IMAGE_COMMANDS, PYTHON_VERSION, REQUIREMENT_FILE_PATH, MEAN_HEIGHT, SDXL_REFINER_MODEL_PATH, google_credentials_info, BUCKET_NAME, OUTPUT_IMAGE_EXTENSION, SECRET_NAME, content_type
 from fastapi import HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials
 from requests import Response

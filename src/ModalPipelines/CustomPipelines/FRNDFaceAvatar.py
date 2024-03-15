@@ -42,7 +42,7 @@ class stableDiffusion:
         os.chdir("../IP-Adapter")
         sys.path.insert(0, "../IP-Adapter")
 
-        from ip_adapter.ip_adapter_faceid import IPAdapterFaceIDXL
+        from ip_adapter.ip_adapter_faceid import IPAdapterFaceIDXL #type: ignore
 
         
         pipe = StableDiffusionXLPipeline.from_single_file(
