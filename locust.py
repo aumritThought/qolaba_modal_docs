@@ -193,14 +193,14 @@ init_parameters = {
 extra_negative_prompt = "disfigured, kitsch, ugly, oversaturated, greain, low-res, Deformed, blurry, bad anatomy, poorly drawn face, mutation, mutated, extra limb, poorly drawn hands, missing limb, floating limbs, disconnected limbs, malformed hands, blur, out of focus, long neck, long body, disgusting, poorly drawn, childish, mutilated, mangled, old, surreal, calligraphy, sign, writing, watermark, text, body out of frame, extra legs, extra arms, extra feet, out of frame, poorly drawn feet, cross-eye"
 
 parameters = {
-    "file_url" : "https://res.cloudinary.com/qolaba/image/upload/v1710065765/ixahewjejv01m88ixqjo.jpg",
+    "file_url" : "https://res.cloudinary.com/qolaba/image/upload/v1710487238/aoaxohrfxzagvgexqfqf.jpg",
     "strength" : 0.5,
     "height": 1024,
     "width": 1024,
     "num_inference_steps": 30,
     "guidance_scale": 7.5,
     "batch": 1,
-    "gender" : "male",
+    "gender" : "female",
     "remove_background" : False
 }
 # image : str | Any
