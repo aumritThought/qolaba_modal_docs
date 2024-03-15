@@ -7,7 +7,7 @@ from diffusers import DiffusionPipeline, StableDiffusionXLPipeline
 from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
 from transformers import CLIPImageProcessor
 import torch, time, os, requests, re, io, datetime, uuid
-from src.utils.Constants import BASE_IMAGE_COMMANDS, PYTHON_VERSION, REQUIREMENT_FILE_PATH, MAX_HEIGHT, MIN_HEIGHT, SDXL_REFINER_MODEL_PATH, google_credentials_info, BUCKET_NAME, OUTPUT_IMAGE_EXTENSION, SECRET_NAME, content_type
+from src.utils.Constants import BASE_IMAGE_COMMANDS, PYTHON_VERSION, REQUIREMENT_FILE_PATH, MAX_HEIGHT, MEAN_HEIGHT, SDXL_REFINER_MODEL_PATH, google_credentials_info, BUCKET_NAME, OUTPUT_IMAGE_EXTENSION, SECRET_NAME, content_type
 from fastapi import HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials
 from requests import Response
@@ -133,14 +133,14 @@ def upload_data_gcp(data : Imagetype | str, extension : str) -> str:
 #Image operations
 def resize_image(img: Imagetype) -> Imagetype:
     img = img.resize((64 * round(img.size[0] / 64), 64 * round(img.size[1] / 64)))
-    if(img.size[0]*img.size[1] > MAX_HEIGHT*MAX_HEIGHT):
+    if(img.size[0]*img.size[1] > MEAN_HEIGHT*MEAN_HEIGHT):
         # if ( img.size[0] > MAX_HEIGHT or img.size[0] < MIN_HEIGHT or img.size[1] > MAX_HEIGHT or img.size[1] < MIN_HEIGHT):
             if img.size[1] >= img.size[0]:
-                height = MAX_HEIGHT
-                width = ((int(img.size[0]* MAX_HEIGHT/ img.size[1]))// 64) * 64
+                height = MEAN_HEIGHT
+                width = ((int(img.size[0]* MEAN_HEIGHT/ img.size[1]))// 64) * 64
             else:
-                width = MAX_HEIGHT
-                height = ((int(img.size[1]*MAX_HEIGHT/ img.size[0]))// 64) * 64
+                width = MEAN_HEIGHT
+                height = ((int(img.size[1]*MEAN_HEIGHT/ img.size[0]))// 64) * 64
 
             img = img.resize((width, height))
     return img
