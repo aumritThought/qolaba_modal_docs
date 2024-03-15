@@ -44,22 +44,26 @@ def get_app_list(
 
 
 @app.post("/tasks", response_model=APITaskResponse)
+@handle_exceptions
 def get_status(parameters : TaskStatus,
                api_key: HTTPAuthorizationCredentials = Depends(auth_scheme)):
     check_token(api_key)
     task_result = get_task_status(parameters.task_id)
 
-    if task_result.status=="FAILURE":
+    if task_result.status == "FAILURE":
         raise task_result.result
     
-    task_Response = APITaskResponse(
-            task_id=parameters.task_id,
-            input=parameters.model_dump(),
-            status=task_result.status,
-            output= task_result.result
-            ).model_dump()
-    
-    return task_Response
+    if(task_result.status == "PENDING"):
+        task_Response = APITaskResponse(
+                task_id=parameters.task_id,
+                input=parameters.model_dump(),
+                status=task_result.status,
+                output= task_result.result
+                ).model_dump()
+        
+        return task_Response
+    else:
+        return task_result.result
 
 
 if __name__ == "__main__":

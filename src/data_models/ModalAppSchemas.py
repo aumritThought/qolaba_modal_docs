@@ -269,6 +269,9 @@ class SDXLAPIImageToImageParameters(SDXLImage2ImageParameters):
     width: int = Query(ge=MIN_HEIGHT, le = MAX_HEIGHT)
     num_inference_steps: int = Query(ge = MIN_INFERENCE_STEPS, le = MAX_INFERENCE_STEPS) 
 
+class PromptParrotParameters(BaseModel):
+    prompt : str
+
 
 class APITaskResponse(BaseModel):
     time_required : Optional[dict] = {}
