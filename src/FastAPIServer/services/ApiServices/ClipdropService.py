@@ -16,7 +16,6 @@ class ClipdropUncropImage2image(IService):
     def remote(self, parameters: dict) -> dict:
         parameters : ClipDropUncropParameters = ClipDropUncropParameters(**parameters)
         img : Imagetype = get_image_from_url(parameters.file_url)
-        print(img)
         img = img.resize((parameters.width, parameters.height))
         filtered_image = io.BytesIO()
         img.save(filtered_image, "JPEG")

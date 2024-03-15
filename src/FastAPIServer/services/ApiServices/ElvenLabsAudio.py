@@ -46,7 +46,6 @@ class ElvenLabsAudio(IService):
         )
 
         audio_length = self.get_audio_length(BytesIO(audio))
-        print(type(audio))
 
         url = upload_data_gcp(audio, OUTPUT_AUDIO_EXTENSION)
 
