@@ -198,7 +198,7 @@ def timing_decorator(func: callable) -> callable:
 
         result.time.runtime = runtime
 
-        return result
+        return result.model_dump()
 
     return wrapper
 

@@ -26,7 +26,7 @@ class DalleText2Image(IService):
     def remote(self, parameters: dict) -> dict:
         parameters : DalleParameters = DalleParameters(**parameters)
 
-        Height_width = f"{parameters.height}x{parameters.width}"
+        Height_width = f"{parameters.width}x{parameters.height}"
 
         if not (Height_width in DALLE_SUPPORTED_HW):
             raise Exception(
