@@ -51,7 +51,7 @@ def get_status(parameters : TaskStatus,
     task_result = get_task_status(parameters.task_id)
 
     if task_result.status == "FAILURE":
-        raise task_result.result
+        raise Exception(str(task_result.traceback))
     
     if(task_result.status == "PENDING"):
         task_Response = APITaskResponse(

@@ -39,11 +39,14 @@ def initialize_shared_object():
 def on_worker_init(**kwargs):
     initialize_shared_object()
 
+
 def get_service_list()-> dict:
     task_response = APITaskResponse(output=service_registry.get_available_services())
     return task_response.model_dump()
 
-@celery.task( name="AI_task", time_limit = CELERY_RESULT_EXPIRATION_TIME, max_retries = CELERY_MAX_RETRY, soft_time_limit = CELERY_SOFT_LIMIT)
+
+
+@celery.task(name="AI_task", time_limit = CELERY_RESULT_EXPIRATION_TIME, max_retries = CELERY_MAX_RETRY, soft_time_limit = CELERY_SOFT_LIMIT)
 def create_task(parameters: dict) -> dict:
     st = time.time()
     parameters : APIInput = APIInput(**parameters)
@@ -90,12 +93,7 @@ def task_gen(parameters: APIInput) -> dict:
     else:
         return create_task(parameters.model_dump())
     
-def get_task_status(id : str):
+def get_task_status(id : str) -> AsyncResult:
     task_update = celery.AsyncResult(id)
     return task_update
 
-
-
-# def get_task_status(id : str) -> AsyncResult:
-#     result: AsyncResult = celery.AsyncResult(id)
-#     return result
