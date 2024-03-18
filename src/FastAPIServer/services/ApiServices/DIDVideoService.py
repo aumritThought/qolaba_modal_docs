@@ -27,10 +27,10 @@ class DIDVideo(IService):
 
             if status == "error":
                 raise Exception(
-                    response.json()["error"]["description"], "Internal Error"
+                    response.json()["error"]["description"]
                 )
             if time.time() - st > 600:
-                raise Exception("Request is cancelled due to timeout", "Internal Error")
+                raise Exception("Request is cancelled due to timeout")
             time.sleep(1)
 
         return response.json()["result_url"]
@@ -74,7 +74,7 @@ class DIDVideo(IService):
 
         if response.status_code != 201:
             print(response.json())
-            raise Exception(response.json()["description"], "Internal Error")
+            raise Exception(response.json()["description"])
 
         task_id = response.json()["id"]
         vid_url = self.check_status(task_id)

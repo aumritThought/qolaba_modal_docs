@@ -63,14 +63,13 @@ class ElvenLabsAudio(IService):
 
             if audio_length > 600 or audio_length < 60:
                 raise Exception(
-                    "Audio Length should be more than 60s and less than 600s",
-                    "Internal Error",
+                    "Audio Length should be more than 60s and less than 600s"
                 )
 
             list_of_saved_audios.append(file_name)
 
         if len(list_of_saved_audios) == 0:
-            raise Exception("Provide at least one proper audio URL", "Internal Error")
+            raise Exception("Provide at least one proper audio URL")
 
         clone_settings = VoiceClone(
             name = parameters.clone_parameters.name,

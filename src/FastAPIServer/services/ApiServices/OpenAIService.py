@@ -30,8 +30,7 @@ class DalleText2Image(IService):
 
         if not (Height_width in DALLE_SUPPORTED_HW):
             raise Exception(
-                f"Height and width should be {str(DALLE_SUPPORTED_HW)}",
-                "Dalle API error",
+                f"Height and width should be {str(DALLE_SUPPORTED_HW)} for Dalle"
             )
         threads: List[threading.Thread] = []
         results = []

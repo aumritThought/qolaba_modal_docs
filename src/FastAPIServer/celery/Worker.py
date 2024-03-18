@@ -54,7 +54,10 @@ def create_task(parameters: dict) -> dict:
         app = app(parameters.init_parameters)
         output_data = app.run_inference.remote(parameters.parameters)
     else:
-        raise Exception("Given APP Id is not available", "Internal Error")
+        raise Exception("Given APP Id is not available")
+
+    if(output_data == None or output_data == {} or output_data == ""):
+        raise Exception("Received an empty response from model")
 
     output_data = TaskResponse(**output_data)
     time_required = time.time() - st

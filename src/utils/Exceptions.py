@@ -54,11 +54,8 @@ def handle_exceptions(func: Callable):
             traceback_str = "".join(
                 traceback.format_exception(None, exc, exc.__traceback__)
             )
-            try:
-                error, error_data = exc.args
-            except:
-                error_data = str(exc.args)
-                error = "Internal Error"
+            error_data = str(exc),
+            error = "Internal Error"
 
             task_response = APITaskResponse(
                 error=str(error),

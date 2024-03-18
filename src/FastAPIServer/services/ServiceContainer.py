@@ -57,7 +57,7 @@ class ServiceRegistry:
             setattr(self.container, app_name, providers.Factory(Model))
             self.modal_services.append(app_name)
         else:
-            raise Exception(f"Given {app_name} does not exist", "Please provide proper name")
+            raise Exception(f"Given {app_name} does not exist, Please provide proper name")
 
     def get_service(self, service_name : str):
         service_provider = getattr(self.container, service_name, None)

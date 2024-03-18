@@ -7,7 +7,7 @@ from diffusers import DiffusionPipeline, StableDiffusionXLPipeline
 from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
 from transformers import CLIPImageProcessor
 import torch, time, os, requests, re, io, datetime, uuid
-from src.utils.Constants import BASE_IMAGE_COMMANDS, PYTHON_VERSION, REQUIREMENT_FILE_PATH, MEAN_HEIGHT, SDXL_REFINER_MODEL_PATH, google_credentials_info, BUCKET_NAME, OUTPUT_IMAGE_EXTENSION, SECRET_NAME, content_type
+from src.utils.Constants import BASE_IMAGE_COMMANDS, PYTHON_VERSION, REQUIREMENT_FILE_PATH, MEAN_HEIGHT, SDXL_REFINER_MODEL_PATH, google_credentials_info, BUCKET_NAME, OUTPUT_IMAGE_EXTENSION, SECRET_NAME, content_type, MAX_UPLOAD_RETRY
 from fastapi import HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials
 from requests import Response
@@ -82,7 +82,7 @@ def make_request(url: str, method: str, json_data: dict = None, headers: dict = 
 
     if method not in ["GET", "POST"]:
         raise Exception(
-            "Invalid request method", "Please check method input given with URL"
+            "Invalid request method, Please check method input given with URL"
         )
 
     response = None
@@ -92,12 +92,21 @@ def make_request(url: str, method: str, json_data: dict = None, headers: dict = 
         response = requests.post(url, data=json_data, headers=headers, files = files, json = json)
 
     if(response.status_code != 200):
-        raise Exception(str(response.text), "API Error")
+        raise Exception(str(response.text))
 
     return response
 
 #Cloudinary
 def upload_data_gcp(data : Imagetype | str, extension : str) -> str:
+    for i in range(0, MAX_UPLOAD_RETRY):
+        url = upload_to_gcp(data, extension)
+        if(url != None and url != ""):
+            break
+    if(url == "" or url == None):
+        raise Exception("Received an empty URL")
+    return url
+            
+def upload_to_gcp(data : Imagetype | str, extension : str) -> str:
     try:
         current_time = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         random_string = str(uuid.uuid4())
@@ -183,9 +192,11 @@ def timing_decorator(func: callable) -> callable:
         start_time = time.time()
         result = func(*args, **kwargs)
 
-        execution_time = time.time() - start_time
+        runtime = time.time() - start_time
 
-        result["time"]["runtime"] = execution_time
+        result = TaskResponse(**result)
+
+        result.time.runtime = runtime
 
         return result
 
