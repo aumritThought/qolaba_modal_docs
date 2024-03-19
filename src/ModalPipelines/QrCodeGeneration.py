@@ -1,27 +1,29 @@
 from modal import Stub, method, Volume, Secret
 from src.data_models.Configuration import stub_dictionary
-from src.data_models.ModalAppSchemas import StubNames, IllusionDuiffusion, InitParameters
+from src.data_models.ModalAppSchemas import StubNames, IllusionDuiffusion
 from src.utils.Globals import get_base_image, SafetyChecker, generate_image_urls, prepare_response, get_image_from_url
-from src.utils.Constants import sdxl_model_list, VOLUME_NAME, VOLUME_PATH, SECRET_NAME
-from diffusers import StableDiffusionXLControlNetPipeline, ControlNetModel
-import torch, time, os
-
-stub_name = StubNames().illusion_diffusion
+from src.utils.Constants import VOLUME_NAME, VOLUME_PATH, SECRET_NAME, extra_negative_prompt
+from diffusers import StableDiffusionControlNetPipeline, ControlNetModel
+import torch, time
+        
+stub_name = StubNames().qr_code_generation
 
 stub = Stub(stub_name)
 
 def download_base_sdxl():
-    os.system("wget -O optical.safetensors https://huggingface.co/Nacholmo/controlnet-qr-pattern-sdxl/resolve/main/automatic1111/control_v01u_sdxl_opticalpattern.safetensors")
-    controlnet = ControlNetModel.from_single_file(
-        "optical.safetensors", torch_dtype=torch.float16
-    ) 
-    StableDiffusionXLControlNetPipeline.from_pretrained(
-        "stabilityai/stable-diffusion-xl-base-1.0", controlnet=controlnet, torch_dtype=torch.float16, use_safetensors=True, variant="fp16"
+    controlnet = ControlNetModel.from_pretrained(
+        "monster-labs/control_v1p_sd15_qrcode_monster", torch_dtype=torch.float16
+    )
+    controlnet_tile = ControlNetModel.from_pretrained(
+        "ioclab/control_v1p_sd15_brightness", torch_dtype=torch.float16
+    )
+    StableDiffusionControlNetPipeline.from_pretrained(
+        "Lykon/dreamshaper-8", controlnet=[controlnet, controlnet_tile], torch_dtype=torch.float16, use_safetensors=True, variant="fp16"
     )
 
 vol = Volume.persisted(VOLUME_NAME)
 
-image = get_base_image().run_function(download_base_sdxl)
+image = get_base_image().run_function(download_base_sdxl, secrets= [Secret.from_name(SECRET_NAME)])
 
 stub.image = image
 
@@ -33,18 +35,18 @@ stub.image = image
           secrets = [Secret.from_name(SECRET_NAME)])
 class stableDiffusion:
     def __init__(self, init_parameters : dict) -> None:
-        init_parameters : InitParameters = InitParameters(**init_parameters)
         st = time.time()
         controlnet = ControlNetModel.from_pretrained(
-            "monster-labs/control_v1p_sdxl_qrcode_monster", torch_dtype=torch.float16
+            "monster-labs/control_v1p_sd15_qrcode_monster", torch_dtype=torch.float16
+        )
+        controlnet_tile = ControlNetModel.from_pretrained(
+            "ioclab/control_v1p_sd15_brightness", torch_dtype=torch.float16
         )
 
-        self.pipe = StableDiffusionXLControlNetPipeline.from_single_file(
-            sdxl_model_list.get(init_parameters.model), controlnet=controlnet, torch_dtype=torch.float16, use_safetensors=True, variant="fp16"
+        self.pipe = StableDiffusionControlNetPipeline.from_pretrained(
+            "Lykon/dreamshaper-8", controlnet=[controlnet, controlnet_tile], torch_dtype=torch.float16, use_safetensors=True, variant="fp16"
         )
         self.pipe.to("cuda")
-        if(init_parameters.lora_model):
-            self.pipe.load_lora_weights(init_parameters.lora_model)
 
         # self.pipe.enable_xformers_memory_efficient_attention()
         # self.refiner.enable_xformers_memory_efficient_attention()
@@ -57,22 +59,25 @@ class stableDiffusion:
 
         parameters : IllusionDuiffusion = IllusionDuiffusion(**parameters)
 
-        parameters.image = get_image_from_url(parameters.image, resize = True)
+        parameters.negative_prompt = parameters.negative_prompt + extra_negative_prompt
+        
+        parameters.file_url = get_image_from_url(parameters.file_url)
 
         st = time.time()
 
         images = []
-
+         
         for i in range(0, parameters.batch):
             image = self.pipe(
                 prompt = parameters.prompt,
                 negative_prompt = parameters.negative_prompt,
-                controlnet_conditioning_scale = parameters.controlnet_scale,
-                image=parameters.image,
+                controlnet_conditioning_scale = [0.85, 0.35],
+                image=[parameters.file_url, parameters.file_url],
                 guidance_scale = parameters.guidance_scale,
-                cross_attention_kwargs={"scale": parameters.lora_scale},
                 batch = 1,
-                num_inference_steps = parameters.num_inference_steps
+                num_inference_steps = parameters.num_inference_steps,
+                control_guidance_start=[0, 0.3],
+                control_guidance_end=[1, 0.7],
             ).images[0]
             torch.cuda.empty_cache()
 

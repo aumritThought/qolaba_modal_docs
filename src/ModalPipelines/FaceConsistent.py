@@ -2,7 +2,7 @@ from modal import Stub, method, Volume, Secret
 from src.data_models.Configuration import stub_dictionary
 from src.data_models.ModalAppSchemas import StubNames, InitParameters, FaceConsistentParameters
 from src.utils.Globals import get_base_image, SafetyChecker, generate_image_urls, prepare_response, get_image_from_url, get_refiner
-from src.utils.Constants import VOLUME_NAME, VOLUME_PATH, SECRET_NAME, sdxl_model_list
+from src.utils.Constants import VOLUME_NAME, VOLUME_PATH, SECRET_NAME, sdxl_model_list, extra_negative_prompt
 import torch, time, os, sys
 from diffusers import StableDiffusionXLPipeline
 from insightface.app import FaceAnalysis
@@ -22,7 +22,7 @@ def download_face_model():
 image = get_base_image().run_commands(
     "git clone https://github.com/tencent-ailab/IP-Adapter.git",
     "wget https://huggingface.co/h94/IP-Adapter-FaceID/resolve/main/ip-adapter-faceid_sdxl.bin"
-).run_function(download_face_model)
+).run_function(download_face_model, secrets= [Secret.from_name(SECRET_NAME)])
 
 stub.image = image
 
@@ -72,11 +72,11 @@ class stableDiffusion:
 
         parameters : FaceConsistentParameters = FaceConsistentParameters(**parameters)
 
-        parameters.image = get_image_from_url(parameters.image, resize = True)
+        parameters.negative_prompt = parameters.negative_prompt + extra_negative_prompt
 
-        parameters.image = parameters.image.convert("RGB")
+        parameters.file_url = get_image_from_url(parameters.file_url)
 
-        face_img=np.array(parameters.image)
+        face_img=np.array(parameters.file_url)
 
         faces = self.app.get(face_img)
 

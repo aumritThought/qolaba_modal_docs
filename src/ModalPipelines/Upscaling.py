@@ -28,7 +28,7 @@ stub.image = image
           secrets = [Secret.from_name(SECRET_NAME)])
 class stableDiffusion:
     def __init__(self, init_parameters : dict) -> None:
-        init_parameters : InitParameters = InitParameters(**init_parameters)
+        
         st = time.time()
 
         model = RRDBNet(
@@ -57,11 +57,11 @@ class stableDiffusion:
 
         parameters : UpscaleParameters = UpscaleParameters(**parameters)
 
-        parameters.image = get_image_from_url(parameters.image, resize = True)
+        parameters.file_url = get_image_from_url(parameters.file_url)
 
-        parameters.image = parameters.image.convert("RGB")
+        parameters.file_url = parameters.file_url.convert("RGB")
 
-        np_img = np.array(parameters.image, dtype=np.uint8)
+        np_img = np.array(parameters.file_url, dtype=np.uint8)
         upsampler_output, img_mode = self.upsampler.enhance(
             np_img[:, :, ::-1]
         )

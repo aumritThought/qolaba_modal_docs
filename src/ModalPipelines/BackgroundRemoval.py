@@ -17,7 +17,7 @@ image = get_base_image()
 def download_removal_model():
     Remover()
 
-stub.image = image.run_function(download_removal_model)
+stub.image = image.run_function(download_removal_model, secrets = [Secret.from_name(SECRET_NAME)])
 
 
 @stub.cls(gpu = stub_dictionary[stub_name].gpu, 
@@ -40,46 +40,39 @@ class stableDiffusion:
 
         parameters : BackGroundRemoval = BackGroundRemoval(**parameters)
 
-        parameters.image = get_image_from_url(parameters.image, resize = True)
+        parameters.file_url = get_image_from_url(parameters.file_url)
 
-        parameters.image = parameters.image.convert("RGB")
         try:
-            parameters.bg_img = get_image_from_url(parameters.bg_img, resize = True)
-            parameters.bg_img = parameters.bg_img.convert("RGB")
-            parameters.bg_img = parameters.bg_img.resize(parameters.image.size)
+            parameters.bg_img = get_image_from_url(parameters.bg_img)
+            parameters.bg_img = parameters.bg_img.resize(parameters.file_url.size)
         except Exception as e:
             print(e)
             parameters.bg_img = None
         
         if parameters.blur == True:
-            image = self.remover.process(parameters.image, type="blur")
+            image = self.remover.process(parameters.file_url, type="blur")
 
         elif not (parameters.bg_img == None):
             temp_file_img = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
             parameters.bg_img.save(temp_file_img, format="JPEG")
 
             image = self.remover.process(
-                parameters.image, type=temp_file_img.name
+                parameters.file_url, type=temp_file_img.name
             )  # use another image as a background
-            print(os.path.exists(temp_file_img.name))
+            
             try:
-                print(temp_file_img.name)
                 os.remove(temp_file_img.name)
-                print("removed file")
             except:
-                print("Error in removing file")
                 pass
-            print(os.path.exists(temp_file_img.name))
         elif parameters.bg_color == True:
             image = self.remover.process(
-                parameters.image, type=str([parameters.r_color, parameters.g_color, parameters.b_color])
+                parameters.file_url, type=str([parameters.r_color, parameters.g_color, parameters.b_color])
             )
         else:
-            image = self.remover.process(parameters.image, type="rgba")
+            image = self.remover.process(parameters.file_url, type="rgba")
         torch.cuda.empty_cache()
 
-
-        image_urls, has_nsfw_content = generate_image_urls([image], self.safety_checker, format = "PNG")
+        image_urls, has_nsfw_content = generate_image_urls([image], self.safety_checker)
 
         self.runtime = time.time() - st
 

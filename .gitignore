@@ -3,6 +3,19 @@ __pycache__/
 *.py[cod]
 *$py.class
 .vscode
+test-dep.py
+api_key.py
+.git*
+getresul*
+urls.txt
+*.png
+*.jpeg
+__pycache__/
+Extra
+*.rdb
+.env
+venv/
+
 
 # C extensions
 *.so

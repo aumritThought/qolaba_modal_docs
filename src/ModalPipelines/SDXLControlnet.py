@@ -2,7 +2,7 @@ from modal import Stub, method, Volume, Secret
 from src.data_models.Configuration import stub_dictionary
 from src.data_models.ModalAppSchemas import StubNames, SDXLControlNetParameters, InitParameters
 from src.utils.Globals import get_base_image, get_refiner, SafetyChecker, generate_image_urls, prepare_response, get_image_from_url
-from src.utils.Constants import sdxl_model_list, VOLUME_NAME, VOLUME_PATH, SECRET_NAME, controlnet_model_list
+from src.utils.Constants import sdxl_model_list, VOLUME_NAME, VOLUME_PATH, SECRET_NAME, controlnet_model_list, extra_negative_prompt
 from diffusers import StableDiffusionXLAdapterPipeline, T2IAdapter
 import torch, time
 from PIL import Image
@@ -81,7 +81,7 @@ def download_base_sdxl():
 
 vol = Volume.persisted(VOLUME_NAME)
 
-image = get_base_image().run_function(download_base_sdxl, gpu = "t4")
+image = get_base_image().run_function(download_base_sdxl, gpu = "t4", secrets= [Secret.from_name(SECRET_NAME)])
 
 stub.image = image
 
@@ -122,13 +122,15 @@ class stableDiffusion:
 
         parameters : SDXLControlNetParameters = SDXLControlNetParameters(**parameters)
 
-        parameters.image = get_image_from_url(parameters.image, resize = True)
+        parameters.negative_prompt = parameters.negative_prompt + extra_negative_prompt
 
-        controlnet_image_model = ContrloNetImageGeneration(parameters.image, self.init_parameters.controlnet_model)
+        parameters.file_url = get_image_from_url(parameters.file_url)
+
+        controlnet_image_model = ContrloNetImageGeneration(parameters.file_url, self.init_parameters.controlnet_model)
         controlnet_image = controlnet_image_model.prepare_images()
 
         st = time.time()
-
+        
         images = []
 
         for i in range(0, parameters.batch):

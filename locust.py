@@ -187,24 +187,22 @@ from modal import Cls
 import time
 
 init_parameters = {
-    "model" : "Realistic",
+    "model" : "Colorful",
     "controlnet_model" : "canny"
 }
+extra_negative_prompt = "disfigured, kitsch, ugly, oversaturated, greain, low-res, Deformed, blurry, bad anatomy, poorly drawn face, mutation, mutated, extra limb, poorly drawn hands, missing limb, floating limbs, disconnected limbs, malformed hands, blur, out of focus, long neck, long body, disgusting, poorly drawn, childish, mutilated, mangled, old, surreal, calligraphy, sign, writing, watermark, text, body out of frame, extra legs, extra arms, extra feet, out of frame, poorly drawn feet, cross-eye"
 
 parameters = {
+    "file_url" : "https://res.cloudinary.com/qolaba/image/upload/v1710487238/aoaxohrfxzagvgexqfqf.jpg",
+    "strength" : 0.5,
     "height": 1024,
     "width": 1024,
-    "num_inference_steps": 30, 
-    "guidance_scale":  13,
-    "batch":  1,
-    "prompt": "cute dog",
-    "negative_prompt": "blurry",
-    "lora_scale" : 0.5,
-    "image" : "https://res.cloudinary.com/qolaba/image/upload/v1709715234/toxu6q3dc1nlsupl6lax.png",
-    "strength" : 1,
-    "prompt" : "a man with black background",
-    "bg_img" : "https://res.cloudinary.com/qolaba/image/upload/v1705612740/jbsewrunbccplqd19y4p.png",
-    "controlnet_scale" : 2.5
+    "num_inference_steps": 30,
+    "guidance_scale": 7.5,
+    "batch": 1,
+    "gender" : "female",
+    "remove_background" : False,
+    "prompt" : "cute dog"
 }
 # image : str | Any
 #     bg_img : Optional[str] = None
@@ -215,11 +213,11 @@ parameters = {
 #     blur: Optional[bool] = False  
 #     strength : float = Query(ge = MIN_STRENGTH, le = MAX_STRENGTH)
 st = time.time()
-Model = Cls.lookup("Illusion_Diffusion", "stableDiffusion", environment_name = "dev")  # returns a class-like object
-
+Model = Cls.lookup("Stable_Cascade", "stableDiffusion", environment_name = "dev")  # returns a class-like object
+print(time.time() - st)
 m = Model(init_parameters)
 print("model obtained")
-print(time.time() - st)
+
 
 print(time.time()-st)
 print(m.run_inference.remote(parameters))
