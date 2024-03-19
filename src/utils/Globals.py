@@ -123,7 +123,7 @@ def upload_to_gcp(data : Imagetype | str, extension : str) -> str:
 
         storage_client = storage.Client(credentials=credentials, project=google_credentials_info['project_id'])
 
-        bucket = storage_client.bucket(BUCKET_NAME)
+        bucket = storage_client.bucket(os.environ["BUCKET_NAME"])
 
         blob = bucket.blob(destination_blob_name)
 

@@ -157,10 +157,9 @@ google_credentials_info = {
     "token_uri": os.environ["GCP_TOKEN_URI"],
     "auth_provider_x509_cert_url": os.environ["GCP_AUTH_PROVIDER_X509_CERT_URL"],
     "client_x509_cert_url": os.environ["GCP_CLIENT_X509_CERT_URL"],
-    # "universe_domain": os.environ["GCP_UNIVERSE_DOMAIN"]
+    "universe_domain": os.environ["GCP_UNIVERSE_DOMAIN"]
 }
 
-BUCKET_NAME = "qolaba"
 OUTPUT_IMAGE_EXTENSION = "png"
 OUTPUT_AUDIO_EXTENSION = "mp3"
 OUTPUT_VIDEO_EXTENSION = "mp4"
@@ -314,6 +313,13 @@ app_dict = {
         "init_parameters" : {
         },
         "model_name" : "dalle_text2image" 
+    },
+    "ap-Jf2aKs8dPqXzRb1Yv6hN7L": {
+        "app_id" : "SDXL_Image_To_Image_modal",
+        "init_parameters" : {
+            "model" : "Qolaba turbo fast"
+        },
+        "model_name" : "sdxl_turbo_image2image" 
     },
 
     "ap-9QVYLtWxXRzGH0qk97iG03": {
