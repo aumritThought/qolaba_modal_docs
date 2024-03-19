@@ -247,7 +247,7 @@ app_dict = {
         "model_name" : "revanim_text2image" 
     },
     "ap-PZYd1Bb5QH57Rw4BF0dPA4": {
-        "app_id" : "SDXL_Text_To_Image_modal",
+        "app_id" : "Stable_Cascade_modal",
         "init_parameters" : {
             "model" : "Vibrant"
         },

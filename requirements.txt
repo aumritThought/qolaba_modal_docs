@@ -21,7 +21,7 @@ contourpy==1.2.0
 controlnet-aux==0.0.7
 cycler==0.12.1
 Cython==3.0.8
-diffusers[torch]==0.25.0
+diffusers[torch]==0.27.0
 dnspython==2.6.1
 easydict==1.12
 einops==0.7.0

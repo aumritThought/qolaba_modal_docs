@@ -32,6 +32,7 @@ class StubNames(BaseModel):
     illusion_diffusion : str = "Illusion_Diffusion"
     qr_code_generation : str = "QRCode_Generation"
     frnd_face_consistent : str = "IPAdapter_FRND_face_consistent"
+    stable_cascade_text_to_image : str = "Stable_Cascade"
 
 class StubConfiguration(BaseModel):
     memory : int
@@ -148,7 +149,7 @@ class StableVideoDiffusion(BaseModel):
     fps : int = Query(default=MIN_FPS,ge=MIN_FPS, le=MAX_FPS)
 
 class IllusionDuiffusion(SDXLImage2ImageParameters):
-    controlnet_scale : float = Query(default= 1.5, ge=0, le=4)
+    controlnet_scale : float = Query(default= 2.5, ge=0, le=4)
     num_inference_steps: int = Query(ge = MIN_INFERENCE_STEPS, le = MAX_INFERENCE_STEPS) 
 
 class ClipDropUncropParameters(BaseModel):
