@@ -1,5 +1,7 @@
 from pydantic import constr
 import os
+from dotenv import load_dotenv
+load_dotenv()
 
 #Volume variables
 VOLUME_NAME = "SDXL-LORA-Volume"
