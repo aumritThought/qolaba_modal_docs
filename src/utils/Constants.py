@@ -236,72 +236,37 @@ app_dict = {
     "ap-JOsvgUBfInC2UQnz0FQFkG": {
         "app_id" : "SDXL_Text_To_Image_modal",
         "init_parameters" : {
-            "model" : "SDXL Turbo"
+            "model" : SDXL_TURBO_MODEL
         },
         "model_name" : "sdxl_turbo_text2image" 
     },
-    "ap-9ccz5olHjWxCVWjGTpLhr6": {
+    "ap-PZYd1Bb5QH57Rw4BF0dPA4": {
         "app_id" : "SDXL_Text_To_Image_modal",
         "init_parameters" : {
-            "model" : "rev-anim"
-        },
-        "model_name" : "revanim_text2image" 
-    },
-    "ap-PZYd1Bb5QH57Rw4BF0dPA4": {
-        "app_id" : "Stable_Cascade_modal",
-        "init_parameters" : {
-            "model" : "Vibrant"
+            "model" : SDXL_PIXELA_MODEL
         },
         "model_name" : "pixela_text2image" 
-    },
-    "ap-RmIIykpGUHWzTZRmF0U4bH": {
-        "app_id" : "SDXL_Text_To_Image_modal",
-        "init_parameters" : {
-            "model" : "3D Cartoon"
-        },
-        "model_name" : "3D_cartoon_text2image" 
     },
     "ap-VbAWaTpRHAcfqywOmcjN2y": {
         "app_id" : "SDXL_Text_To_Image_modal",
         "init_parameters" : {
-            "model" : "Cartoon"
+            "model" : SDXL_3DCARTOON_MODEL
         },
         "model_name" : "cartoon_text2image" 
-    },
-    "ap-z5opn6mGtcHtSh5kCTje1C": {
-        "app_id" : "SDXL_Text_To_Image_modal",
-        "init_parameters" : {
-            "model" : "Colorful"
-        },
-        "model_name" : "colorful_text2image" 
     },
     "ap-7vTmulaxjyiCzQEj1BOOvJ": {
         "app_id" : "SDXL_Text_To_Image_modal",
         "init_parameters" : {
-            "model" : "Anime"
+            "model" : SDXL_CARTOON_MODEL
         },
         "model_name" : "anime_text2image" 
-    },
-    "ap-onCEEZdTFZF4X8XJjYOHGR": {
-        "app_id" : "SDXL_Text_To_Image_modal",
-        "init_parameters" : {
-            "model" : "Anime 2"
-        },
-        "model_name" : "anime_2_text2image" 
     },
     "ap-uU4Xo4z6KgFHFjW9gnAl3q": {
         "app_id" : "SDXL_Text_To_Image_modal",
         "init_parameters" : {
-            "model" : "Realistic"
+            "model" : SDXL_REALISTIC_MODEL
         },
         "model_name" : "realistic_text2image" 
-    },
-    "ap-9TlukeWaO8uJmjZsPzqmKB": {
-        "app_id" : "SDXL_Text_To_Image_modal",
-        "init_parameters" : {
-            "model" : "Realistic 2"
-        },
-        "model_name" : "realistic_2_text2image" 
     },
 
     "ap-oDVXRQ7bCaWW05O52P1mlA": {
@@ -316,76 +281,43 @@ app_dict = {
         },
         "model_name" : "dalle_text2image" 
     },
+
+
     "ap-Jf2aKs8dPqXzRb1Yv6hN7L": {
         "app_id" : "SDXL_Image_To_Image_modal",
         "init_parameters" : {
-            "model" : "Qolaba turbo fast"
+            "model" : SDXL_TURBO_MODEL
         },
         "model_name" : "sdxl_turbo_image2image" 
     },
 
-    "ap-9QVYLtWxXRzGH0qk97iG03": {
-        "app_id" : "SDXL_Image_To_Image_modal",
-        "init_parameters" : {
-            "model" : "rev-anim"
-        },
-        "model_name" : "revanim_image2image" 
-    },
     "ap-vcbg1l7bBuScbDuUOk3Shl": {
         "app_id" : "SDXL_Image_To_Image_modal",
         "init_parameters" : {
-            "model" : "Vibrant"
+            "model" : SDXL_PIXELA_MODEL
         },
         "model_name" : "pixela_image2image" 
-    },
-    "ap-1dONyJCjssrvvXLufmvGWJ": {
-        "app_id" : "SDXL_Image_To_Image_modal",
-        "init_parameters" : {
-            "model" : "3D Cartoon"
-        },
-        "model_name" : "3D_cartoon_image2image" 
     },
     "ap-Rgtph3LFS9rRT5X7XREazo": {
         "app_id" : "SDXL_Image_To_Image_modal",
         "init_parameters" : {
-            "model" : "Cartoon"
+            "model" : SDXL_3DCARTOON_MODEL
         },
         "model_name" : "cartoon_image2image" 
-    },
-    "ap-wVf86rypMYb2pyMY46ikxw": {
-        "app_id" : "SDXL_Image_To_Image_modal",
-        "init_parameters" : {
-            "model" : "Colorful"
-        },
-        "model_name" : "colorful_image2image" 
     },
     "ap-Zj2zfXKq52zvpib7jGqYFp": {
         "app_id" : "SDXL_Image_To_Image_modal",
         "init_parameters" : {
-            "model" : "Anime"
+            "model" : SDXL_CARTOON_MODEL
         },
         "model_name" : "anime_image2image" 
-    },
-    "ap-ATG5IQ5s9jjrILhBbRNp4h": {
-        "app_id" : "SDXL_Image_To_Image_modal",
-        "init_parameters" : {
-            "model" : "Anime 2"
-        },
-        "model_name" : "anime_2_image2image" 
     },
     "ap-nM68b4WwQ6VzdNwwXBrOHE": {
         "app_id" : "SDXL_Image_To_Image_modal",
         "init_parameters" : {
-            "model" : "Realistic"
+            "model" : SDXL_REALISTIC_MODEL
         },
         "model_name" : "realistic_image2image" 
-    },
-    "ap-6xdUez7nEduEYqDan7NTrh": {
-        "app_id" : "SDXL_Image_To_Image_modal",
-        "init_parameters" : {
-            "model" : "Realistic 2"
-        },
-        "model_name" : "realistic_2_image2image" 
     },
 
     "ap-eRSyl0imzrUrbvgdAYwDTl": {
@@ -418,7 +350,7 @@ app_dict = {
     "ap-a1b2c3d4e5f6g7h8i9j0kq": {
         "app_id" : "SDXL_controlnet_modal",
         "init_parameters" : {
-            "model" : "Colorful",
+            "model" : SDXL_COLORFUL_MODEL,
             "controlnet_model" : "openpose"
         },
         "model_name" : "Openpose_controlnet__image2image" 
@@ -426,7 +358,7 @@ app_dict = {
     "ap-1us0FK21Ach6eiWxo22is8": {
         "app_id" : "SDXL_controlnet_modal",
         "init_parameters" : {
-            "model" : "Colorful",
+            "model" : SDXL_COLORFUL_MODEL,
             "controlnet_model" : "canny"
         },
         "model_name" : "Canny_controlnet__image2image" 
@@ -434,7 +366,7 @@ app_dict = {
     "ap-WrXnJBXy23XpPh6IlH5tRX": {
         "app_id" : "SDXL_controlnet_modal",
         "init_parameters" :{
-            "model" : "Colorful",
+            "model" : SDXL_COLORFUL_MODEL,
             "controlnet_model" : "depth"
         },
         "model_name" : "depth_controlnet__image2image" 
@@ -442,7 +374,7 @@ app_dict = {
     "ap-ebD8V0XxzAuKSu696A11nd": {
         "app_id" : "SDXL_controlnet_modal",
         "init_parameters" : {
-            "model" : "Colorful",
+            "model" : SDXL_COLORFUL_MODEL,
             "controlnet_model" : "sketch"
         },
         "model_name" : "sketch_controlnet__image2image" 
@@ -486,7 +418,7 @@ app_dict = {
     "ap-SwsTOsD7STxJ0obCkskUHw": {
         "app_id" : "IPAdapter_face_consistent_modal",
         "init_parameters" : {
-            "model" : "Colorful"
+            "model" : SDXL_COLORFUL_MODEL
         },
         "model_name" : "face_consistent_image2image"
     },
@@ -505,7 +437,7 @@ app_dict = {
     "ap-kNvCpegQY2HiDHmk5X7X6F": {
         "app_id" : "IPAdapter_image_variation_modal",
         "init_parameters" : {
-            "model" : "Colorful"
+            "model" : SDXL_COLORFUL_MODEL
         },
         "model_name" : "variation_image2image" 
     },
