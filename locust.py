@@ -213,7 +213,7 @@ parameters = {
 #     blur: Optional[bool] = False  
 #     strength : float = Query(ge = MIN_STRENGTH, le = MAX_STRENGTH)
 st = time.time()
-Model = Cls.lookup("SDXL_Text_To_Image", "stableDiffusion", environment_name = "dev")  # returns a class-like object
+Model = Cls.lookup("BackGround_Removal", "stableDiffusion", environment_name = "dev")  # returns a class-like object
 print(time.time() - st)
 m = Model(init_parameters)
 print("model obtained")

@@ -283,7 +283,7 @@ class ElevenLabsParameters(BaseModel):
 #         return v
     
 class DalleParameters(SDXLText2ImageParameters):
-    quality : Optional[dalle_supported_quality] = "hd"  # type: ignore
+    quality : Optional[dalle_supported_quality] = "standard"  # type: ignore
 
 class SDXLAPITextToImageParameters(SDXLText2ImageParameters):
     style_preset : Optional[sdxl_preset_list] = "enhance" # type: ignore
