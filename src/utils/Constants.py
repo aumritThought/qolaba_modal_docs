@@ -30,17 +30,28 @@ SDXL_CARTOON_MODEL = "/SDXL_models/DeepBlue.safetensors"
 SDXL_3DCARTOON_MODEL = "/SDXL_models/DynaVision.safetensors"
 SDXL_TURBO_MODEL = "/SDXL_models/TurboVisionXL.safetensors"
 
+REV_ANIM = "rev-anim"
+VIBRANT = "Vibrant"
+COLORFUL = "Colorful"
+REALISTIC = "Realistic"
+REALISTIC_2 = "Realistic 2"
+ANIME = "Anime"
+ANIME_2 = "Anime 2"
+CARTOON = "Cartoon"
+CARTOON3D = "3D Cartoon" 
+SDXL_TURBO = "SDXL Turbo"
+
 sdxl_model_list = {
-    "rev-anim" : SDXL_REVANIME_MODEL,
-    "Vibrant" : SDXL_PIXELA_MODEL,
-    "Colorful" : SDXL_COLORFUL_MODEL,
-    "Realistic" : SDXL_REALISTIC_MODEL,
-    "Realistic 2" : SDXL_REALISTIC_2_MODEL, 
-    "Anime" : SDXL_ANIME_MODEL,
-    "Anime 2" : SDXL_ANIME_2_MODEL,
-    "Cartoon" : SDXL_CARTOON_MODEL,
-    "3D Cartoon" : SDXL_3DCARTOON_MODEL,
-    "SDXL Turbo" : SDXL_TURBO_MODEL
+    REV_ANIM : SDXL_REVANIME_MODEL,
+    VIBRANT : SDXL_PIXELA_MODEL,
+    COLORFUL : SDXL_COLORFUL_MODEL,
+    REALISTIC : SDXL_REALISTIC_MODEL,
+    REALISTIC_2 : SDXL_REALISTIC_2_MODEL, 
+    ANIME : SDXL_ANIME_MODEL,
+    ANIME_2 : SDXL_ANIME_2_MODEL,
+    CARTOON : SDXL_CARTOON_MODEL,
+    CARTOON3D : SDXL_3DCARTOON_MODEL,
+    SDXL_TURBO : SDXL_TURBO_MODEL
 }
 
 sdxl_model_string = "|".join(sdxl_model_list.keys())
@@ -236,35 +247,35 @@ app_dict = {
     "ap-JOsvgUBfInC2UQnz0FQFkG": {
         "app_id" : "SDXL_Text_To_Image_modal",
         "init_parameters" : {
-            "model" : SDXL_TURBO_MODEL
+            "model" : SDXL_TURBO
         },
         "model_name" : "sdxl_turbo_text2image" 
     },
     "ap-PZYd1Bb5QH57Rw4BF0dPA4": {
         "app_id" : "SDXL_Text_To_Image_modal",
         "init_parameters" : {
-            "model" : SDXL_PIXELA_MODEL
+            "model" : VIBRANT
         },
         "model_name" : "pixela_text2image" 
     },
     "ap-VbAWaTpRHAcfqywOmcjN2y": {
         "app_id" : "SDXL_Text_To_Image_modal",
         "init_parameters" : {
-            "model" : SDXL_3DCARTOON_MODEL
+            "model" : CARTOON3D
         },
         "model_name" : "cartoon_text2image" 
     },
     "ap-7vTmulaxjyiCzQEj1BOOvJ": {
         "app_id" : "SDXL_Text_To_Image_modal",
         "init_parameters" : {
-            "model" : SDXL_CARTOON_MODEL
+            "model" : CARTOON
         },
         "model_name" : "anime_text2image" 
     },
     "ap-uU4Xo4z6KgFHFjW9gnAl3q": {
         "app_id" : "SDXL_Text_To_Image_modal",
         "init_parameters" : {
-            "model" : SDXL_REALISTIC_MODEL
+            "model" : REALISTIC
         },
         "model_name" : "realistic_text2image" 
     },
@@ -286,7 +297,7 @@ app_dict = {
     "ap-Jf2aKs8dPqXzRb1Yv6hN7L": {
         "app_id" : "SDXL_Image_To_Image_modal",
         "init_parameters" : {
-            "model" : SDXL_TURBO_MODEL
+            "model" : SDXL_TURBO
         },
         "model_name" : "sdxl_turbo_image2image" 
     },
@@ -294,28 +305,28 @@ app_dict = {
     "ap-vcbg1l7bBuScbDuUOk3Shl": {
         "app_id" : "SDXL_Image_To_Image_modal",
         "init_parameters" : {
-            "model" : SDXL_PIXELA_MODEL
+            "model" : VIBRANT
         },
         "model_name" : "pixela_image2image" 
     },
     "ap-Rgtph3LFS9rRT5X7XREazo": {
         "app_id" : "SDXL_Image_To_Image_modal",
         "init_parameters" : {
-            "model" : SDXL_3DCARTOON_MODEL
+            "model" : CARTOON3D
         },
         "model_name" : "cartoon_image2image" 
     },
     "ap-Zj2zfXKq52zvpib7jGqYFp": {
         "app_id" : "SDXL_Image_To_Image_modal",
         "init_parameters" : {
-            "model" : SDXL_CARTOON_MODEL
+            "model" : CARTOON
         },
         "model_name" : "anime_image2image" 
     },
     "ap-nM68b4WwQ6VzdNwwXBrOHE": {
         "app_id" : "SDXL_Image_To_Image_modal",
         "init_parameters" : {
-            "model" : SDXL_REALISTIC_MODEL
+            "model" : REALISTIC
         },
         "model_name" : "realistic_image2image" 
     },
@@ -350,7 +361,7 @@ app_dict = {
     "ap-a1b2c3d4e5f6g7h8i9j0kq": {
         "app_id" : "SDXL_controlnet_modal",
         "init_parameters" : {
-            "model" : SDXL_COLORFUL_MODEL,
+            "model" : COLORFUL,
             "controlnet_model" : "openpose"
         },
         "model_name" : "Openpose_controlnet__image2image" 
@@ -358,7 +369,7 @@ app_dict = {
     "ap-1us0FK21Ach6eiWxo22is8": {
         "app_id" : "SDXL_controlnet_modal",
         "init_parameters" : {
-            "model" : SDXL_COLORFUL_MODEL,
+            "model" : COLORFUL,
             "controlnet_model" : "canny"
         },
         "model_name" : "Canny_controlnet__image2image" 
@@ -366,7 +377,7 @@ app_dict = {
     "ap-WrXnJBXy23XpPh6IlH5tRX": {
         "app_id" : "SDXL_controlnet_modal",
         "init_parameters" :{
-            "model" : SDXL_COLORFUL_MODEL,
+            "model" : COLORFUL,
             "controlnet_model" : "depth"
         },
         "model_name" : "depth_controlnet__image2image" 
@@ -374,7 +385,7 @@ app_dict = {
     "ap-ebD8V0XxzAuKSu696A11nd": {
         "app_id" : "SDXL_controlnet_modal",
         "init_parameters" : {
-            "model" : SDXL_COLORFUL_MODEL,
+            "model" : COLORFUL,
             "controlnet_model" : "sketch"
         },
         "model_name" : "sketch_controlnet__image2image" 
@@ -418,7 +429,7 @@ app_dict = {
     "ap-SwsTOsD7STxJ0obCkskUHw": {
         "app_id" : "IPAdapter_face_consistent_modal",
         "init_parameters" : {
-            "model" : SDXL_COLORFUL_MODEL
+            "model" : COLORFUL
         },
         "model_name" : "face_consistent_image2image"
     },
@@ -437,7 +448,7 @@ app_dict = {
     "ap-kNvCpegQY2HiDHmk5X7X6F": {
         "app_id" : "IPAdapter_image_variation_modal",
         "init_parameters" : {
-            "model" : SDXL_COLORFUL_MODEL
+            "model" : COLORFUL
         },
         "model_name" : "variation_image2image" 
     },
