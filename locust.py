@@ -187,7 +187,7 @@ from modal import Cls
 import time
 
 init_parameters = {
-    "model" : "Colorful",
+    "model" : "rev-anim",
     "controlnet_model" : "canny"
 }
 extra_negative_prompt = "disfigured, kitsch, ugly, oversaturated, greain, low-res, Deformed, blurry, bad anatomy, poorly drawn face, mutation, mutated, extra limb, poorly drawn hands, missing limb, floating limbs, disconnected limbs, malformed hands, blur, out of focus, long neck, long body, disgusting, poorly drawn, childish, mutilated, mangled, old, surreal, calligraphy, sign, writing, watermark, text, body out of frame, extra legs, extra arms, extra feet, out of frame, poorly drawn feet, cross-eye"
@@ -213,7 +213,7 @@ parameters = {
 #     blur: Optional[bool] = False  
 #     strength : float = Query(ge = MIN_STRENGTH, le = MAX_STRENGTH)
 st = time.time()
-Model = Cls.lookup("Stable_Cascade", "stableDiffusion", environment_name = "dev")  # returns a class-like object
+Model = Cls.lookup("BackGround_Removal", "stableDiffusion", environment_name = "dev")  # returns a class-like object
 print(time.time() - st)
 m = Model(init_parameters)
 print("model obtained")

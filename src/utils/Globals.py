@@ -113,9 +113,14 @@ def upload_to_gcp(data : Imagetype | str, extension : str) -> str:
 
         destination_blob_name = f"{current_time}_{random_string}.{extension}"
         if(type(data) == Imagetype):
-            with io.BytesIO() as buffer:
-                data.save(buffer, format="PNG")
-                data = buffer.getvalue()
+            if data.mode == 'RGBA':
+                with io.BytesIO() as buffer:
+                    data.save(buffer, format="PNG")
+                    data = buffer.getvalue()
+            else:
+                with io.BytesIO() as buffer:
+                    data.save(buffer, format="JPEG")
+                    data = buffer.getvalue()
 
         byte_data = io.BytesIO(data)
 
