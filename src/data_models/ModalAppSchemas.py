@@ -19,7 +19,6 @@ from src.utils.Constants import sdxl_model_string, controlnet_models
 from elevenlabs import voices, Voice, set_api_key
 import os
 
-
 class StubNames(BaseModel):
     sdxl_text_to_image: str = "SDXL_Text_To_Image"
     sdxl_image_to_image : str = "SDXL_Image_To_Image"
@@ -44,9 +43,10 @@ class TimeData(BaseModel):
     runtime : int | float
 
 class TaskResponse(BaseModel):
-    result : list[str] | dict 
+    result : Any
     Has_NSFW_Content : list[bool]
     time : TimeData
+    extension : str
 
 
 # class SDXLParameters(BaseModel):

@@ -2,7 +2,7 @@ from modal import Stub, method, Volume, Secret
 from src.data_models.Configuration import stub_dictionary
 from src.data_models.ModalAppSchemas import StubNames, IllusionDuiffusion
 from src.utils.Globals import get_base_image, SafetyChecker, generate_image_urls, prepare_response, get_image_from_url
-from src.utils.Constants import VOLUME_NAME, VOLUME_PATH, SECRET_NAME, extra_negative_prompt
+from src.utils.Constants import VOLUME_NAME, VOLUME_PATH, SECRET_NAME, extra_negative_prompt, OUTPUT_IMAGE_EXTENSION
 from diffusers import StableDiffusionControlNetPipeline, ControlNetModel
 import torch, time
         
@@ -83,8 +83,9 @@ class stableDiffusion:
 
             images.append(image)
 
-        image_urls, has_nsfw_content = generate_image_urls(images, self.safety_checker)
+    
+        images, has_nsfw_content = generate_image_urls(images, self.safety_checker)
 
         self.runtime = time.time() - st
 
-        return prepare_response(image_urls, has_nsfw_content, self.container_execution_time, self.runtime)
+        return prepare_response(images, has_nsfw_content, self.container_execution_time, self.runtime, OUTPUT_IMAGE_EXTENSION)

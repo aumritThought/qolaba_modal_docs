@@ -2,7 +2,7 @@ from modal import Stub, method, Volume, Secret
 from src.data_models.Configuration import stub_dictionary
 from src.data_models.ModalAppSchemas import StubNames, InitParameters, FaceConsistentParameters
 from src.utils.Globals import get_base_image, SafetyChecker, generate_image_urls, prepare_response, get_image_from_url, get_refiner
-from src.utils.Constants import VOLUME_NAME, VOLUME_PATH, SECRET_NAME, sdxl_model_list, extra_negative_prompt
+from src.utils.Constants import VOLUME_NAME, VOLUME_PATH, SECRET_NAME, sdxl_model_list, extra_negative_prompt, OUTPUT_IMAGE_EXTENSION
 import torch, time, os, sys
 from diffusers import StableDiffusionXLPipeline
 from insightface.app import FaceAnalysis
@@ -16,8 +16,22 @@ stub = Stub(stub_name)
 vol = Volume.persisted(VOLUME_NAME)
 
 def download_face_model():
+    os.chdir("../IP-Adapter")
+    sys.path.insert(0, "../IP-Adapter")
+
+    from ip_adapter.ip_adapter_faceid import IPAdapterFaceIDXL
+
+    pipe = StableDiffusionXLPipeline.from_pretrained(
+            "stabilityai/stable-diffusion-xl-base-1.0", torch_dtype=torch.float16, use_safetensors=True, variant="fp16"
+        )
+
     app = FaceAnalysis(name="buffalo_l", providers=['CUDAExecutionProvider', 'CPUExecutionProvider'])
     app.prepare(ctx_id=0, det_size=(640, 640))
+
+    ip_ckpt = "../ip-adapter-faceid_sdxl.bin"
+
+    IPAdapterFaceIDXL(pipe, ip_ckpt, "cpu")
+
 
 image = get_base_image().run_commands(
     "git clone https://github.com/tencent-ailab/IP-Adapter.git",
@@ -113,9 +127,8 @@ class stableDiffusion:
             torch.cuda.empty_cache()
             images.append(image)
 
-        image_urls, has_nsfw_content = generate_image_urls(images, self.safety_checker)
+        images, has_nsfw_content = generate_image_urls(images, self.safety_checker)
 
         self.runtime = time.time() - st
 
-        return prepare_response(image_urls, has_nsfw_content, self.container_execution_time, self.runtime)
-
+        return prepare_response(images, has_nsfw_content, self.container_execution_time, self.runtime, OUTPUT_IMAGE_EXTENSION)
