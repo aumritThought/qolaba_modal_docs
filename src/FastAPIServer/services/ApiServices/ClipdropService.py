@@ -32,13 +32,17 @@ class ClipdropUncropImage2image(IService):
 
         headers = {"x-api-key": self.api_key}
 
-        response : Response = make_request(
-            self.url, "POST", json_data=data, headers=headers, files=files
-        )
+        image_urls = []
 
-        image_urls = upload_data_gcp(response.content, OUTPUT_IMAGE_EXTENSION)
+        for i in range(0, parameters.batch):
+            response : Response = make_request(
+                self.url, "POST", json_data=data, headers=headers, files=files
+            )
 
-        return prepare_response([image_urls], [False], 0, 0)
+            image_url = upload_data_gcp(response.content, OUTPUT_IMAGE_EXTENSION)
+            image_urls.append(image_url)
+
+        return prepare_response(image_urls, [False]*parameters.batch, 0, 0)
 
 
 class ClipdropCleanupImage2image(IService):
@@ -91,7 +95,7 @@ class ClipdropReplaceBackgroundImage2Image(IService):
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
         parameters : ClipDropReplaceBackgroundParameters = ClipDropReplaceBackgroundParameters(**parameters)
-
+        
         img = get_image_from_url( parameters.file_url)
 
         filtered_image = io.BytesIO()
@@ -103,14 +107,17 @@ class ClipdropReplaceBackgroundImage2Image(IService):
         json_data = {"prompt": parameters.prompt}
 
         headers = {"x-api-key": self.api_key}
+        image_urls = []
 
-        response : Response = make_request(
-            self.url, "POST", files=files, json_data=json_data, headers=headers
-        )
+        for i in range(0, parameters.batch):
+            response : Response = make_request(
+                self.url, "POST", files=files, json_data=json_data, headers=headers
+            )
 
-        image_urls = upload_data_gcp(response.content, OUTPUT_IMAGE_EXTENSION)
+            image_url = upload_data_gcp(response.content, OUTPUT_IMAGE_EXTENSION)
+            image_urls.append(image_url)
 
-        return prepare_response([image_urls], [False], 0, 0)
+        return prepare_response(image_urls, [False]*parameters.batch, 0, 0)
 
 
 class ClipdropRemoveTextImage2Image(IService):
