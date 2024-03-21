@@ -34,7 +34,7 @@ class SDXLText2Image(IService):
         response = make_request(
             self.url, "POST", json=json_data, headers=headers
         )
-
+        
         Has_NSFW_Content = [False] * parameters.batch
 
         data = response.json()
