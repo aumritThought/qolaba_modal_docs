@@ -2,7 +2,7 @@ from modal import Stub, method, Volume, Secret
 from src.data_models.Configuration import stub_dictionary
 from src.data_models.ModalAppSchemas import StubNames, InitParameters, UpscaleParameters
 from src.utils.Globals import get_base_image, SafetyChecker, generate_image_urls, prepare_response, get_image_from_url
-from src.utils.Constants import VOLUME_NAME, VOLUME_PATH, SECRET_NAME, ULTRASHARP_MODEL
+from src.utils.Constants import VOLUME_NAME, VOLUME_PATH, SECRET_NAME, ULTRASHARP_MODEL, OUTPUT_IMAGE_EXTENSION
 import torch, time
 import numpy as np
 from PIL import Image
@@ -67,9 +67,9 @@ class stableDiffusion:
         )
 
         images = [Image.fromarray(upsampler_output[:, :, ::-1], mode=img_mode)]
-
-        image_urls, has_nsfw_content = generate_image_urls(images, self.safety_checker)
+        
+        images, has_nsfw_content = generate_image_urls(images, self.safety_checker)
 
         self.runtime = time.time() - st
 
-        return prepare_response(image_urls, has_nsfw_content, self.container_execution_time, self.runtime)
+        return prepare_response(images, has_nsfw_content, self.container_execution_time, self.runtime, OUTPUT_IMAGE_EXTENSION)

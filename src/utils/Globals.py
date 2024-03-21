@@ -54,24 +54,25 @@ def get_refiner(pipe : StableDiffusionXLPipeline) -> DiffusionPipeline:
 
 #Modal App Output relataed utils
 def generate_image_urls(image_data, safety_checker : SafetyChecker) -> tuple[list[str], list[bool]]:
-    image_urls = []
+    images = []
     has_nsfw_content = []
     for im in range(0, len(image_data)):
         nsfw_content = safety_checker.check_nsfw_content(image_data[im])
         if nsfw_content[0]:
             has_nsfw_content.append(nsfw_content[0])
         else:
-            im_url = upload_data_gcp(image_data[im], OUTPUT_IMAGE_EXTENSION)
-            image_urls.append(im_url)
+            # im_url = upload_data_gcp(, OUTPUT_IMAGE_EXTENSION)
+            images.append(image_data[im])
             has_nsfw_content.append(nsfw_content[0])
-    return image_urls, has_nsfw_content
+    return images, has_nsfw_content
 
 
-def prepare_response(result: list[str] | dict, Has_NSFW_content : list[bool], time : float, runtime : float) -> dict:
+def prepare_response(result: list[str] | dict, Has_NSFW_content : list[bool], time : float, runtime : float, extension : str) -> dict:
     task_response = TaskResponse(
         result = result,
         Has_NSFW_Content = Has_NSFW_content,
-        time = TimeData(startup_time = time, runtime = runtime)
+        time = TimeData(startup_time = time, runtime = runtime),
+        extension=extension        
     )
     return task_response.model_dump()
 

@@ -2,7 +2,7 @@ from modal import Stub, method, Volume, Secret
 from src.data_models.Configuration import stub_dictionary
 from src.data_models.ModalAppSchemas import StubNames, SDXLImage2ImageParameters, InitParameters
 from src.utils.Globals import get_base_image, get_refiner, SafetyChecker, generate_image_urls, prepare_response, get_image_from_url
-from src.utils.Constants import sdxl_model_list, VOLUME_NAME, VOLUME_PATH, SECRET_NAME, extra_negative_prompt
+from src.utils.Constants import sdxl_model_list, VOLUME_NAME, VOLUME_PATH, SECRET_NAME, extra_negative_prompt, OUTPUT_IMAGE_EXTENSION
 from diffusers import StableDiffusionXLImg2ImgPipeline
 import torch, time
 
@@ -69,7 +69,7 @@ class stableDiffusion:
                 denoising_end = 0.8,
                 guidance_scale = parameters.guidance_scale,
                 output_type="latent",
-                cross_attention_kwargs={"scale": parameters.lora_scale},
+                # cross_attention_kwargs={"scale": parameters.lora_scale},
             ).images[0]
             torch.cuda.empty_cache()
 
@@ -83,9 +83,9 @@ class stableDiffusion:
 
             torch.cuda.empty_cache()
             images.append(image)
-
-        image_urls, has_nsfw_content = generate_image_urls(images, self.safety_checker)
+    
+        images, has_nsfw_content = generate_image_urls(images, self.safety_checker)
 
         self.runtime = time.time() - st
 
-        return prepare_response(image_urls, has_nsfw_content, self.container_execution_time, self.runtime)
+        return prepare_response(images, has_nsfw_content, self.container_execution_time, self.runtime, OUTPUT_IMAGE_EXTENSION)

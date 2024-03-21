@@ -59,9 +59,6 @@ class stableDiffusion:
         with open(vid_path, 'rb') as file:
             byte_string = file.read()
 
-
-        vid_url = upload_data_gcp(byte_string, OUTPUT_VIDEO_EXTENSION)
-
         try:
             os.remove(vid_path)
         except:
@@ -70,4 +67,4 @@ class stableDiffusion:
         has_nsfw_content = [False]
         self.runtime = time.time() - st
 
-        return prepare_response([vid_url], has_nsfw_content, self.container_execution_time, self.runtime)
+        return prepare_response([byte_string], has_nsfw_content, self.container_execution_time, self.runtime, OUTPUT_VIDEO_EXTENSION)

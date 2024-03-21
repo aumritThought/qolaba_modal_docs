@@ -5,7 +5,7 @@ from src.utils.Constants import REDIS_URL, CELERY_RESULT_EXPIRATION_TIME, CELERY
 from src.data_models.ModalAppSchemas import APIInput, APITaskResponse, TaskResponse
 from celery.result import AsyncResult
 from src.FastAPIServer.services.ServiceContainer import ServiceContainer, ServiceRegistry
-
+from src.utils.Globals import upload_data_gcp
 
 celery = Celery(
     "task_scheduler",
@@ -52,17 +52,20 @@ def create_task(parameters: dict) -> dict:
     parameters : APIInput = APIInput(**parameters)
     app = service_registry.get_service(parameters.app_id)
     if(parameters.app_id in service_registry.api_services):
-        output_data = app().remote(parameters.parameters)
+        output_data = TaskResponse(**app().remote(parameters.parameters))
     elif(parameters.app_id in service_registry.modal_services):
         app = app(parameters.init_parameters)
-        output_data = app.run_inference.remote(parameters.parameters)
+        output_data = TaskResponse(**app.run_inference.remote(parameters.parameters))
+        urls = []
+        for i in output_data.result:
+            urls.append(upload_data_gcp(i, output_data.extension))
+        output_data.result = urls
     else:
         raise Exception("Given APP Id is not available")
 
     if(output_data == None or output_data == {} or output_data == ""):
         raise Exception("Received an empty response from model")
 
-    output_data = TaskResponse(**output_data)
     time_required = time.time() - st
 
     if (output_data.time.runtime< time_required < output_data.time.runtime + output_data.time.startup_time):

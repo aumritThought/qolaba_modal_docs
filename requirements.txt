@@ -151,3 +151,4 @@ openai
 loguru
 google-cloud-storage
 mistralai
+mediapipe
