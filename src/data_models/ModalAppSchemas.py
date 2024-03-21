@@ -46,7 +46,7 @@ class TaskResponse(BaseModel):
     result : Any
     Has_NSFW_Content : list[bool]
     time : TimeData
-    extension : str
+    extension : str | None
 
 
 # class SDXLParameters(BaseModel):

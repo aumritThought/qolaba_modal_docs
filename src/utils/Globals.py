@@ -67,7 +67,7 @@ def generate_image_urls(image_data, safety_checker : SafetyChecker) -> tuple[lis
     return images, has_nsfw_content
 
 
-def prepare_response(result: list[str] | dict, Has_NSFW_content : list[bool], time : float, runtime : float, extension : str) -> dict:
+def prepare_response(result: list[str] | dict, Has_NSFW_content : list[bool], time : float, runtime : float, extension : str = None) -> dict:
     task_response = TaskResponse(
         result = result,
         Has_NSFW_Content = Has_NSFW_content,
