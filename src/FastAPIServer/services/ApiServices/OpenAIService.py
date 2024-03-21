@@ -63,15 +63,18 @@ class PromptParrot(IService):
     def remote(self, parameters: dict) -> dict:
         parameters : PromptParrotParameters = PromptParrotParameters(**parameters)
         parameters.prompt = a = f"{BASE_PROMPT_FOR_GENERATION} \n{parameters.prompt}"
+        modified_prompts = []
+        for i in range(0, parameters.batch):
+            response = self.client.chat.completions.create(
+                model="gpt-3.5-turbo-0125",
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": a}
+                ],
+                temperature=0.5
+                )
+            
+            modified_prompts.append(response.choices[0].message.content)
 
-        response = self.client.chat.completions.create(
-            model="gpt-3.5-turbo-0125",
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": a}
-            ],
-            temperature=0.5
-            )
-
-        return prepare_response([response.choices[0].message.content], [False], 0, 0)
+        return prepare_response(modified_prompts, [False]*parameters.batch, 0, 0)
 

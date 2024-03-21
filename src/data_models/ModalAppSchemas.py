@@ -160,6 +160,7 @@ class ClipDropUncropParameters(BaseModel):
     left: int = Query(ge = MIN_INCREASE_SIDE, le = MAX_INCREASE_SIDE)
     top: int = Query(ge = MIN_INCREASE_SIDE, le = MAX_INCREASE_SIDE)
     bottom: int = Query(ge = MIN_INCREASE_SIDE, le = MAX_INCREASE_SIDE)
+    batch: int = Query(default=1, ge=MIN_BATCH, le=MAX_BATCH)
 
     @model_validator(mode='after')
     def validate_params(self):
@@ -174,6 +175,7 @@ class ClipDropCleanUpParameters(BaseModel):
 class ClipDropReplaceBackgroundParameters(BaseModel):
     file_url : str | Any
     prompt : str
+    batch: int = Query(default=1, ge=MIN_BATCH, le=MAX_BATCH)
 
 class ClipDropRemoveTextParameters(BaseModel):
     file_url : str | Any
@@ -297,6 +299,7 @@ class SDXLAPIImageToImageParameters(SDXLImage2ImageParameters):
 
 class PromptParrotParameters(BaseModel):
     prompt : str
+    batch : int
 
 
 class APITaskResponse(BaseModel):
