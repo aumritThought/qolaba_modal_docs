@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator, constr
 from fastapi import Query
 from typing import  Optional, Any, List, Literal
 from src.utils.Constants import (
@@ -13,11 +13,12 @@ from src.utils.Constants import (
     MAX_COLOR, MIN_COLOR,
     MAX_FPS, MIN_FPS,
     MIN_INCREASE_SIDE, MAX_INCREASE_SIDE, HW_MULTIPLE,
-    MIN_SUPPORTED_AUDIO_FILE_ELEVENLABS, MAX_SUPPORTED_AUDIO_FILE_ELEVENLABS, gender_word,
+    MIN_SUPPORTED_AUDIO_FILE_ELEVENLABS, MAX_SUPPORTED_AUDIO_FILE_ELEVENLABS, gender_word, content_type,
     elevenlabs_accent_list, elevenlabs_age_list, elevenlabs_gender_list, dalle_supported_quality, sdxl_preset_list, did_expression_list)
 from src.utils.Constants import sdxl_model_string, controlnet_models
 from elevenlabs import voices, Voice, set_api_key
 import os
+
 
 class StubNames(BaseModel):
     sdxl_text_to_image: str = "SDXL_Text_To_Image"
@@ -316,8 +317,13 @@ class APIInput(BaseModel):
     parameters : Optional[dict] = {}
     init_parameters : Optional[dict] = {}
     ref_id: Optional[str] = ""
-    celery: Optional[bool] = False 
+    celery: Optional[bool] = False
+    fast_inference: Optional[bool] = False
 
 class TaskStatus(BaseModel):
     task_id: Optional[str] = None
     ref_id: Optional[str] = ""
+
+class FileUploadData(BaseModel):
+    file : str
+    extension : str = constr(pattern = '|'.join(content_type.keys()))

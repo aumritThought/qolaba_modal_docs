@@ -7,6 +7,7 @@ from celery.result import AsyncResult
 from src.FastAPIServer.services.ServiceContainer import ServiceContainer, ServiceRegistry
 from src.utils.Globals import upload_data_gcp
 
+
 celery = Celery(
     "task_scheduler",
     broker = REDIS_URL,
@@ -51,10 +52,18 @@ def create_task(parameters: dict) -> dict:
     st = time.time()
     parameters : APIInput = APIInput(**parameters)
     app = service_registry.get_service(parameters.app_id)
+
     if(parameters.app_id in service_registry.api_services):
         output_data = TaskResponse(**app().remote(parameters.parameters))
+
     elif(parameters.app_id in service_registry.modal_services):
+        
+        if(parameters.fast_inference == True):
+            # app = Cls.lookup(parameters.app_id.replace("_modal", ""), "stableDiffusion", environment_name = os.environ["environment"])
+            app = app.with_options(gpu="a100")
+
         app = app(parameters.init_parameters)
+        
         output_data = TaskResponse(**app.run_inference.remote(parameters.parameters))
         urls = []
         for i in output_data.result:

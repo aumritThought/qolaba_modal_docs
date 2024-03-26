@@ -46,7 +46,7 @@ class ServiceRegistry:
         for cls in list_apps():      
             Model = Cls.lookup(cls, "stableDiffusion", environment_name = os.environ["environment"])
             cls = f"{cls}_modal"
-            setattr(self.container, cls, providers.Factory(Model))
+            setattr(self.container, cls, Model)
             self.modal_services.append(cls)
 
     def register_new_modal_service(self, app_name):
