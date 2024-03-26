@@ -5,11 +5,13 @@ from fastapi import Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from src.data_models.ModalAppSchemas import APIInput, APITaskResponse, TaskStatus
 from src.FastAPIServer.celery.Worker import task_gen, get_task_status, initialize_shared_object
-from src.utils.Globals import check_token
+from src.utils.Globals import check_token, upload_to_gcp
 from src.utils.Constants import app_dict
+from src.data_models.ModalAppSchemas import FileUploadData
 from src.utils.Exceptions import handle_Request_exceptions, handle_exceptions
-import uvicorn, os
+import uvicorn, os, base64
 from fastapi.exceptions import RequestValidationError
+
 
 app = FastAPI()
 app.exception_handler(RequestValidationError)(handle_Request_exceptions)
@@ -65,6 +67,21 @@ def get_status(parameters : TaskStatus,
     else:
         return task_result.result
 
+
+@app.post("/upload_data_GCP", response_model=APITaskResponse)
+@handle_exceptions
+def upload_file(file: FileUploadData, api_key: HTTPAuthorizationCredentials = Depends(auth_scheme)):
+    check_token(api_key)
+    data = base64.b64decode(file.file)
+
+    url = upload_to_gcp(data, file.extension)
+
+    task_Response = APITaskResponse(
+                output= {"url": url},
+                status="SUCCESS"
+    ).model_dump()
+
+    return task_Response
 
 if __name__ == "__main__":
     uvicorn.run(

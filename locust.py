@@ -156,77 +156,52 @@
 # model8 = RealESRGAN(device, scale=3)
 # model8.load_weights('weights/RealESRGAN_x4.pth', download=True)
 
-# from PIL import Image
-# import requests
-# from io import BytesIO
-
-# response = requests.get("https://res.cloudinary.com/qolaba/image/upload/v1695690455/kxug1tmiolt1dtsvv5br.jpg")
-# response.raise_for_status()  # Raise an HTTPError for bad responses
-# image_data = BytesIO(response.content)
-# image =  Image.open(image_data)
-# # image = model8.predict(image)
-# # print(image.size)
-
-# import torch
-# from PIL import Image
-# import numpy as np
-# from RealESRGAN import RealESRGAN
-
-# device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-# model = RealESRGAN(device, scale=4)
-# model.load_weights('/home/prakhar-pc/qolaba/Modal-Deployments/4x-UltraSharp.pth')
 
 
-# sr_image = model.predict(image)
+from modal import Cls
+import time
 
-# print(sr_image.size)
+init_parameters = {
+    "model" : "rev-anim",
+    "controlnet_model" : "canny"
+}
+extra_negative_prompt = "disfigured, kitsch, ugly, oversaturated, greain, low-res, Deformed, blurry, bad anatomy, poorly drawn face, mutation, mutated, extra limb, poorly drawn hands, missing limb, floating limbs, disconnected limbs, malformed hands, blur, out of focus, long neck, long body, disgusting, poorly drawn, childish, mutilated, mangled, old, surreal, calligraphy, sign, writing, watermark, text, body out of frame, extra legs, extra arms, extra feet, out of frame, poorly drawn feet, cross-eye"
 
-
-# from modal import Cls
-# import time
-
-# init_parameters = {
-#     "model" : "rev-anim",
-#     "controlnet_model" : "canny"
-# }
-# extra_negative_prompt = "disfigured, kitsch, ugly, oversaturated, greain, low-res, Deformed, blurry, bad anatomy, poorly drawn face, mutation, mutated, extra limb, poorly drawn hands, missing limb, floating limbs, disconnected limbs, malformed hands, blur, out of focus, long neck, long body, disgusting, poorly drawn, childish, mutilated, mangled, old, surreal, calligraphy, sign, writing, watermark, text, body out of frame, extra legs, extra arms, extra feet, out of frame, poorly drawn feet, cross-eye"
-
-# parameters = {
-#     "file_url" : "https://res.cloudinary.com/qolaba/image/upload/v1710487238/aoaxohrfxzagvgexqfqf.jpg",
-#     "strength" : 0.5,
-#     "height": 1024,
-#     "width": 1024,
-#     "num_inference_steps": 30,
-#     "guidance_scale": 7.5,
-#     "batch": 1,
-#     "gender" : "female",
-#     "remove_background" : False,
-#     "prompt" : "cute dog"
-# }
-# # image : str | Any
-# #     bg_img : Optional[str] = None
-# #     bg_color : Optional[bool] = False 
-# #     r_color: int = Query(default=MIN_COLOR,ge=MIN_COLOR, le=MAX_COLOR)
-# #     g_color: int = Query(default=MIN_COLOR,ge=MIN_COLOR, le=MAX_COLOR)
-# #     b_color: int = Query(default=MIN_COLOR,ge=MIN_COLOR, le=MAX_COLOR)
-# #     blur: Optional[bool] = False  
-# #     strength : float = Query(ge = MIN_STRENGTH, le = MAX_STRENGTH)
-# st = time.time()
-# Model = Cls.lookup("BackGround_Removal", "stableDiffusion", environment_name = "dev")  # returns a class-like object
-# print(time.time() - st)
-# m = Model(init_parameters)
-# print("model obtained")
+parameters = {
+    "file_url" : "https://res.cloudinary.com/qolaba/image/upload/v1710487238/aoaxohrfxzagvgexqfqf.jpg",
+    "strength" : 0.5,
+    "height": 1024,
+    "width": 1024,
+    "num_inference_steps": 30,
+    "guidance_scale": 7.5,
+    "batch": 1,
+    "gender" : "female",
+    "remove_background" : False,
+    "prompt" : "cute dog"
+}
+# image : str | Any
+#     bg_img : Optional[str] = None
+#     bg_color : Optional[bool] = False 
+#     r_color: int = Query(default=MIN_COLOR,ge=MIN_COLOR, le=MAX_COLOR)
+#     g_color: int = Query(default=MIN_COLOR,ge=MIN_COLOR, le=MAX_COLOR)
+#     b_color: int = Query(default=MIN_COLOR,ge=MIN_COLOR, le=MAX_COLOR)
+#     blur: Optional[bool] = False  
+#     strength : float = Query(ge = MIN_STRENGTH, le = MAX_STRENGTH)
+st = time.time()
+Model = Cls.lookup("SDXL_Text_To_Image", "stableDiffusion", environment_name = "dev")  # returns a class-like object
+print(time.time() - st)
 
 
-# print(time.time()-st)
-# print(m.run_inference.remote(parameters))
-# print(time.time() - st)
-
-
-from elevenlabs.client import ElevenLabs
-
-client = ElevenLabs(
-  api_key="50295069ba93c03a5de7495820c484da"
+Model = Model.with_options(
+    gpu="a100"
 )
-response = client.voices.get_all()
+
+m = Model(init_parameters)
+
+print("model obtained")
+
+
+print(time.time()-st)
+print(m.run_inference.remote(parameters))
+print(time.time() - st)
+
