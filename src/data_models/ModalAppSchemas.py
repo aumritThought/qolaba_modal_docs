@@ -285,7 +285,11 @@ class ElevenLabsParameters(BaseModel):
 #             raise ValueError("Invalid input. The parameter must be one of: " + ", ".join(voice_dict))
 #         return v
     
-class DalleParameters(SDXLText2ImageParameters):
+class DalleParameters(BaseModel):
+    height: int = Query(ge = MIN_HEIGHT, le = MAX_HEIGHT)
+    width: int = Query(ge=MIN_HEIGHT, le = MAX_HEIGHT)
+    batch:  int = Query( ge = MIN_BATCH, le = MAX_BATCH)
+    prompt: str
     quality : Optional[dalle_supported_quality] = "standard"  # type: ignore
 
 class SDXLAPITextToImageParameters(SDXLText2ImageParameters):
