@@ -13,7 +13,7 @@ from src.utils.Constants import (
     MAX_COLOR, MIN_COLOR,
     MAX_FPS, MIN_FPS,
     MIN_INCREASE_SIDE, MAX_INCREASE_SIDE, HW_MULTIPLE,
-    MIN_SUPPORTED_AUDIO_FILE_ELEVENLABS, MAX_SUPPORTED_AUDIO_FILE_ELEVENLABS, gender_word, content_type,
+    MIN_SUPPORTED_AUDIO_FILE_ELEVENLABS, MAX_SUPPORTED_AUDIO_FILE_ELEVENLABS, gender_word,
     elevenlabs_accent_list, elevenlabs_age_list, elevenlabs_gender_list, dalle_supported_quality, sdxl_preset_list, did_expression_list)
 from src.utils.Constants import sdxl_model_string, controlnet_models
 from elevenlabs import voices, Voice, set_api_key
