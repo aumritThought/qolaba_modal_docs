@@ -24,7 +24,7 @@ ADD ./ /root/app
 
 WORKDIR /root/app
 
-RUN pip install -r requirements.txt
+RUN --mount=type=cache,id=s/957e8176-4750-45ca-9a04-7893f63b4c47-/root/cache/pip,target=/root/.cache/pip pip install -r requirements.txt
 
 ARG TOKEN_ID
 
