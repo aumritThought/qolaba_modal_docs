@@ -328,6 +328,3 @@ class TaskStatus(BaseModel):
     task_id: Optional[str] = None
     ref_id: Optional[str] = ""
 
-class FileUploadData(BaseModel):
-    file : str
-    extension : str = constr(pattern = '|'.join(content_type.keys()))
