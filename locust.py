@@ -178,7 +178,7 @@ parameters = {
     "gender" : "female",
     "remove_background" : False,
     "prompt" : "cute dog",
-    "scale"  : 4,
+    "scale"  : 2,
 }
 # image : str | Any
 #     bg_img : Optional[str] = None
