@@ -12,19 +12,13 @@ RUN apt-get update
 
 RUN apt-get install redis -y
 
-RUN pip install torch torchvision torchaudio
-
-# RUN pip install fastapi uvicorn Pillow modal requests python-dotenv gTTS elevenlabs pydub ffmpeg-python celery[redis] redis numpy psutil python-multipart pillow-heif cached_property einops 
-
-# RUN pip install cachetools
-
 RUN mkdir /root/app
 
 ADD ./ /root/app
 
 WORKDIR /root/app
 
-RUN pip install -r requirements.txt
+RUN --mount=type=cache,id=s/957e8176-4750-45ca-9a04-7893f63b4c47-/root/cache/pip,target=/root/.cache/pip pip install torch torchvision torchaudio && pip install -r requirements.txt
 
 ARG TOKEN_ID
 

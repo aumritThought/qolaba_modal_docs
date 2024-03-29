@@ -2,7 +2,7 @@ import io, base64
 from src.data_models.ModalAppSchemas import SDXLAPITextToImageParameters, SDXLAPIImageToImageParameters
 from src.utils.Globals import timing_decorator, make_request, upload_data_gcp, get_image_from_url, prepare_response
 from src.FastAPIServer.services.IService import IService
-from src.utils.Constants import OUTPUT_IMAGE_EXTENSION
+from src.utils.Constants import OUTPUT_IMAGE_EXTENSION, extra_negative_prompt
 
 class SDXLText2Image(IService):
     def __init__(self) -> None:
@@ -20,16 +20,25 @@ class SDXLText2Image(IService):
             "Accept": "application/json",
             "Authorization": f"Bearer {self.api_key}",
         }
-
+        
         json_data = {
-            "text_prompts": [{"text": parameters.prompt}],
+            "text_prompts": [
+                                {
+                                "text": parameters.prompt,
+                                "weight": 1
+                                },
+                                {
+                                "text": f"{parameters.negative_prompt}, {extra_negative_prompt}",
+                                "weight": -1
+                                }
+                            ],
             "cfg_scale": parameters.guidance_scale,
             "clip_guidance_preset": "FAST_BLUE",
             "height": parameters.height,
             "width": parameters.width,
             "samples": parameters.batch,
             "steps": parameters.num_inference_steps,
-            "style_preset": parameters.style_preset
+            "style_preset": parameters.style_preset,
         }
         response = make_request(
             self.url, "POST", json=json_data, headers=headers
@@ -77,9 +86,12 @@ class SDXLImage2Image(IService):
             "image_strength": 1 - parameters.strength,
             "init_image_mode": "IMAGE_STRENGTH",
             "text_prompts[0][text]": parameters.prompt,
+            "text_prompts[0][weight]": 1,
+            "text_prompts[1][text]": f"{parameters.negative_prompt}, {extra_negative_prompt}",
+            "text_prompts[1][weight]": -1,
             "cfg_scale": parameters.guidance_scale,
             "samples": parameters.batch,
-            "steps": parameters.num_inference_steps,
+            # "steps": 30,
             "style_preset": parameters.style_preset,
         }
 

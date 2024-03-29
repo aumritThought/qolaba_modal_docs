@@ -67,6 +67,19 @@ class stableDiffusion:
         
         self.safety_checker = SafetyChecker()
         self.container_execution_time = time.time() - st
+    
+    def hex_to_rgb(self, hex_color : str):
+        if hex_color.startswith('#'):
+            hex_color = hex_color[1:]
+        
+        if len(hex_color) == 6: 
+            r, g, b = int(hex_color[0:2], 16), int(hex_color[2:4], 16), int(hex_color[4:6], 16)
+        elif len(hex_color) == 3: 
+            r, g, b = int(hex_color[0]*2, 16), int(hex_color[1]*2, 16), int(hex_color[2]*2, 16)
+        else:
+            raise ValueError("Invalid hex color format")
+        
+        return (r, g, b)
 
     @method()
     def run_inference(self, parameters : dict) -> dict:
@@ -115,7 +128,11 @@ class stableDiffusion:
             ).images[0]
 
             if (parameters.remove_background == True):
-                image = self.remover.process(image, type="rgba")
+                if(parameters.bg_color):
+                    r,g,b = self.hex_to_rgb(parameters.bg_color)
+                    image = self.remover.process(image, type=str([r, g, b]))
+                else:
+                    image = self.remover.process(image, type="rgba")
 
             torch.cuda.empty_cache()
 
