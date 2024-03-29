@@ -97,6 +97,7 @@ class SDXLControlNetParameters(SDXLImage2ImageParameters):
 
 class UpscaleParameters(BaseModel):
     file_url : str | Any
+    scale : Literal[2, 4, 8]
 
 class VariationParameters(SDXLControlNetParameters):
     prompt: Optional[str] = None
@@ -123,6 +124,7 @@ class FRNDFaceAvatarParameters(BaseModel):
     strength: float = Query(default= 1, gt=MIN_STRENGTH, le=MAX_STRENGTH)
     gender : Literal["male", "female"]
     remove_background : bool
+    bg_color : Optional[str] = None
 
     @model_validator(mode='after')
     def validate_params(self):
@@ -300,7 +302,7 @@ class SDXLAPIImageToImageParameters(SDXLImage2ImageParameters):
     style_preset : Optional[sdxl_preset_list] # type: ignore
     height: int = Query(ge = MIN_HEIGHT, le = MAX_HEIGHT)
     width: int = Query(ge=MIN_HEIGHT, le = MAX_HEIGHT)
-    num_inference_steps: int = Query(ge = MIN_INFERENCE_STEPS, le = MAX_INFERENCE_STEPS) 
+    # num_inference_steps: int = Query(ge = MIN_INFERENCE_STEPS, le = MAX_INFERENCE_STEPS) 
 
 class PromptParrotParameters(BaseModel):
     prompt : str

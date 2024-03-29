@@ -158,73 +158,74 @@
 
 
 
-# from modal import Cls
-# import time
+from modal import Cls
+import time
 
-# init_parameters = {
-#     "model" : "rev-anim",
-#     "controlnet_model" : "canny"
-# }
-# extra_negative_prompt = "disfigured, kitsch, ugly, oversaturated, greain, low-res, Deformed, blurry, bad anatomy, poorly drawn face, mutation, mutated, extra limb, poorly drawn hands, missing limb, floating limbs, disconnected limbs, malformed hands, blur, out of focus, long neck, long body, disgusting, poorly drawn, childish, mutilated, mangled, old, surreal, calligraphy, sign, writing, watermark, text, body out of frame, extra legs, extra arms, extra feet, out of frame, poorly drawn feet, cross-eye"
+init_parameters = {
+    "model" : "rev-anim",
+    "controlnet_model" : "canny"
+}
+extra_negative_prompt = "disfigured, kitsch, ugly, oversaturated, greain, low-res, Deformed, blurry, bad anatomy, poorly drawn face, mutation, mutated, extra limb, poorly drawn hands, missing limb, floating limbs, disconnected limbs, malformed hands, blur, out of focus, long neck, long body, disgusting, poorly drawn, childish, mutilated, mangled, old, surreal, calligraphy, sign, writing, watermark, text, body out of frame, extra legs, extra arms, extra feet, out of frame, poorly drawn feet, cross-eye"
 
-# parameters = {
-#     "file_url" : "https://res.cloudinary.com/qolaba/image/upload/v1710487238/aoaxohrfxzagvgexqfqf.jpg",
-#     "strength" : 0.5,
-#     "height": 1024,
-#     "width": 1024,
-#     "num_inference_steps": 30,
-#     "guidance_scale": 7.5,
-#     "batch": 1,
-#     "gender" : "female",
-#     "remove_background" : False,
-#     "prompt" : "cute dog"
-# }
-# # image : str | Any
-# #     bg_img : Optional[str] = None
-# #     bg_color : Optional[bool] = False 
-# #     r_color: int = Query(default=MIN_COLOR,ge=MIN_COLOR, le=MAX_COLOR)
-# #     g_color: int = Query(default=MIN_COLOR,ge=MIN_COLOR, le=MAX_COLOR)
-# #     b_color: int = Query(default=MIN_COLOR,ge=MIN_COLOR, le=MAX_COLOR)
-# #     blur: Optional[bool] = False  
-# #     strength : float = Query(ge = MIN_STRENGTH, le = MAX_STRENGTH)
-# st = time.time()
-# Model = Cls.lookup("SDXL_Text_To_Image", "stableDiffusion", environment_name = "dev")  # returns a class-like object
-# print(time.time() - st)
+parameters = {
+    "file_url" : "https://res.cloudinary.com/qolaba/image/upload/v1710487238/aoaxohrfxzagvgexqfqf.jpg",
+    "strength" : 0.5,
+    "height": 1024,
+    "width": 1024,
+    "num_inference_steps": 30,
+    "guidance_scale": 7.5,
+    "batch": 1,
+    "gender" : "female",
+    "remove_background" : False,
+    "prompt" : "cute dog",
+    "scale"  : 4,
+}
+# image : str | Any
+#     bg_img : Optional[str] = None
+#     bg_color : Optional[bool] = False 
+#     r_color: int = Query(default=MIN_COLOR,ge=MIN_COLOR, le=MAX_COLOR)
+#     g_color: int = Query(default=MIN_COLOR,ge=MIN_COLOR, le=MAX_COLOR)
+#     b_color: int = Query(default=MIN_COLOR,ge=MIN_COLOR, le=MAX_COLOR)
+#     blur: Optional[bool] = False  
+#     strength : float = Query(ge = MIN_STRENGTH, le = MAX_STRENGTH)
+st = time.time()
+Model = Cls.lookup("Ultrasharp_Upscaler", "stableDiffusion", environment_name = "dev")  # returns a class-like object
+print(time.time() - st)
 
 
 # Model = Model.with_options(
 #     gpu="a100"
 # )
 
-# m = Model(init_parameters)
+m = Model(init_parameters)
 
-# print("model obtained")
+print("model obtained")
 
 
+print(time.time()-st)
+print(m.run_inference.remote(parameters))
+print(time.time() - st)
+
+# import requests
+
+# url = 'http://localhost:9000/upload_data_GCP'
+# headers = {
+#     'accept': 'application/json',
+#     'Authorization': 'Bearer 123456'
+# }
+# import time
+# st = time.time()
+# files = {
+#     'file': ( open('/home/dhruv/Modal/20240319191101_6174bf9c-fadc-464d-860b-66002132e3b6.jpg', 'rb'))
+# }
+# data = {
+#     "file_type" : "pdf"
+# }
 # print(time.time()-st)
-# print(m.run_inference.remote(parameters))
-# print(time.time() - st)
 
-import requests
+# response = requests.post(url, headers=headers, data=data, files=files)
+# print(time.time()-st)
+# # Ensure you close the file after the request is made
 
-url = 'http://localhost:9000/upload_data_GCP'
-headers = {
-    'accept': 'application/json',
-    'Authorization': 'Bearer 123456'
-}
-import time
-st = time.time()
-files = {
-    'file': ( open('/home/dhruv/Modal/20240319191101_6174bf9c-fadc-464d-860b-66002132e3b6.jpg', 'rb'))
-}
-data = {
-    "file_type" : "pdf"
-}
-print(time.time()-st)
-
-response = requests.post(url, headers=headers, data=data, files=files)
-print(time.time()-st)
-# Ensure you close the file after the request is made
-
-print(response.status_code)
-print(response.json())
+# print(response.status_code)
+# print(response.json())
