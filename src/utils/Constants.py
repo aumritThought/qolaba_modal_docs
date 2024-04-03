@@ -466,6 +466,12 @@ app_dict = {
         "init_parameters" : {
         },
         "model_name" : "promptparrot_text2text" 
+    },
+    "ap-3p72hG5NkRfw9DLozXbPQW": {
+        "app_id" : "Differential_Diffusion_inpainting_modal",
+        "init_parameters" : {
+        },
+        "model_name" : "inpainting_image2image" 
     }
 
 }

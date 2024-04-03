@@ -33,6 +33,7 @@ class StubNames(BaseModel):
     qr_code_generation : str = "QRCode_Generation"
     frnd_face_consistent : str = "IPAdapter_FRND_face_consistent"
     stable_cascade_text_to_image : str = "Stable_Cascade"
+    differential_diffusion_inpainting : str = "Differential_Diffusion_inpainting"
 
 class StubConfiguration(BaseModel):
     memory : int
@@ -303,6 +304,16 @@ class SDXLAPIImageToImageParameters(SDXLImage2ImageParameters):
     height: int = Query(ge = MIN_HEIGHT, le = MAX_HEIGHT)
     width: int = Query(ge=MIN_HEIGHT, le = MAX_HEIGHT)
     # num_inference_steps: int = Query(ge = MIN_INFERENCE_STEPS, le = MAX_INFERENCE_STEPS) 
+
+class DifferentialDiffusionInpainting(BaseModel):
+    file_url : str | Any
+    mask_url : str | Any
+    prompt : str
+    strength : float = Query(default = 0.9, gt = MIN_STRENGTH, le = MAX_STRENGTH)
+    guidance_scale:  float = Query( ge = MIN_GUIDANCE_SCALE, le = MAX_GUIDANCE_SCALE)
+    batch:  int = Query( ge = MIN_BATCH, le = MAX_BATCH)
+    num_inference_steps: int = Query(ge = MIN_INFERENCE_STEPS, le = MAX_INFERENCE_STEPS) 
+    negative_prompt: Optional[str] = " "
 
 class PromptParrotParameters(BaseModel):
     prompt : str
