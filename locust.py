@@ -168,17 +168,18 @@ init_parameters = {
 extra_negative_prompt = "disfigured, kitsch, ugly, oversaturated, greain, low-res, Deformed, blurry, bad anatomy, poorly drawn face, mutation, mutated, extra limb, poorly drawn hands, missing limb, floating limbs, disconnected limbs, malformed hands, blur, out of focus, long neck, long body, disgusting, poorly drawn, childish, mutilated, mangled, old, surreal, calligraphy, sign, writing, watermark, text, body out of frame, extra legs, extra arms, extra feet, out of frame, poorly drawn feet, cross-eye"
 
 parameters = {
-    "file_url" : "https://res.cloudinary.com/qolaba/image/upload/v1710487238/aoaxohrfxzagvgexqfqf.jpg",
-    "strength" : 0.5,
+    "file_url" : "https://storage.googleapis.com/qolaba-staging/20240331174647_501f3839-832c-4ed7-a2bc-db168b5905fe.jpg",
+    "strength" :0.9,
     "height": 1024,
     "width": 1024,
-    "num_inference_steps": 30,
+    "num_inference_steps": 50,
     "guidance_scale": 7.5,
-    "batch": 1,
+    "batch": 2,
     "gender" : "female",
     "remove_background" : False,
-    "prompt" : "cute dog",
-    "scale"  : 4,
+    "prompt" : "small cute smiling dog face, purchasing vegetables",
+    "scale"  : 2,
+    "mask_url" : "https://storage.googleapis.com/qolaba-staging/1712165074578_image.png"
 }
 # image : str | Any
 #     bg_img : Optional[str] = None
@@ -189,7 +190,7 @@ parameters = {
 #     blur: Optional[bool] = False  
 #     strength : float = Query(ge = MIN_STRENGTH, le = MAX_STRENGTH)
 st = time.time()
-Model = Cls.lookup("Ultrasharp_Upscaler", "stableDiffusion", environment_name = "dev")  # returns a class-like object
+Model = Cls.lookup("Differential_Diffusion_inpainting", "stableDiffusion", environment_name = "dev")  # returns a class-like object
 print(time.time() - st)
 
 
@@ -203,7 +204,8 @@ print("model obtained")
 
 
 print(time.time()-st)
-print(m.run_inference.remote(parameters))
+print(m.run_inference.remote(parameters)["result"][0].save("abc.jpg"))
+print(m.run_inference.remote(parameters)["result"][1].save("abc1.jpg"))
 print(time.time() - st)
 
 # import requests

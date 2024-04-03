@@ -61,7 +61,7 @@ class stableDiffusion:
 
         parameters.negative_prompt = parameters.negative_prompt + extra_negative_prompt
         
-        parameters.file_url = get_image_from_url(parameters.file_url)
+        parameters.file_url = get_image_from_url(parameters.file_url).resize((768,768))
 
         st = time.time()
 

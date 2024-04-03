@@ -28,7 +28,6 @@ stub.image = image
           secrets = [Secret.from_name(SECRET_NAME)])
 class stableDiffusion:
     def __init__(self, init_parameters : dict) -> None:
-        print("Here")
         st = time.time()
 
         model = RRDBNet(
@@ -47,14 +46,12 @@ class stableDiffusion:
 
         self.upsampler.device = torch.device("cuda")
         self.upsampler.model.to("cuda")
-        print("Here 1")
         self.safety_checker = SafetyChecker()
         self.container_execution_time = time.time() - st
 
     @method()
     def run_inference(self, parameters : dict) -> dict:
         st = time.time()
-        print("Here2")
         parameters : UpscaleParameters = UpscaleParameters(**parameters)
 
         parameters.file_url = get_image_from_url(parameters.file_url)
@@ -65,26 +62,20 @@ class stableDiffusion:
         upsampler_output, img_mode = self.upsampler.enhance(
                 np_img[:, :, ::-1]
             )
-        print("Here3")
         
         if(parameters.scale==2):
-            print(upsampler_output.shape)
-            upsampler_output = cv2.resize(upsampler_output, (int(upsampler_output.shape[0]/2), int(upsampler_output.shape[1]/2)))
-            print(upsampler_output.shape)
+            upsampler_output = cv2.resize(upsampler_output, (int(upsampler_output.shape[1]/2), int(upsampler_output.shape[0]/2)))
         if(parameters.scale==8):
-            print(upsampler_output.shape)
-            upsampler_output = cv2.resize(upsampler_output, (int(upsampler_output.shape[0]/2), int(upsampler_output.shape[1]/2)))
-            print(upsampler_output.shape)
+            upsampler_output = cv2.resize(upsampler_output, (int(upsampler_output.shape[1]/2), int(upsampler_output.shape[0]/2)))
+            image = Image.fromarray(upsampler_output[:, :, ::-1], mode=img_mode)
+            np_img = np.array(image, dtype=np.uint8)
             upsampler_output, img_mode = self.upsampler.enhance(
-                upsampler_output[:, :, ::-1]
-            )
-            print(upsampler_output.shape)
+                    np_img[:, :, ::-1]
+                )
 
-        print("Here4")
         images = [Image.fromarray(upsampler_output[:, :, ::-1], mode=img_mode)]
         
         images, has_nsfw_content = generate_image_urls(images, self.safety_checker)
 
         self.runtime = time.time() - st
-        print("Here5")
         return prepare_response(images, has_nsfw_content, self.container_execution_time, self.runtime, OUTPUT_IMAGE_EXTENSION)
