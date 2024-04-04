@@ -9,7 +9,6 @@ from src.utils.Constants import (
     CLIPDROP_CLEANUP_URL,
     CLIPDROP_REMOVE_TEXT_URL, 
     CLIPDROP_REPLACE_BACKGROUND_URL)
-from transparent_background import Remover
 
 
 class IService(ABC):
@@ -19,7 +18,6 @@ class IService(ABC):
         self.stability_engine_id = SDXL_ENGINE_ID
         self.stability_api_key = os.environ["SDXL_API_KEY"]
         self.stability_inpaint_url = SDXL_INPAINT_URL
-        self.background_remover = Remover(device = "cpu")
 
         #elevenlabs definations
         self.elevenlabs_api_key = os.environ["ELEVENLABS_API_KEY"] 

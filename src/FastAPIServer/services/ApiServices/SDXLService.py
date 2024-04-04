@@ -168,11 +168,11 @@ class SDXLInpainting(IService):
         return prepare_response(image_urls, Has_NSFW_Content, 0, 0)
 
 class SDXLReplaceBackground(IService):
-    def __init__(self) -> None:
+    def __init__(self, remover) -> None:
         super().__init__()
         self.api_key = self.stability_api_key
         self.url = self.stability_inpaint_url
-        self.remover = self.background_remover
+        self.remover = remover
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
