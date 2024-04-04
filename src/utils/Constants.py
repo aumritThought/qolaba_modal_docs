@@ -407,7 +407,7 @@ app_dict = {
         "model_name" : "clipdrop_cleanup_image2image" 
     },
     "ap-L4vHj7YbXeT2qKoU1fW3G7": {
-        "app_id" : "clipdropreplacebackgroundimage2image_api",
+        "app_id" : "sdxlreplacebackground_api",
         "init_parameters" : {
         },
         "model_name" : "clipdrop_Replace_background_image2image" 

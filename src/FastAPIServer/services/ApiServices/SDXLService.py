@@ -4,6 +4,7 @@ from src.utils.Globals import timing_decorator, make_request, upload_data_gcp, g
 from src.FastAPIServer.services.IService import IService
 from src.utils.Constants import OUTPUT_IMAGE_EXTENSION, extra_negative_prompt
 from PIL.Image import Image as Imagetype
+from transparent_background import Remover
 
 
 class SDXLText2Image(IService):
@@ -167,3 +168,60 @@ class SDXLInpainting(IService):
 
         return prepare_response(image_urls, Has_NSFW_Content, 0, 0)
 
+class SDXLReplaceBackground(IService):
+    def __init__(self) -> None:
+        super().__init__()
+        self.api_key = self.stability_api_key
+        self.url = self.stability_inpaint_url
+        self.remover = Remover(device = "cpu")
+
+    @timing_decorator
+    def remote(self, parameters: dict) -> dict:
+        parameters : SDXLAPIInpainting = SDXLAPIInpainting(**parameters)
+        image = get_image_from_url(
+            parameters.file_url
+        )
+
+        mask = self.remover.process(image, type="rgba")
+
+        mask = mask.getchannel('A')
+
+        filtered_image = io.BytesIO()
+        image.save(filtered_image, "JPEG")
+
+        mask = invert_bw_image_color(mask)
+
+        mask = mask.resize((image.size))
+
+        mask_filtered_image = io.BytesIO()
+
+        mask.save(mask_filtered_image, "JPEG")
+
+        headers = {
+            "accept": "image/*",
+            "Authorization": f"Bearer {self.api_key}",
+        }
+        files={
+                "image": filtered_image.getvalue(),
+                "mask": mask_filtered_image.getvalue()
+        }
+
+        json_data = {
+            "prompt": parameters.prompt,
+            "output_format": "jpeg",
+            "negative_prompt" : parameters.negative_prompt,
+        }
+
+        response = make_request(
+            self.url, "POST", json_data=json_data, headers=headers, files=files
+        )
+
+        Has_NSFW_Content = [False] * parameters.batch
+
+        image_urls = []
+
+        image_urls.append(
+                upload_data_gcp(response.content, OUTPUT_IMAGE_EXTENSION)
+            )
+
+        return prepare_response(image_urls, Has_NSFW_Content, 0, 0)
