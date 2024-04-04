@@ -151,7 +151,7 @@ class SDXLInpainting(IService):
         json_data = {
             "prompt": parameters.prompt,
             "output_format": "jpeg",
-            "negative_prompt" : parameters.negative_prompt,
+            "negative_prompt" : parameters.negative_prompt + extra_negative_prompt,
         }
 
         response = make_request(
@@ -209,7 +209,7 @@ class SDXLReplaceBackground(IService):
         json_data = {
             "prompt": parameters.prompt,
             "output_format": "jpeg",
-            "negative_prompt" : parameters.negative_prompt,
+            "negative_prompt" : parameters.negative_prompt + extra_negative_prompt,
         }
 
         response = make_request(

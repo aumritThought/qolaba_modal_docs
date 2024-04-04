@@ -33,7 +33,6 @@ class StubNames(BaseModel):
     qr_code_generation : str = "QRCode_Generation"
     frnd_face_consistent : str = "IPAdapter_FRND_face_consistent"
     stable_cascade_text_to_image : str = "Stable_Cascade"
-    differential_diffusion_inpainting : str = "Differential_Diffusion_inpainting"
 
 class StubConfiguration(BaseModel):
     memory : int
