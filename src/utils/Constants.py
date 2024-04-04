@@ -400,7 +400,7 @@ app_dict = {
         "model_name" : "clipdrop_uncrop_image2image" 
     },
     "ap-7XmHk4LtVgFJq2cQoE3yB8": {
-        "app_id" : "clipdropcleanupimage2image_api",
+        "app_id" : "Differential_Diffusion_inpainting_modal", #"clipdropcleanupimage2image_api",
         "init_parameters" : {
         },
         "model_name" : "clipdrop_cleanup_image2image" 
