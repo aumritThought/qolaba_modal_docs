@@ -70,7 +70,6 @@ class ClipdropCleanupImage2image(IService):
         mask_filtered_image = io.BytesIO()
 
         mask.save(mask_filtered_image, "JPEG")
-        mask.save("mask.jpg")
 
         files = {
             "image_file": ("image.jpg", filtered_image.getvalue(), "image/jpeg"),

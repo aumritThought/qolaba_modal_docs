@@ -305,14 +305,11 @@ class SDXLAPIImageToImageParameters(SDXLImage2ImageParameters):
     width: int = Query(ge=MIN_HEIGHT, le = MAX_HEIGHT)
     # num_inference_steps: int = Query(ge = MIN_INFERENCE_STEPS, le = MAX_INFERENCE_STEPS) 
 
-class DifferentialDiffusionInpainting(BaseModel):
+class SDXLAPIInpainting(BaseModel):
     file_url : str | Any
     mask_url : str | Any
     prompt : str
-    strength : float = Query(default = 0.9, gt = MIN_STRENGTH, le = MAX_STRENGTH)
-    guidance_scale:  float = Query( ge = MIN_GUIDANCE_SCALE, le = MAX_GUIDANCE_SCALE)
-    batch:  int = Query( ge = MIN_BATCH, le = MAX_BATCH)
-    num_inference_steps: int = Query(ge = MIN_INFERENCE_STEPS, le = MAX_INFERENCE_STEPS) 
+    batch:  int = Query(default = 1, ge = MIN_BATCH, le = MAX_BATCH)
     negative_prompt: Optional[str] = " "
 
 class PromptParrotParameters(BaseModel):
