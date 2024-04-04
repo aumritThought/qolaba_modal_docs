@@ -25,11 +25,10 @@ celery.conf.CELERY_TASK_TIME_LIMIT = CELERY_RESULT_EXPIRATION_TIME
 celery.conf.worker_init = worker_init
 
 
-
-
 def initialize_shared_object():
     global service_registry
-    
+    global container 
+
     container = ServiceContainer()
     service_registry = ServiceRegistry(container)
     service_registry.register_internal_services() 
@@ -54,7 +53,10 @@ def create_task(parameters: dict) -> dict:
     app = service_registry.get_service(parameters.app_id)
 
     if(parameters.app_id in service_registry.api_services):
-        output_data = TaskResponse(**app().remote(parameters.parameters))
+        if(parameters.app_id == "sdxlreplacebackground_api"):
+            output_data = TaskResponse(**app(container.bg_remover()).remote(parameters.parameters))
+        else:
+            output_data = TaskResponse(**app().remote(parameters.parameters))
 
     elif(parameters.app_id in service_registry.modal_services):
         

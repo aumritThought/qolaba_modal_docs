@@ -9,10 +9,11 @@ from modal_proto import api_pb2
 from modal_utils.async_utils import synchronizer
 import os
 from modal import Cls
+from transparent_background import Remover
 
 
 class ServiceContainer(containers.DeclarativeContainer):
-    pass
+    bg_remover = providers.Singleton(Remover, device="cpu")
 
 
 @synchronizer.create_blocking
