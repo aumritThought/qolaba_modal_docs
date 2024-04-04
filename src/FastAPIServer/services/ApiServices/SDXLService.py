@@ -1,8 +1,10 @@
 import io, base64
-from src.data_models.ModalAppSchemas import SDXLAPITextToImageParameters, SDXLAPIImageToImageParameters
-from src.utils.Globals import timing_decorator, make_request, upload_data_gcp, get_image_from_url, prepare_response
+from src.data_models.ModalAppSchemas import SDXLAPITextToImageParameters, SDXLAPIImageToImageParameters, SDXLAPIInpainting
+from src.utils.Globals import timing_decorator, make_request, upload_data_gcp, get_image_from_url, prepare_response, invert_bw_image_color
 from src.FastAPIServer.services.IService import IService
 from src.utils.Constants import OUTPUT_IMAGE_EXTENSION, extra_negative_prompt
+from PIL.Image import Image as Imagetype
+
 
 class SDXLText2Image(IService):
     def __init__(self) -> None:
@@ -106,6 +108,61 @@ class SDXLImage2Image(IService):
         for image in data["artifacts"]:
             image_urls.append(
                 upload_data_gcp(base64.b64decode(image["base64"]), OUTPUT_IMAGE_EXTENSION)
+            )
+
+        return prepare_response(image_urls, Has_NSFW_Content, 0, 0)
+
+class SDXLInpainting(IService):
+    def __init__(self) -> None:
+        super().__init__()
+        self.api_key = self.stability_api_key
+        self.url = self.stability_inpaint_url
+
+    @timing_decorator
+    def remote(self, parameters: dict) -> dict:
+        parameters : SDXLAPIInpainting = SDXLAPIInpainting(**parameters)
+        image = get_image_from_url(
+            parameters.file_url
+        )
+
+        filtered_image = io.BytesIO()
+        image.save(filtered_image, "JPEG")
+
+        mask : Imagetype = get_image_from_url(parameters.mask_url)
+
+        mask = invert_bw_image_color(mask)
+
+        mask = mask.resize((image.size))
+
+        mask_filtered_image = io.BytesIO()
+
+        mask.save(mask_filtered_image, "JPEG")
+
+        headers = {
+            "accept": "image/*",
+            "Authorization": f"Bearer {self.api_key}",
+        }
+        files={
+                "image": filtered_image.getvalue(),
+                "mask": mask_filtered_image.getvalue()
+        }
+
+        json_data = {
+            "prompt": parameters.prompt,
+            "output_format": "jpeg",
+            "negative_prompt" : parameters.negative_prompt,
+        }
+
+        response = make_request(
+            self.url, "POST", json_data=json_data, headers=headers, files=files
+        )
+
+        Has_NSFW_Content = [False] * parameters.batch
+
+        image_urls = []
+
+        image_urls.append(
+                upload_data_gcp(response.content, OUTPUT_IMAGE_EXTENSION)
             )
 
         return prepare_response(image_urls, Has_NSFW_Content, 0, 0)

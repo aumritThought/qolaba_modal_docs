@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 import os
 from src.utils.Constants import (
     STABILITY_API, 
+    SDXL_INPAINT_URL,
     DID_TALK_API,  
     SDXL_ENGINE_ID, 
     CLIPDROP_UNCROP_URL,
@@ -15,6 +16,8 @@ class IService(ABC):
         self.stability_api = STABILITY_API
         self.stability_engine_id = SDXL_ENGINE_ID
         self.stability_api_key = os.environ["SDXL_API_KEY"]
+        self.stability_inpaint_url = SDXL_INPAINT_URL
+
 
         #elevenlabs definations
         self.elevenlabs_api_key = os.environ["ELEVENLABS_API_KEY"] 

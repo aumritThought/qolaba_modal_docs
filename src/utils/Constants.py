@@ -124,6 +124,7 @@ SDXL_ENGINE_ID = "stable-diffusion-xl-1024-v1-0"
 SDXL_DEFAULT_PRESET = "enhance"
 SDXL_STYLE_PRESET_LIST = ["3d-model", "analog-film", "anime", "cinematic", "comic-book", "digital-art", "enhance", "fantasy-art", "isometric", "line-art", "low-poly", "modeling-compound", "neon-punk", "origami", "photographic", "pixel-art", "tile-texture"]
 sdxl_preset_list = constr(pattern = '|'.join(SDXL_STYLE_PRESET_LIST))
+SDXL_INPAINT_URL = "https://api.stability.ai/v2beta/stable-image/edit/inpaint"
 
 #clipdrop api configuration
 CLIPDROP_UNCROP_URL = "https://clipdrop-api.co/uncrop/v1"
@@ -400,7 +401,7 @@ app_dict = {
         "model_name" : "clipdrop_uncrop_image2image" 
     },
     "ap-7XmHk4LtVgFJq2cQoE3yB8": {
-        "app_id" : "Differential_Diffusion_inpainting_modal", #"clipdropcleanupimage2image_api",
+        "app_id" : "sdxlinpainting_api", #"clipdropcleanupimage2image_api",
         "init_parameters" : {
         },
         "model_name" : "clipdrop_cleanup_image2image" 
