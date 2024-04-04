@@ -306,7 +306,7 @@ class SDXLAPIImageToImageParameters(SDXLImage2ImageParameters):
 
 class SDXLAPIInpainting(BaseModel):
     file_url : str | Any
-    mask_url : str | Any
+    mask_url : Optional[str | Any] = None
     prompt : str
     batch:  int = Query(default = 1, ge = MIN_BATCH, le = MAX_BATCH)
     negative_prompt: Optional[str] = " "

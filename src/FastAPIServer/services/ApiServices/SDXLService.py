@@ -4,7 +4,6 @@ from src.utils.Globals import timing_decorator, make_request, upload_data_gcp, g
 from src.FastAPIServer.services.IService import IService
 from src.utils.Constants import OUTPUT_IMAGE_EXTENSION, extra_negative_prompt
 from PIL.Image import Image as Imagetype
-from transparent_background import Remover
 
 
 class SDXLText2Image(IService):
@@ -173,7 +172,7 @@ class SDXLReplaceBackground(IService):
         super().__init__()
         self.api_key = self.stability_api_key
         self.url = self.stability_inpaint_url
-        self.remover = Remover(device = "cpu")
+        self.remover = self.background_remover
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
