@@ -10,7 +10,7 @@ from src.utils.Constants import app_dict
 from src.utils.Exceptions import handle_Request_exceptions, handle_exceptions
 import uvicorn, os, base64
 from fastapi.exceptions import RequestValidationError
-
+from transparent_background import Remover
 
 app = FastAPI()
 app.exception_handler(RequestValidationError)(handle_Request_exceptions)
@@ -18,6 +18,7 @@ auth_scheme = HTTPBearer()
 
 @app.on_event("startup")
 def startup_event():
+    Remover(device="cpu") # Do not remove this line. it will download the weights which are not directly possible through celery due to ray and celery error
     initialize_shared_object()
 
 @app.post("/generate_content", response_model=APITaskResponse)

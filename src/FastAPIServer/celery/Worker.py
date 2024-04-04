@@ -25,11 +25,10 @@ celery.conf.CELERY_TASK_TIME_LIMIT = CELERY_RESULT_EXPIRATION_TIME
 celery.conf.worker_init = worker_init
 
 
-
-
 def initialize_shared_object():
     global service_registry
     global container 
+
     container = ServiceContainer()
     service_registry = ServiceRegistry(container)
     service_registry.register_internal_services() 
