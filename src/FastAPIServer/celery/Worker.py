@@ -60,9 +60,9 @@ def create_task(parameters: dict) -> dict:
 
     elif(parameters.app_id in service_registry.modal_services):
         
-        if(parameters.fast_inference == True):
+        # if(parameters.fast_inference == True):
             # app = Cls.lookup(parameters.app_id.replace("_modal", ""), "stableDiffusion", environment_name = os.environ["environment"])
-            app = app.with_options(gpu="a100")
+        app = app.with_options(gpu=parameters.inference_type)
 
         app = app(parameters.init_parameters)
         

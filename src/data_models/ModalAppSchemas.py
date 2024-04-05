@@ -331,7 +331,7 @@ class APIInput(BaseModel):
     init_parameters : Optional[dict] = {}
     ref_id: Optional[str] = ""
     celery: Optional[bool] = False
-    fast_inference: Optional[bool] = False
+    inference_type : Optional[Literal["a10g", "a100", "h100"]] = "a10g"
 
 class TaskStatus(BaseModel):
     task_id: Optional[str] = None
