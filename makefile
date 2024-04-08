@@ -3,7 +3,7 @@ setup:
 	pip install torch torchvision torchaudio && pip install -r requirements.txt
 
 deploy_main:
-	modal run -e main --just-run src/repositories/ModalVolume.py
+	modal run -e main src/repositories/ModalVolume.py
 	modal deploy src/ModalPipelines/CustomPipelines/FRNDFaceAvatar.py --env main
 	modal deploy src/ModalPipelines/BackgroundRemoval.py --env main
 	modal deploy src/ModalPipelines/FaceConsistent.py --env main
@@ -16,7 +16,7 @@ deploy_main:
 	modal deploy src/ModalPipelines/Variation.py --env main
 
 deploy_dev:
-	modal run -e dev --just-run src/repositories/ModalVolume.py
+	modal run -e dev src/repositories/ModalVolume.py
 	modal deploy src/ModalPipelines/CustomPipelines/FRNDFaceAvatar.py --env dev
 	modal deploy src/ModalPipelines/BackgroundRemoval.py --env dev
 	modal deploy src/ModalPipelines/FaceConsistent.py --env dev

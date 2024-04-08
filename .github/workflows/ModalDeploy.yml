@@ -35,7 +35,7 @@ jobs:
 
       - name: Deploy job
         run: |
-          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+          if [ "${{ github.ref }}" == "refs/heads/master" ]; then
             make deploy_main
           elif [ "${{ github.ref }}" == "refs/heads/dev" ]; then
             make deploy_dev
