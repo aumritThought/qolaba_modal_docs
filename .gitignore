@@ -5,7 +5,6 @@ __pycache__/
 .vscode
 test-dep.py
 api_key.py
-.git*
 getresul*
 urls.txt
 *.png

@@ -1,0 +1,43 @@
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    branches: 
+      - main
+      - dev
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: secrets
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11.8"
+      
+      - name: Install Make
+        run: sudo apt-get update && sudo apt-get install -y make
+
+      - name: Install requirements
+        run: make setup
+
+      - name: setup modal
+        run: modal token set --token-id ${{ secrets.TOKEN_ID }} --token-secret ${{ secrets.TOKEN_SECRET }}
+
+      - name: Deploy job
+        run: |
+          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            make deploy_main
+          elif [ "${{ github.ref }}" == "refs/heads/dev" ]; then
+            make deploy_dev
+          fi
+          
