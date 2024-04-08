@@ -1,56 +1,29 @@
-.PHONY: test
+setup:
+	python -m pip install --upgrade pip
+	pip install torch torchvision torchaudio && pip install -r requirements.txt
 
-test:
-	sh -c '. _virtualenv/bin/activate; py.test tests'
+deploy_main:
+	modal run -e main --just-run src/repositories/ModalVolume.py
+    modal deploy src/ModalPipelines/CustomPipelines/FRNDFaceAvatar.py --env main
+    modal deploy src/ModalPipelines/BackgroundRemoval.py --env main
+	modal deploy src/ModalPipelines/FaceConsistent.py --env main
+	modal deploy src/ModalPipelines/IllusionDiffusion.py --env main
+	modal deploy src/ModalPipelines/QrCodeGeneration.py --env main
+	modal deploy src/ModalPipelines/SDXLControlnet.py --env main
+	modal deploy src/ModalPipelines/SDXLImageToImage.py --env main
+	modal deploy src/ModalPipelines/SDXLTextToImage.py --env main
+	modal deploy src/ModalPipelines/Upscaling.py --env main
+	modal deploy src/ModalPipelines/Variation.py --env main
 
-.PHONY: test-all
-
-test-all:
-	tox
-
-.PHONY: upload
-
-upload: test-all build-dist
-	_virtualenv/bin/twine upload dist/*
-	make clean
-
-.PHONY: build-dist
-
-build-dist: clean
-	_virtualenv/bin/pyproject-build
-
-.PHONY: clean
-
-clean:
-	rm -f MANIFEST
-	rm -rf build dist
-
-dev-canny:
-		modal deploy /home/prakhar-pc/qolaba/Modal-Deployments/src/image_to_image/controlnet/Canny.py --env dev
-
-dev-depth:
-		modal deploy /home/prakhar-pc/qolaba/Modal-Deployments/src/image_to_image/controlnet/Depth.py --env dev
-
-dev-normal:
-		modal deploy /home/prakhar-pc/qolaba/Modal-Deployments/src/image_to_image/controlnet/normal_copy.py --env dev
-
-format:
-	black src
-
-reqs:
-	pip install -r requirements.txt
-# .PHONY: bootstrap
-
-# bootstrap: _virtualenv
-# 	_virtualenv/bin/pip install -e .
-# ifneq ($(wildcard test-requirements.txt),)
-# 	_virtualenv/bin/pip install -r test-requirements.txt
-# endif
-# 	make clean
-
-# _virtualenv:
-# 	python3 -m venv _virtualenv
-# 	_virtualenv/bin/pip install --upgrade pip
-# 	_virtualenv/bin/pip install --upgrade setuptools
-# 	_virtualenv/bin/pip install --upgrade wheel
-# 	_virtualenv/bin/pip install --upgrade build twine
+deploy_dev:
+    modal run -e dev --just-run src/repositories/ModalVolume.py
+    modal deploy src/ModalPipelines/CustomPipelines/FRNDFaceAvatar.py --env dev
+    modal deploy src/ModalPipelines/BackgroundRemoval.py --env dev
+	modal deploy src/ModalPipelines/FaceConsistent.py --env dev
+	modal deploy src/ModalPipelines/IllusionDiffusion.py --env dev
+	modal deploy src/ModalPipelines/QrCodeGeneration.py --env dev
+	modal deploy src/ModalPipelines/SDXLControlnet.py --env dev
+	modal deploy src/ModalPipelines/SDXLImageToImage.py --env dev
+	modal deploy src/ModalPipelines/SDXLTextToImage.py --env dev
+	modal deploy src/ModalPipelines/Upscaling.py --env dev
+	modal deploy src/ModalPipelines/Variation.py --env dev
