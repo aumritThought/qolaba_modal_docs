@@ -11,9 +11,8 @@ on:
       - dev
 
 jobs:
-  build_for_main:
+  build:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
     environment: secrets
 
     steps:
@@ -29,7 +28,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y make
 
       - name: setup modal
-        run: modal token set --token-id ${{ secrets.MODAL_TOKEN_ID }} --token-secret ${{ secrets.MODAL_TOKEN_SECRET }}
+        run: modal token set --token-id ${{ secrets.TOKEN_ID }} --token-secret ${{ secrets.TOKEN_SECRET }}
 
       - name: Install requirements
         run: |
@@ -37,34 +36,9 @@ jobs:
 
       - name: Deploy job
         run: |
-          make deploy_main
-
-  build_for_develop:
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/dev'
-    environment: secrets
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Install Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11.8"
-      
-      - name: Install Make
-        run: sudo apt-get update && sudo apt-get install -y make
-
-      - name: setup modal
-        run: modal token set --token-id ${{ secrets.MODAL_TOKEN_ID }} --token-secret ${{ secrets.MODAL_TOKEN_SECRET }}
-
-      - name: Install requirements
-        run: |
-          make setup
-
-      - name: Deploy job
-        run: |
-          make deploy_dev
-        
-
+          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            make deploy_main
+          elif [ "${{ github.ref }}" == "refs/heads/dev" ]; then
+            make deploy_dev
+          fi
+          
