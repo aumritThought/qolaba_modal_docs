@@ -4,8 +4,8 @@ setup:
 
 deploy_main:
 	modal run -e main --just-run src/repositories/ModalVolume.py
-    modal deploy src/ModalPipelines/CustomPipelines/FRNDFaceAvatar.py --env main
-    modal deploy src/ModalPipelines/BackgroundRemoval.py --env main
+	modal deploy src/ModalPipelines/CustomPipelines/FRNDFaceAvatar.py --env main
+	modal deploy src/ModalPipelines/BackgroundRemoval.py --env main
 	modal deploy src/ModalPipelines/FaceConsistent.py --env main
 	modal deploy src/ModalPipelines/IllusionDiffusion.py --env main
 	modal deploy src/ModalPipelines/QrCodeGeneration.py --env main
@@ -16,9 +16,9 @@ deploy_main:
 	modal deploy src/ModalPipelines/Variation.py --env main
 
 deploy_dev:
-    modal run -e dev --just-run src/repositories/ModalVolume.py
-    modal deploy src/ModalPipelines/CustomPipelines/FRNDFaceAvatar.py --env dev
-    modal deploy src/ModalPipelines/BackgroundRemoval.py --env dev
+	modal run -e dev --just-run src/repositories/ModalVolume.py
+	modal deploy src/ModalPipelines/CustomPipelines/FRNDFaceAvatar.py --env dev
+	modal deploy src/ModalPipelines/BackgroundRemoval.py --env dev
 	modal deploy src/ModalPipelines/FaceConsistent.py --env dev
 	modal deploy src/ModalPipelines/IllusionDiffusion.py --env dev
 	modal deploy src/ModalPipelines/QrCodeGeneration.py --env dev
