@@ -27,12 +27,11 @@ jobs:
       - name: Install Make
         run: sudo apt-get update && sudo apt-get install -y make
 
+      - name: Install requirements
+        run: make setup
+
       - name: setup modal
         run: modal token set --token-id ${{ secrets.TOKEN_ID }} --token-secret ${{ secrets.TOKEN_SECRET }}
-
-      - name: Install requirements
-        run: |
-          make setup
 
       - name: Deploy job
         run: |
