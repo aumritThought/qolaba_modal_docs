@@ -94,7 +94,7 @@ class stableDiffusion:
         face_img=np.array(parameters.file_url)
 
         faces = self.app.get(face_img)
-        print(time.time()-st)
+
         faceid_embeds = torch.from_numpy(faces[0].normed_embedding).unsqueeze(0)
         face_image = face_align.norm_crop(face_img, landmark=faces[0].kps, image_size=224)
 
@@ -129,7 +129,7 @@ class stableDiffusion:
             images.append(image)
 
         images, has_nsfw_content = generate_image_urls(images, self.safety_checker)
-        print(time.time()-st)
+
         self.runtime = time.time() - st
 
         return prepare_response(images, has_nsfw_content, self.container_execution_time, self.runtime, OUTPUT_IMAGE_EXTENSION)
