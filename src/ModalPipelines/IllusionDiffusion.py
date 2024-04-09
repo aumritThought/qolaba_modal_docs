@@ -65,7 +65,7 @@ class stableDiffusion:
             image = self.pipe(
                 prompt = parameters.prompt,
                 negative_prompt = parameters.negative_prompt,
-                controlnet_conditioning_scale = parameters.controlnet_scale,
+                controlnet_conditioning_scale = parameters.strength* 1.5 + 1,
                 image=parameters.file_url,
                 guidance_scale = parameters.guidance_scale,
                 batch = 1,
