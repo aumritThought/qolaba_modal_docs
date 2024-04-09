@@ -4,6 +4,7 @@ from src.utils.Globals import timing_decorator, make_request, upload_data_gcp, g
 from src.FastAPIServer.services.IService import IService
 from src.utils.Constants import OUTPUT_IMAGE_EXTENSION, extra_negative_prompt
 from PIL.Image import Image as Imagetype
+from transparent_background import Remover
 
 
 class SDXLText2Image(IService):
@@ -168,7 +169,7 @@ class SDXLInpainting(IService):
         return prepare_response(image_urls, Has_NSFW_Content, 0, 0)
 
 class SDXLReplaceBackground(IService):
-    def __init__(self, remover) -> None:
+    def __init__(self, remover : Remover) -> None:
         super().__init__()
         self.api_key = self.stability_api_key
         self.url = self.stability_inpaint_url

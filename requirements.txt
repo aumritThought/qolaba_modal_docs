@@ -66,7 +66,7 @@ numpy==1.26.4
 omegaconf==2.3.0
 onnx==1.15.0
 onnxruntime==1.17.1
-onnxruntime-gpu==1.16.0
+onnxruntime-gpu==1.17.1
 opencv-python==4.9.0.80
 opencv-python-headless==4.9.0.80
 open-clip-torch==2.20.0
