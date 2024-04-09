@@ -152,7 +152,6 @@ class StableVideoDiffusion(BaseModel):
     fps : int = Query(default=MIN_FPS,ge=MIN_FPS, le=MAX_FPS)
 
 class IllusionDuiffusion(SDXLImage2ImageParameters):
-    controlnet_scale : float = Query(default= 2.5, ge=0, le=4)
     num_inference_steps: int = Query(ge = MIN_INFERENCE_STEPS, le = MAX_INFERENCE_STEPS) 
 
 class ClipDropUncropParameters(BaseModel):
