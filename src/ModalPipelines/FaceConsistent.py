@@ -25,7 +25,7 @@ def download_face_model():
             "stabilityai/stable-diffusion-xl-base-1.0", torch_dtype=torch.float16, use_safetensors=True, variant="fp16"
         )
 
-    app = FaceAnalysis(name="buffalo_l", providers=['CUDAExecutionProvider', 'CPUExecutionProvider'])
+    app = FaceAnalysis(name="buffalo_l", providers=['CUDAExecutionProvider'])
     app.prepare(ctx_id=0, det_size=(640, 640))
 
     ip_ckpt = "../ip-adapter-faceid_sdxl.bin"
@@ -35,8 +35,9 @@ def download_face_model():
 
 image = get_base_image().run_commands(
     "git clone https://github.com/tencent-ailab/IP-Adapter.git",
-    "wget https://huggingface.co/h94/IP-Adapter-FaceID/resolve/main/ip-adapter-faceid_sdxl.bin"
-).run_function(download_face_model, secrets= [Secret.from_name(SECRET_NAME)])
+    "wget https://huggingface.co/h94/IP-Adapter-FaceID/resolve/main/ip-adapter-faceid_sdxl.bin",
+    "pip install --upgrade --force-reinstall onnxruntime-gpu --extra-index-url https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/"
+).run_function(download_face_model, secrets= [Secret.from_name(SECRET_NAME)], gpu="a10g")
 
 stub.image = image
 
@@ -69,7 +70,7 @@ class stableDiffusion:
         # pipe.enable_xformers_memory_efficient_attention()
         # self.refiner.enable_xformers_memory_efficient_attention()
 
-        self.app = FaceAnalysis(name="buffalo_l", providers=['CUDAExecutionProvider', 'CPUExecutionProvider'])
+        self.app = FaceAnalysis(name="buffalo_l", providers=['CUDAExecutionProvider'])
         self.app.prepare(ctx_id=0, det_size=(640, 640))
 
         ip_ckpt = "../ip-adapter-faceid_sdxl.bin"
@@ -93,7 +94,7 @@ class stableDiffusion:
         face_img=np.array(parameters.file_url)
 
         faces = self.app.get(face_img)
-
+        print(time.time()-st)
         faceid_embeds = torch.from_numpy(faces[0].normed_embedding).unsqueeze(0)
         face_image = face_align.norm_crop(face_img, landmark=faces[0].kps, image_size=224)
 
@@ -128,7 +129,7 @@ class stableDiffusion:
             images.append(image)
 
         images, has_nsfw_content = generate_image_urls(images, self.safety_checker)
-
+        print(time.time()-st)
         self.runtime = time.time() - st
 
         return prepare_response(images, has_nsfw_content, self.container_execution_time, self.runtime, OUTPUT_IMAGE_EXTENSION)
