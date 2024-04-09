@@ -242,7 +242,7 @@ from itertools import product
 
 
 headers = {
-            'Authorization': 'Bearer X7Lum9dvnIT8hIEC3h7rBhkRSFMcDtb0LZhmMV4fJZxGpBN8yG0cD2BqiLo3iR5SMRs43txafEVl6FmT',
+            'Authorization': 'Bearer 123456',
             }
 
 api_styles = ["text-to-Image", 
