@@ -1,0 +1,56 @@
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    branches: 
+      - main
+      - dev
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: secrets
+    env:
+      GCP_TYPE: ${{ secrets.GCP_TYPE }} 
+      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }} 
+      GCP_PRIVATE_KEY_ID: ${{ secrets.GCP_PRIVATE_KEY_ID }} 
+      GCP_PRIVATE_KEY: ${{ secrets.GCP_PRIVATE_KEY }} 
+      GCP_CLIENT_EMAIL: ${{ secrets.GCP_CLIENT_EMAIL }} 
+      GCP_CLIENT_ID: ${{ secrets.GCP_CLIENT_ID }} 
+      GCP_AUTH_URI: ${{ secrets.GCP_AUTH_URI }} 
+      GCP_TOKEN_URI: ${{ secrets.GCP_TOKEN_URI }} 
+      GCP_AUTH_PROVIDER_X509_CERT_URL: ${{ secrets.GCP_AUTH_PROVIDER_X509_CERT_URL }} 
+      GCP_CLIENT_X509_CERT_URL: ${{ secrets.GCP_CLIENT_X509_CERT_URL }} 
+      GCP_UNIVERSE_DOMAIN: ${{ secrets.GCP_UNIVERSE_DOMAIN }} 
+      BUCKET_NAME: ${{ secrets.BUCKET_NAME }} 
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11.8"
+      
+      - name: Install Make
+        run: sudo apt-get update && sudo apt-get install -y make
+
+      - name: Install requirements
+        run: make setup
+
+      - name: setup modal
+        run: modal token set --token-id ${{ secrets.TOKEN_ID }} --token-secret ${{ secrets.TOKEN_SECRET }}
+
+      - name: Deploy job
+        run: |
+          if [ "${{ github.ref }}" == "refs/heads/master" ]; then
+            make deploy_main
+          elif [ "${{ github.ref }}" == "refs/heads/dev" ]; then
+            make deploy_dev
+          fi
+          
