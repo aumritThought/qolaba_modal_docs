@@ -62,16 +62,26 @@ def generate_image_urls(image_data, safety_checker : SafetyChecker) -> tuple[lis
             has_nsfw_content.append(nsfw_content[0])
         else:
             # im_url = upload_data_gcp(, OUTPUT_IMAGE_EXTENSION)
-            images.append(image_data[im])
+            images.append(convert_image_to_bytes(image_data[im]))
             has_nsfw_content.append(nsfw_content[0])
     return images, has_nsfw_content
 
+def convert_image_to_bytes(image: Image.Image) -> bytes:
+    # return img_bytes.getvalue()
+    if image.mode == 'RGBA':
+        with io.BytesIO() as buffer:
+            image.save(buffer, format="PNG")
+            return buffer.getvalue()
+    else:
+        with io.BytesIO() as buffer:
+            image.save(buffer, format="JPEG")
+            return buffer.getvalue()
 
-def prepare_response(result: list[str] | dict, Has_NSFW_content : list[bool], time : float, runtime : float, extension : str = None) -> dict:
+def prepare_response(result: list[str] | dict, Has_NSFW_content : list[bool], time_data : float, runtime : float, extension : str = None) -> dict:
     task_response = TaskResponse(
         result = result,
         Has_NSFW_Content = Has_NSFW_content,
-        time = TimeData(startup_time = time, runtime = runtime),
+        time = TimeData(startup_time = time_data, runtime = runtime),
         extension=extension        
     )
     return task_response.model_dump()
@@ -109,6 +119,7 @@ def upload_data_gcp(data : Imagetype | str, extension : str) -> str:
             
 def upload_to_gcp(data : Imagetype | str, extension : str) -> str:
     try:
+        st = time.time()
         current_time = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         random_string = str(uuid.uuid4())
 
@@ -138,6 +149,7 @@ def upload_to_gcp(data : Imagetype | str, extension : str) -> str:
         blob.content_disposition = "inline"
 
         blob.upload_from_file(byte_data)
+        print(time.time()-st)
 
         return blob.public_url
 
