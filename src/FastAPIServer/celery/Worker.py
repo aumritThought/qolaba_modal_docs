@@ -78,7 +78,7 @@ def create_task(parameters: dict) -> dict:
         raise Exception("Received an empty response from model")
 
     time_required = time.time() - st
-    print(time_required)
+
     if (output_data.time.runtime< time_required < output_data.time.runtime + output_data.time.startup_time):
         output_data.time.startup_time = 0
     
