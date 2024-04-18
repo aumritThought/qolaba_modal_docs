@@ -15,10 +15,11 @@ Extra
 .env
 venv/
 
-
 # C extensions
 *.so
 Extra.py
+Extra
+
 # Distribution / packaging
 .Python
 build/

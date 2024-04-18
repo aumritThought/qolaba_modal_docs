@@ -6,7 +6,7 @@ from PIL.Image import Image as Imagetype
 from diffusers import DiffusionPipeline, StableDiffusionXLPipeline
 from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
 from transformers import CLIPImageProcessor
-import torch, time, os, requests, re, io, datetime, uuid, imageio
+import torch, time, os, requests, re, io, datetime, uuid, imageio, math
 from src.utils.Constants import BASE_IMAGE_COMMANDS, PYTHON_VERSION, REQUIREMENT_FILE_PATH, MEAN_HEIGHT, SDXL_REFINER_MODEL_PATH, google_credentials_info, OUTPUT_IMAGE_EXTENSION, SECRET_NAME, content_type, MAX_UPLOAD_RETRY
 from fastapi import HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials
@@ -233,20 +233,7 @@ def timing_decorator(func: callable) -> callable:
 
 def check_token(api_key: HTTPAuthorizationCredentials):
     if api_key.credentials != os.environ["API_KEY"]:
-
-        response = requests.post(
-            url=os.environ["QOLABA_B2B_API_URL"],
-            data={"keysHashedValue": api_key.credentials},
-        )
-
-        response.raise_for_status()
-
-        data = response.json()
-        if data["response"] == False:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect bearer token",
-            )
+        raise Exception("Invalid API Key")
 
 def get_clean_name(name : str) -> str:
     pattern = re.compile('[^a-zA-Z0-9]')
@@ -254,3 +241,10 @@ def get_clean_name(name : str) -> str:
     return cleaned_string.lower()
 
 
+def convert_to_aspect_ratio(width : int, height : int) -> str:
+    gcd = math.gcd(width, height)
+        
+    simplified_width = width // gcd
+    simplified_height = height // gcd
+        
+    return f"{simplified_width}:{simplified_height}"

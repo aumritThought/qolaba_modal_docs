@@ -1,5 +1,9 @@
 from dependency_injector import containers, providers
+
+# Do not remove this line. It imports the classes from this file into memory because of that, it is easy to identify that they are subscriber of Iservice class
 from src.FastAPIServer.services.ApiServices import ClipdropService, DIDVideoService, ElvenLabsAudio, OpenAIService, SDXLService
+####
+
 from src.FastAPIServer.services.IService import IService
 from src.utils.Globals import get_clean_name
 from fastapi import HTTPException

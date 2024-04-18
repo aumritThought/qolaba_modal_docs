@@ -84,6 +84,7 @@ class stableDiffusion:
     @method()
     def run_inference(self, parameters : dict) -> dict:
         st = time.time()
+        print(parameters)
 
         parameters : FRNDFaceAvatarParameters = FRNDFaceAvatarParameters(**parameters)
 
@@ -96,6 +97,9 @@ class stableDiffusion:
         face_img=np.array(parameters.file_url)
 
         faces = self.app.get(face_img)
+
+        if(len(faces) == 0):
+            raise Exception("Please provide proper image, Not able to detect the faces.")
 
         faceid_embeds = torch.from_numpy(faces[0].normed_embedding).unsqueeze(0)
         face_image = face_align.norm_crop(face_img, landmark=faces[0].kps, image_size=224)
