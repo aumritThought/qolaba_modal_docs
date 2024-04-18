@@ -5,6 +5,7 @@ from src.utils.Constants import (
     SDXL_INPAINT_URL,
     DID_TALK_API,  
     SDXL_ENGINE_ID, 
+    SDX3_URL,
     CLIPDROP_UNCROP_URL,
     CLIPDROP_CLEANUP_URL,
     CLIPDROP_REMOVE_TEXT_URL, 
@@ -18,6 +19,7 @@ class IService(ABC):
         self.stability_engine_id = SDXL_ENGINE_ID
         self.stability_api_key = os.environ["SDXL_API_KEY"]
         self.stability_inpaint_url = SDXL_INPAINT_URL
+        self.sdxl3_url = SDX3_URL
 
         #elevenlabs definations
         self.elevenlabs_api_key = os.environ["ELEVENLABS_API_KEY"] 

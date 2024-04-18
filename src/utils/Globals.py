@@ -6,7 +6,7 @@ from PIL.Image import Image as Imagetype
 from diffusers import DiffusionPipeline, StableDiffusionXLPipeline
 from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
 from transformers import CLIPImageProcessor
-import torch, time, os, requests, re, io, datetime, uuid
+import torch, time, os, requests, re, io, datetime, uuid, imageio, math
 from src.utils.Constants import BASE_IMAGE_COMMANDS, PYTHON_VERSION, REQUIREMENT_FILE_PATH, MEAN_HEIGHT, SDXL_REFINER_MODEL_PATH, google_credentials_info, OUTPUT_IMAGE_EXTENSION, SECRET_NAME, content_type, MAX_UPLOAD_RETRY
 from fastapi import HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials
@@ -14,8 +14,9 @@ from requests import Response
 from google.cloud import storage
 from google.oauth2 import service_account
 import numpy as np
-#Safety Checker Utils
 
+
+#Safety Checker Utils
 class SafetyChecker:
     def __init__(self) -> None:
         self.safety_checker = StableDiffusionSafetyChecker.from_pretrained(
@@ -86,6 +87,16 @@ def prepare_response(result: list[str] | dict, Has_NSFW_content : list[bool], ti
     )
     return task_response.model_dump()
 
+def create_video(frames : list[Imagetype], vid_name : str, fps : int) -> None:
+    writer = imageio.get_writer(vid_name, fps=fps)
+
+    for img in frames:
+        img_np = np.array(img)
+        writer.append_data(img_np)
+
+    writer.close()
+
+
 #Completing request 
 def make_request(url: str, method: str, json_data: dict = None, headers: dict = None, files : dict = None, json : dict = None) -> Response:
 
@@ -149,7 +160,6 @@ def upload_to_gcp(data : Imagetype | str, extension : str) -> str:
         blob.content_disposition = "inline"
 
         blob.upload_from_file(byte_data)
-        print(time.time()-st)
 
         return blob.public_url
 
@@ -223,20 +233,7 @@ def timing_decorator(func: callable) -> callable:
 
 def check_token(api_key: HTTPAuthorizationCredentials):
     if api_key.credentials != os.environ["API_KEY"]:
-
-        response = requests.post(
-            url=os.environ["QOLABA_B2B_API_URL"],
-            data={"keysHashedValue": api_key.credentials},
-        )
-
-        response.raise_for_status()
-
-        data = response.json()
-        if data["response"] == False:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect bearer token",
-            )
+        raise Exception("Invalid API Key")
 
 def get_clean_name(name : str) -> str:
     pattern = re.compile('[^a-zA-Z0-9]')
@@ -244,3 +241,10 @@ def get_clean_name(name : str) -> str:
     return cleaned_string.lower()
 
 
+def convert_to_aspect_ratio(width : int, height : int) -> str:
+    gcd = math.gcd(width, height)
+        
+    simplified_width = width // gcd
+    simplified_height = height // gcd
+        
+    return f"{simplified_width}:{simplified_height}"

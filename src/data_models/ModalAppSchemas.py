@@ -297,6 +297,22 @@ class SDXLAPITextToImageParameters(SDXLText2ImageParameters):
     style_preset : Optional[sdxl_preset_list] = "enhance" # type: ignore
     # seed : Optionalint
 
+
+class SDXL3APITextToImageParameters(BaseModel):
+    height: int = Query(ge = MIN_HEIGHT, le = MAX_HEIGHT)
+    width: int = Query(ge=MIN_HEIGHT, le = MAX_HEIGHT)
+    batch:  int = Query( ge = MIN_BATCH, le = MAX_BATCH)
+    prompt: str
+    negative_prompt : Optional[str]
+
+
+class SDXL3APIImageToImageParameters(BaseModel):
+    file_url : str 
+    batch:  int = Query( ge = MIN_BATCH, le = MAX_BATCH)
+    prompt: str
+    negative_prompt : Optional[str]
+    strength : float = Query(default = 0.7, gt = MIN_STRENGTH, le = MAX_STRENGTH)
+
 class SDXLAPIImageToImageParameters(SDXLImage2ImageParameters):
     style_preset : Optional[sdxl_preset_list] # type: ignore
     height: int = Query(ge = MIN_HEIGHT, le = MAX_HEIGHT)
