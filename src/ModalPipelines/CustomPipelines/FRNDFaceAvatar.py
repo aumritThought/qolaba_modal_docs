@@ -9,6 +9,8 @@ from insightface.app import FaceAnalysis
 from insightface.utils import face_align
 import numpy as np
 from transparent_background import Remover
+import random
+
 
 
 stub_name = StubNames().frnd_face_consistent
@@ -106,6 +108,8 @@ class stableDiffusion:
 
         images = []
 
+        seed = random.randint(1, 10000000)
+
         for i in range(0, parameters.batch):
             image = self.ip_model.generate(
                 prompt = parameters.prompt,
@@ -118,8 +122,10 @@ class stableDiffusion:
                 denoising_end = 0.8,
                 guidance_scale = parameters.guidance_scale,
                 output_type="latent",
-                s_scale = parameters.strength,
-                num_samples = 1
+                s_scale = 0.6,
+                scale = 0.6,
+                num_samples = 1, 
+                seed = seed
             )
             torch.cuda.empty_cache()
 
