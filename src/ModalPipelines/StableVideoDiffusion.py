@@ -1,11 +1,10 @@
 from modal import Stub, method, Volume, Secret
 from src.data_models.Configuration import stub_dictionary
-from src.data_models.ModalAppSchemas import StubNames, StableVideoDiffusion, InitParameters
-from src.utils.Globals import get_base_image, prepare_response, get_image_from_url, upload_data_gcp, SafetyChecker
+from src.data_models.ModalAppSchemas import StubNames, StableVideoDiffusion
+from src.utils.Globals import get_base_image, prepare_response, get_image_from_url, SafetyChecker, create_video
 from src.utils.Constants import VOLUME_NAME, VOLUME_PATH, SECRET_NAME
 from diffusers import StableVideoDiffusionPipeline
-import torch, time, secrets, string, os
-from diffusers.utils import export_to_video
+import torch, time, secrets, string
 from src.utils.Constants import OUTPUT_VIDEO_EXTENSION
 
 
@@ -54,15 +53,11 @@ class stableDiffusion:
 
         random_string = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(10))
 
-        vid_path = export_to_video(frames, f"{random_string}.avi", fps=parameters.fps)
+        create_video(frames, f"{random_string}.mp4", parameters.fps)
 
-        with open(vid_path, 'rb') as file:
+        with open(f"{random_string}.mp4", 'rb') as file:
             byte_string = file.read()
 
-        try:
-            os.remove(vid_path)
-        except:
-            pass
 
         has_nsfw_content = [False]
         self.runtime = time.time() - st

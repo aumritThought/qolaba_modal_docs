@@ -125,6 +125,8 @@ SDXL_DEFAULT_PRESET = "enhance"
 SDXL_STYLE_PRESET_LIST = ["3d-model", "analog-film", "anime", "cinematic", "comic-book", "digital-art", "enhance", "fantasy-art", "isometric", "line-art", "low-poly", "modeling-compound", "neon-punk", "origami", "photographic", "pixel-art", "tile-texture"]
 sdxl_preset_list = constr(pattern = '|'.join(SDXL_STYLE_PRESET_LIST))
 SDXL_INPAINT_URL = "https://api.stability.ai/v2beta/stable-image/edit/inpaint"
+SDXL3_RATIO_LIST = ["16:9", "1:1", "21:9", "2:3", "3:2", "4:5", "5:4", "9:16", "9:21"]
+SDX3_URL = "https://api.stability.ai/v2beta/stable-image/generate/sd3"
 
 #clipdrop api configuration
 CLIPDROP_UNCROP_URL = "https://clipdrop-api.co/uncrop/v1"
@@ -290,6 +292,21 @@ app_dict = {
         },
         "model_name" : "SDXL_text2image" 
     },
+
+    "ap-Xm3pLZVdE8gY4WbR1TcSjQ": {
+        "app_id" : "sdxl3text2image_api",
+        "init_parameters" : {
+        },
+        "model_name" : "SDXL3_text2image" 
+    },
+    
+    "ap-Nk4rV9bTzXq5YH2JpL3fWg": {
+        "app_id" : "sdxl3turbotext2image_api",
+        "init_parameters" : {
+        },
+        "model_name" : "SDXL3_Turbo_text2image" 
+    },
+
     "ap-sdSyd0idsndjnsnsndjsds": {
         "app_id" : "dalletext2image_api",
         "init_parameters" : {
@@ -340,6 +357,13 @@ app_dict = {
         "init_parameters" : {
         },
         "model_name" : "SDXL_image2image" 
+    },
+
+    "ap-F7gH2jPzV5xQ8eT3kLb9Yn": {
+        "app_id" : "sdxl3image2image_api",
+        "init_parameters" : {
+        },
+        "model_name" : "SDXL3_image2image" 
     },
 
     "ap-ssndjnidsierrsnsnd223d": {

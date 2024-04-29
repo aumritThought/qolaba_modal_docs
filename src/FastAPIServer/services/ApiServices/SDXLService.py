@@ -1,8 +1,8 @@
 import io, base64
-from src.data_models.ModalAppSchemas import SDXLAPITextToImageParameters, SDXLAPIImageToImageParameters, SDXLAPIInpainting
-from src.utils.Globals import timing_decorator, make_request, upload_data_gcp, get_image_from_url, prepare_response, invert_bw_image_color
+from src.data_models.ModalAppSchemas import SDXL3APITextToImageParameters, SDXLAPITextToImageParameters, SDXLAPIImageToImageParameters, SDXLAPIInpainting, SDXL3APIImageToImageParameters
+from src.utils.Globals import timing_decorator, make_request, upload_data_gcp, get_image_from_url, prepare_response, invert_bw_image_color, convert_to_aspect_ratio
 from src.FastAPIServer.services.IService import IService
-from src.utils.Constants import OUTPUT_IMAGE_EXTENSION, extra_negative_prompt
+from src.utils.Constants import OUTPUT_IMAGE_EXTENSION, extra_negative_prompt, SDXL3_RATIO_LIST
 from PIL.Image import Image as Imagetype
 from transparent_background import Remover
 
@@ -224,4 +224,162 @@ class SDXLReplaceBackground(IService):
                 upload_data_gcp(response.content, OUTPUT_IMAGE_EXTENSION)
             )
 
+        return prepare_response(image_urls, Has_NSFW_Content, 0, 0)
+    
+class SDXL3Text2Image(IService):
+    def __init__(self) -> None:
+        super().__init__()
+        self.api_key = self.stability_api_key
+        self.url = self.sdxl3_url
+
+
+    def generate_image(self, parameters : SDXL3APITextToImageParameters, model : str) -> str:
+        headers={
+            "authorization": f"Bearer {self.api_key}",
+            "accept": "image/*"
+        }
+                
+
+        aspect_ratio = convert_to_aspect_ratio(parameters.height, parameters.width)
+        if(not (aspect_ratio in SDXL3_RATIO_LIST)):
+            raise Exception("Invalid Height and width dimension")
+        
+        files={"none": ''}
+
+        json_data = {
+            "prompt": parameters.prompt,
+            "model" : model,
+            "mode" : "text-to-image",
+            "aspect_ratio": aspect_ratio,
+            "negative_prompt": parameters.negative_prompt + extra_negative_prompt,
+        }
+
+        response = make_request(
+            self.url, "POST", json_data=json_data, headers=headers, files=files
+        )
+        return response.content
+
+    @timing_decorator
+    def remote(self, parameters: dict) -> dict:
+        parameters : SDXL3APITextToImageParameters = SDXL3APITextToImageParameters(**parameters)
+        images = []
+        
+        for i in range(0, parameters.batch):
+            images.append(self.generate_image(parameters, "sd3"))
+        
+        Has_NSFW_Content = [False] * parameters.batch
+
+        image_urls = []
+        for image in images:
+            image_urls.append(
+                upload_data_gcp(image, OUTPUT_IMAGE_EXTENSION)
+            )
+        return prepare_response(image_urls, Has_NSFW_Content, 0, 0)
+    
+class SDXL3TurboText2Image(IService):
+    def __init__(self) -> None:
+        super().__init__()
+        self.api_key = self.stability_api_key
+        self.url = self.sdxl3_url
+
+    def generate_image(self, parameters : SDXL3APITextToImageParameters, model : str) -> str:
+        headers={
+            "authorization": f"Bearer {self.api_key}",
+            "accept": "image/*"
+        }
+                
+        aspect_ratio = convert_to_aspect_ratio(parameters.height, parameters.width)
+        if(not (aspect_ratio in SDXL3_RATIO_LIST)):
+            raise Exception("Invalid Height and width dimension")
+        
+        files={"none": ''}
+
+        json_data = {
+            "prompt": parameters.prompt,
+            "model" : model,
+            "mode" : "text-to-image",
+            "aspect_ratio": aspect_ratio,
+        }
+
+        response = make_request(
+            self.url, "POST", json_data=json_data, headers=headers, files=files
+        )
+        return response.content
+
+    @timing_decorator
+    def remote(self, parameters: dict) -> dict:
+        parameters : SDXL3APITextToImageParameters = SDXL3APITextToImageParameters(**parameters)
+        images = []
+        
+        for i in range(0, parameters.batch):
+            images.append(self.generate_image(parameters, "sd3-turbo"))
+        
+        Has_NSFW_Content = [False] * parameters.batch
+
+        image_urls = []
+        for image in images:
+            image_urls.append(
+                upload_data_gcp(image, OUTPUT_IMAGE_EXTENSION)
+            )
+        return prepare_response(image_urls, Has_NSFW_Content, 0, 0)
+    
+
+class SDXL3Image2Image(IService):
+    def __init__(self) -> None:
+        super().__init__()
+        self.api_key = self.stability_api_key
+        self.url = self.sdxl3_url
+
+
+    def generate_image(self, parameters : SDXL3APIImageToImageParameters, model : str) -> str:
+        image = get_image_from_url(
+            parameters.file_url
+        )
+
+        image = image.convert("RGB")
+
+        filtered_image = io.BytesIO()
+        image.save(filtered_image, "JPEG")
+
+        headers = {
+            "Accept": "application/json",
+            "Authorization": f"Bearer {self.api_key}",
+        }
+
+        files = {"image": filtered_image.getvalue()}
+
+
+        headers={
+            "authorization": f"Bearer {self.api_key}",
+            "accept": "image/*"
+        }
+                        
+        json_data = {
+            "prompt": parameters.prompt,
+            "model" : model,
+            "mode" : "image-to-image",
+            "negative_prompt": parameters.negative_prompt + extra_negative_prompt,
+            "strength" : parameters.strength
+        }
+
+        response = make_request(
+            self.url, "POST", json_data=json_data, headers=headers, files=files
+        )
+        return response.content
+
+    @timing_decorator
+    def remote(self, parameters: dict) -> dict:
+        parameters : SDXL3APIImageToImageParameters = SDXL3APIImageToImageParameters(**parameters)
+        images = []
+        
+        for i in range(0, parameters.batch):
+            images.append(self.generate_image(parameters, "sd3"))
+        
+        Has_NSFW_Content = [False] * parameters.batch
+
+        image_urls = []
+        for image in images:
+            image_urls.append(
+                upload_data_gcp(image, OUTPUT_IMAGE_EXTENSION)
+            )
         return prepare_response(image_urls, Has_NSFW_Content, 0, 0)

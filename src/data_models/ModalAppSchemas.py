@@ -118,7 +118,7 @@ class FRNDFaceAvatarParameters(BaseModel):
     num_inference_steps: int = Query(default=30, ge=MIN_INFERENCE_STEPS, le=40)
     guidance_scale: float = Query(default=7.5, ge=MIN_GUIDANCE_SCALE, le=MAX_GUIDANCE_SCALE)
     batch: int = Query(default=1, ge=MIN_BATCH, le=MAX_BATCH)
-    prompt: str | None = f"black plain background,  VECTOR CARTOON ILLUSTRATION, half-body shot portrait {gender_word},  5 o clock shadow, 3d bitmoji avatar render, pixar, high def textures 8k, highly detailed, 3d render, award winning, no background elements"
+    prompt: str | None = f"SFW Content, black plain background, joyous dating profile, VECTOR CARTOON ILLUSTRATION, half-body shot portrait enjoyable pleasing pleasurable nice {gender_word}, looking at camera, Relaxed, Charming, Cordial, Gracious, 5 o clock shadow, 3d bitmoji avatar render, pixar, high def textures 8k, highly detailed, 3d render, award winning, no background elements"
     negative_prompt: str | None = " "
     file_url: str | Any
     strength: float = Query(default= 1, gt=MIN_STRENGTH, le=MAX_STRENGTH)
@@ -296,6 +296,22 @@ class DalleParameters(BaseModel):
 class SDXLAPITextToImageParameters(SDXLText2ImageParameters):
     style_preset : Optional[sdxl_preset_list] = "enhance" # type: ignore
     # seed : Optionalint
+
+
+class SDXL3APITextToImageParameters(BaseModel):
+    height: int = Query(ge = MIN_HEIGHT, le = MAX_HEIGHT)
+    width: int = Query(ge=MIN_HEIGHT, le = MAX_HEIGHT)
+    batch:  int = Query( ge = MIN_BATCH, le = MAX_BATCH)
+    prompt: str
+    negative_prompt : Optional[str]
+
+
+class SDXL3APIImageToImageParameters(BaseModel):
+    file_url : str 
+    batch:  int = Query( ge = MIN_BATCH, le = MAX_BATCH)
+    prompt: str
+    negative_prompt : Optional[str]
+    strength : float = Query(default = 0.7, gt = MIN_STRENGTH, le = MAX_STRENGTH)
 
 class SDXLAPIImageToImageParameters(SDXLImage2ImageParameters):
     style_preset : Optional[sdxl_preset_list] # type: ignore

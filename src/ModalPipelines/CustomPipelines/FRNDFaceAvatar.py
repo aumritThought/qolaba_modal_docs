@@ -2,13 +2,15 @@ from modal import Stub, method, Volume, Secret
 from src.data_models.Configuration import stub_dictionary
 from src.data_models.ModalAppSchemas import StubNames, FRNDFaceAvatarParameters
 from src.utils.Globals import get_base_image, SafetyChecker, generate_image_urls, prepare_response, get_image_from_url, get_refiner
-from src.utils.Constants import VOLUME_NAME, VOLUME_PATH, SECRET_NAME, sdxl_model_list, extra_negative_prompt, gender_word, OUTPUT_IMAGE_EXTENSION
+from src.utils.Constants import VOLUME_NAME, VOLUME_PATH, SECRET_NAME, sdxl_model_list, gender_word, OUTPUT_IMAGE_EXTENSION
 import torch, time, os, sys
 from diffusers import StableDiffusionXLPipeline
 from insightface.app import FaceAnalysis
 from insightface.utils import face_align
 import numpy as np
 from transparent_background import Remover
+import random
+
 
 
 stub_name = StubNames().frnd_face_consistent
@@ -84,8 +86,11 @@ class stableDiffusion:
     @method()
     def run_inference(self, parameters : dict) -> dict:
         st = time.time()
+        print(parameters)
 
         parameters : FRNDFaceAvatarParameters = FRNDFaceAvatarParameters(**parameters)
+
+        extra_negative_prompt="NSFW, nudity, no clothes, pornographic content, vagaina, nude breast, disfigured, kitsch, ugly, oversaturated, greain, low-res, Deformed, blurry, bad anatomy, poorly drawn face, mutation, mutated, extra limb, poorly drawn hands, missing limb, floating limbs, disconnected limbs, malformed hands, blur, out of focus, long neck, long body, disgusting, poorly drawn, childish, mutilated, mangled, old, surreal, calligraphy, sign, writing, watermark, text, body out of frame, extra legs, extra arms, extra feet, out of frame, poorly drawn feet, cross-eye"
 
         parameters.negative_prompt = parameters.negative_prompt + extra_negative_prompt
 
@@ -97,10 +102,15 @@ class stableDiffusion:
 
         faces = self.app.get(face_img)
 
+        if(len(faces) == 0):
+            raise Exception("Please provide proper image, Not able to detect the faces.")
+
         faceid_embeds = torch.from_numpy(faces[0].normed_embedding).unsqueeze(0)
         face_image = face_align.norm_crop(face_img, landmark=faces[0].kps, image_size=224)
 
         images = []
+
+        seed = random.randint(1, 10000000)
 
         for i in range(0, parameters.batch):
             image = self.ip_model.generate(
@@ -114,8 +124,10 @@ class stableDiffusion:
                 denoising_end = 0.8,
                 guidance_scale = parameters.guidance_scale,
                 output_type="latent",
-                s_scale = parameters.strength,
-                num_samples = 1
+                s_scale = 0.6,
+                scale = 0.6,
+                num_samples = 1, 
+                seed = seed
             )
             torch.cuda.empty_cache()
 
@@ -139,7 +151,7 @@ class stableDiffusion:
             images.append(image)
 
 
-        images, has_nsfw_content = generate_image_urls(images, self.safety_checker)
+        images, has_nsfw_content = generate_image_urls(images, self.safety_checker, check_NSFW = False)
 
         self.runtime = time.time() - st
 
