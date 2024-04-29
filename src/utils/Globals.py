@@ -54,12 +54,12 @@ def get_refiner(pipe : StableDiffusionXLPipeline) -> DiffusionPipeline:
 
 
 #Modal App Output relataed utils
-def generate_image_urls(image_data, safety_checker : SafetyChecker) -> tuple[list[str], list[bool]]:
+def generate_image_urls(image_data, safety_checker : SafetyChecker, check_NSFW : bool = True) -> tuple[list[str], list[bool]]:
     images = []
     has_nsfw_content = []
     for im in range(0, len(image_data)):
         nsfw_content = safety_checker.check_nsfw_content(image_data[im])
-        if nsfw_content[0]:
+        if nsfw_content[0] and check_NSFW:
             has_nsfw_content.append(nsfw_content[0])
         else:
             # im_url = upload_data_gcp(, OUTPUT_IMAGE_EXTENSION)
