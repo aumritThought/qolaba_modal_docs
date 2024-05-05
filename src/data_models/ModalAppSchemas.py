@@ -38,6 +38,8 @@ class StubConfiguration(BaseModel):
     memory : int
     container_idle_timeout : int 
     gpu : str 
+    num_containers : int
+    
 
 class TimeData(BaseModel):
     startup_time : int | float
@@ -314,7 +316,7 @@ class SDXL3APIImageToImageParameters(BaseModel):
     strength : float = Query(default = 0.7, gt = MIN_STRENGTH, le = MAX_STRENGTH)
 
 class SDXLAPIImageToImageParameters(SDXLImage2ImageParameters):
-    style_preset : Optional[sdxl_preset_list] # type: ignore
+    style_preset : Optional[sdxl_preset_list] = "enhance"# type: ignore
     height: int = Query(ge = MIN_HEIGHT, le = MAX_HEIGHT)
     width: int = Query(ge=MIN_HEIGHT, le = MAX_HEIGHT)
     # num_inference_steps: int = Query(ge = MIN_INFERENCE_STEPS, le = MAX_INFERENCE_STEPS) 

@@ -27,7 +27,8 @@ stub.image = image
           container_idle_timeout = stub_dictionary[stub_name].container_idle_timeout,
           memory = stub_dictionary[stub_name].memory,
           volumes = {VOLUME_PATH: vol},
-          secrets = [Secret.from_name(SECRET_NAME)])
+          secrets = [Secret.from_name(SECRET_NAME)],
+          concurrency_limit=stub_dictionary[stub_name].num_containers)
 class stableDiffusion:
     def __init__(self, init_parameters : dict) -> None:
         st = time.time()
