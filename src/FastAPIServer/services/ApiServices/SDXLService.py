@@ -240,7 +240,11 @@ class SDXL3Text2Image(IService):
         }
                 
 
-        aspect_ratio = convert_to_aspect_ratio(parameters.width, parameters.height)
+        aspect_ratio = convert_to_aspect_ratio(parameters.height, parameters.width)
+        if(aspect_ratio == "7:3"):
+            aspect_ratio = "21:9"
+        if(aspect_ratio == "3:7"):
+            aspect_ratio = "9:21"
         if(not (aspect_ratio in SDXL3_RATIO_LIST)):
             raise Exception("Invalid Height and width dimension")
         
