@@ -240,7 +240,7 @@ class SDXL3Text2Image(IService):
         }
                 
 
-        aspect_ratio = convert_to_aspect_ratio(parameters.height, parameters.width)
+        aspect_ratio = convert_to_aspect_ratio(parameters.width, parameters.height)
         if(aspect_ratio == "7:3"):
             aspect_ratio = "21:9"
         if(aspect_ratio == "3:7"):
