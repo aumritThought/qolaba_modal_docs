@@ -107,9 +107,6 @@ MIN_COLOR = 0
 MAX_FPS = 30
 MIN_FPS = 5
 
-#Clipdrop side increase parameters
-MIN_INCREASE_SIDE = 0
-MAX_INCREASE_SIDE = 2048
 
 #Did api configuration
 DID_TALK_API = "https://api.d-id.com/talks"
@@ -128,11 +125,6 @@ SDXL_INPAINT_URL = "https://api.stability.ai/v2beta/stable-image/edit/inpaint"
 SDXL3_RATIO_LIST = ["16:9", "1:1", "21:9", "2:3", "3:2", "4:5", "5:4", "9:16", "9:21"]
 SDX3_URL = "https://api.stability.ai/v2beta/stable-image/generate/sd3"
 
-#clipdrop api configuration
-CLIPDROP_UNCROP_URL = "https://clipdrop-api.co/uncrop/v1"
-CLIPDROP_CLEANUP_URL = "https://clipdrop-api.co/cleanup/v1"
-CLIPDROP_REPLACE_BACKGROUND_URL = "https://clipdrop-api.co/replace-background/v1"
-CLIPDROP_REMOVE_TEXT_URL = "https://clipdrop-api.co/remove-text/v1"
 
 
 #Elevenlabs configuration
@@ -418,29 +410,18 @@ app_dict = {
         },
         "model_name" : "sketch_controlnet__image2image" 
     },
-    "ap-7yMwQ4XtC3ZrP2jLHJ8bB1": {
-        "app_id" : "clipdropuncropimage2image_api",
-        "init_parameters" : {
-        },
-        "model_name" : "clipdrop_uncrop_image2image" 
-    },
     "ap-7XmHk4LtVgFJq2cQoE3yB8": {
         "app_id" : "sdxlinpainting_api", #"clipdropcleanupimage2image_api",
         "init_parameters" : {
         },
         "model_name" : "clipdrop_cleanup_image2image" 
     },
+
     "ap-L4vHj7YbXeT2qKoU1fW3G7": {
         "app_id" : "sdxlreplacebackground_api",
         "init_parameters" : {
         },
-        "model_name" : "clipdrop_Replace_background_image2image" 
-    },
-    "ap-9k8P3v6zBq2s5T1rXwQm45": {
-        "app_id" : "clipdropremovetextimage2image_api",
-        "init_parameters" : {
-        },
-        "model_name" : "clipdrop_remove_text_image2image" 
+        "model_name" : "Replace_background_image2image" 
     },
     "ap-TYMECaYPMCcOyK2ZgNHgqQ": {
         "app_id" : "QRCode_Generation_modal", 
