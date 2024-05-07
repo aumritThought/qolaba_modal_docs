@@ -49,7 +49,7 @@ class stableDiffusion:
 
         
         pipe = StableDiffusionXLPipeline.from_single_file(
-            sdxl_model_list.get("Colorful"), torch_dtype=torch.float16, use_safetensors=True, variant="fp16"
+            sdxl_model_list.get("Colorful"), torch_dtype=torch.float16, use_safetensors=True, variant="fp16", load_safety_checker = False
         )
         pipe.to("cuda")
 
@@ -87,7 +87,6 @@ class stableDiffusion:
     @method()
     def run_inference(self, parameters : dict) -> dict:
         st = time.time()
-        print(parameters)
 
         parameters : FRNDFaceAvatarParameters = FRNDFaceAvatarParameters(**parameters)
 
@@ -152,8 +151,8 @@ class stableDiffusion:
             images.append(image)
 
 
-        images, has_nsfw_content = generate_image_urls(images, self.safety_checker, check_NSFW = False)
-
+        images, has_nsfw_content = generate_image_urls(images, self.safety_checker, check_NSFW = False, quality = 60)
+        
         self.runtime = time.time() - st
 
         return prepare_response(images, has_nsfw_content, self.container_execution_time, self.runtime, OUTPUT_IMAGE_EXTENSION)

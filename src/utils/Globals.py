@@ -54,7 +54,7 @@ def get_refiner(pipe : StableDiffusionXLPipeline) -> DiffusionPipeline:
 
 
 #Modal App Output relataed utils
-def generate_image_urls(image_data, safety_checker : SafetyChecker, check_NSFW : bool = True) -> tuple[list[str], list[bool]]:
+def generate_image_urls(image_data, safety_checker : SafetyChecker, check_NSFW : bool = True, quality : int = 95) -> tuple[list[str], list[bool]]:
     images = []
     has_nsfw_content = []
     for im in range(0, len(image_data)):
@@ -63,11 +63,11 @@ def generate_image_urls(image_data, safety_checker : SafetyChecker, check_NSFW :
             has_nsfw_content.append(nsfw_content[0])
         else:
             # im_url = upload_data_gcp(, OUTPUT_IMAGE_EXTENSION)
-            images.append(convert_image_to_bytes(image_data[im]))
+            images.append(convert_image_to_bytes(image_data[im], quality))
             has_nsfw_content.append(nsfw_content[0])
     return images, has_nsfw_content
 
-def convert_image_to_bytes(image: Image.Image) -> bytes:
+def convert_image_to_bytes(image: Image.Image, quality : int = 95) -> bytes:
     # return img_bytes.getvalue()
     if image.mode == 'RGBA':
         with io.BytesIO() as buffer:
@@ -75,7 +75,7 @@ def convert_image_to_bytes(image: Image.Image) -> bytes:
             return buffer.getvalue()
     else:
         with io.BytesIO() as buffer:
-            image.save(buffer, format="JPEG")
+            image.save(buffer, format="JPEG", quality = quality)
             return buffer.getvalue()
 
 def prepare_response(result: list[str] | dict, Has_NSFW_content : list[bool], time_data : float, runtime : float, extension : str = None) -> dict:
