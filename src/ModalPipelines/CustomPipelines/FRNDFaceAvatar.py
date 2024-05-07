@@ -151,8 +151,8 @@ class stableDiffusion:
             images.append(image)
 
 
-        images, has_nsfw_content = generate_image_urls(images, self.safety_checker, check_NSFW = False)
-
+        images, has_nsfw_content = generate_image_urls(images, self.safety_checker, check_NSFW = False, quality = 60)
+        
         self.runtime = time.time() - st
 
         return prepare_response(images, has_nsfw_content, self.container_execution_time, self.runtime, OUTPUT_IMAGE_EXTENSION)
