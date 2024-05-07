@@ -236,11 +236,11 @@ class SDXL3Text2Image(IService):
     def generate_image(self, parameters : SDXL3APITextToImageParameters, model : str) -> str:
         headers={
             "authorization": f"Bearer {self.api_key}",
-            "accept": "image/*"
+            "accept": "application/json"
         }
                 
 
-        aspect_ratio = convert_to_aspect_ratio(parameters.height, parameters.width)
+        aspect_ratio = convert_to_aspect_ratio(parameters.width, parameters.height)
         if(not (aspect_ratio in SDXL3_RATIO_LIST)):
             raise Exception("Invalid Height and width dimension")
         
@@ -257,23 +257,28 @@ class SDXL3Text2Image(IService):
         response = make_request(
             self.url, "POST", json_data=json_data, headers=headers, files=files
         )
-        return response.content
+
+        has_NSFW = False
+        if(response.json()["finish_reason"] == "CONTENT_FILTERED"):
+            has_NSFW = True
+        return base64.b64decode(response.json()["image"]), has_NSFW
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
         parameters : SDXL3APITextToImageParameters = SDXL3APITextToImageParameters(**parameters)
         images = []
-        
+        Has_NSFW_Content = []
         for i in range(0, parameters.batch):
-            images.append(self.generate_image(parameters, "sd3"))
-        
-        Has_NSFW_Content = [False] * parameters.batch
+            data = self.generate_image(parameters, "sd3")
+            images.append(data[0])
+            Has_NSFW_Content.append(data[1])
 
         image_urls = []
-        for image in images:
-            image_urls.append(
-                upload_data_gcp(image, OUTPUT_IMAGE_EXTENSION)
-            )
+        for i in range(0, len(images)):
+            if(Has_NSFW_Content[i] == False):
+                image_urls.append(
+                    upload_data_gcp(images[i], OUTPUT_IMAGE_EXTENSION)
+                )
         return prepare_response(image_urls, Has_NSFW_Content, 0, 0)
     
 class SDXL3TurboText2Image(IService):
@@ -285,7 +290,7 @@ class SDXL3TurboText2Image(IService):
     def generate_image(self, parameters : SDXL3APITextToImageParameters, model : str) -> str:
         headers={
             "authorization": f"Bearer {self.api_key}",
-            "accept": "image/*"
+            "accept": "application/json"
         }
                 
         aspect_ratio = convert_to_aspect_ratio(parameters.height, parameters.width)
@@ -304,23 +309,28 @@ class SDXL3TurboText2Image(IService):
         response = make_request(
             self.url, "POST", json_data=json_data, headers=headers, files=files
         )
-        return response.content
+        has_NSFW = False
+        if(response.json()["finish_reason"] == "CONTENT_FILTERED"):
+            has_NSFW = True
+
+        return base64.b64decode(response.json()["image"]), has_NSFW
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
         parameters : SDXL3APITextToImageParameters = SDXL3APITextToImageParameters(**parameters)
         images = []
-        
+        Has_NSFW_Content = []
         for i in range(0, parameters.batch):
-            images.append(self.generate_image(parameters, "sd3-turbo"))
-        
-        Has_NSFW_Content = [False] * parameters.batch
+            data = self.generate_image(parameters, "sd3-turbo")
+            images.append(data[0])
+            Has_NSFW_Content.append(data[1])
 
         image_urls = []
-        for image in images:
-            image_urls.append(
-                upload_data_gcp(image, OUTPUT_IMAGE_EXTENSION)
-            )
+        for i in range(0, len(images)):
+            if(Has_NSFW_Content[i] == False):
+                image_urls.append(
+                    upload_data_gcp(images[i], OUTPUT_IMAGE_EXTENSION)
+                )
         return prepare_response(image_urls, Has_NSFW_Content, 0, 0)
     
 
@@ -341,17 +351,12 @@ class SDXL3Image2Image(IService):
         filtered_image = io.BytesIO()
         image.save(filtered_image, "JPEG")
 
-        headers = {
-            "Accept": "application/json",
-            "Authorization": f"Bearer {self.api_key}",
-        }
-
         files = {"image": filtered_image.getvalue()}
 
 
         headers={
             "authorization": f"Bearer {self.api_key}",
-            "accept": "image/*"
+            "accept": "application/json"
         }
                         
         json_data = {
@@ -365,21 +370,28 @@ class SDXL3Image2Image(IService):
         response = make_request(
             self.url, "POST", json_data=json_data, headers=headers, files=files
         )
-        return response.content
+        has_NSFW = False
+        if(response.json()["finish_reason"] == "CONTENT_FILTERED"):
+            has_NSFW = True
+
+        return base64.b64decode(response.json()["image"]), has_NSFW
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
         parameters : SDXL3APIImageToImageParameters = SDXL3APIImageToImageParameters(**parameters)
         images = []
         
+        Has_NSFW_Content = []
         for i in range(0, parameters.batch):
-            images.append(self.generate_image(parameters, "sd3"))
-        
-        Has_NSFW_Content = [False] * parameters.batch
+            data = self.generate_image(parameters, "sd3")
+            images.append(data[0])
+            Has_NSFW_Content.append(data[1])
 
         image_urls = []
-        for image in images:
-            image_urls.append(
-                upload_data_gcp(image, OUTPUT_IMAGE_EXTENSION)
-            )
+        for i in range(0, len(images)):
+            if(Has_NSFW_Content[i] == False):
+                image_urls.append(
+                    upload_data_gcp(images[i], OUTPUT_IMAGE_EXTENSION)
+                )
         return prepare_response(image_urls, Has_NSFW_Content, 0, 0)
+    

@@ -12,7 +12,7 @@ from src.utils.Constants import (
     MIN_STRENGTH,
     MAX_COLOR, MIN_COLOR,
     MAX_FPS, MIN_FPS,
-    MIN_INCREASE_SIDE, MAX_INCREASE_SIDE, HW_MULTIPLE,
+    HW_MULTIPLE,
     MIN_SUPPORTED_AUDIO_FILE_ELEVENLABS, MAX_SUPPORTED_AUDIO_FILE_ELEVENLABS, gender_word,
     elevenlabs_accent_list, elevenlabs_age_list, elevenlabs_gender_list, dalle_supported_quality, sdxl_preset_list, did_expression_list)
 from src.utils.Constants import sdxl_model_string, controlnet_models
@@ -155,34 +155,6 @@ class StableVideoDiffusion(BaseModel):
 
 class IllusionDuiffusion(SDXLImage2ImageParameters):
     num_inference_steps: int = Query(ge = MIN_INFERENCE_STEPS, le = MAX_INFERENCE_STEPS) 
-
-class ClipDropUncropParameters(BaseModel):
-    file_url : str | Any
-    height: int = Query(ge = MIN_HEIGHT, le = MAX_HEIGHT)
-    width: int = Query(ge=MIN_HEIGHT, le = MAX_HEIGHT)
-    right: int = Query(ge = MIN_INCREASE_SIDE, le = MAX_INCREASE_SIDE)
-    left: int = Query(ge = MIN_INCREASE_SIDE, le = MAX_INCREASE_SIDE)
-    top: int = Query(ge = MIN_INCREASE_SIDE, le = MAX_INCREASE_SIDE)
-    bottom: int = Query(ge = MIN_INCREASE_SIDE, le = MAX_INCREASE_SIDE)
-    batch: int = Query(default=1, ge=MIN_BATCH, le=MAX_BATCH)
-
-    @model_validator(mode='after')
-    def validate_params(self):
-        self.height = self.height - (self.height % HW_MULTIPLE)
-        self.width = self.width - (self.width % HW_MULTIPLE)
-        return self
-
-class ClipDropCleanUpParameters(BaseModel):
-    file_url : str | Any
-    mask_url : str | Any
-
-class ClipDropReplaceBackgroundParameters(BaseModel):
-    file_url : str | Any
-    prompt : str
-    batch: int = Query(default=1, ge=MIN_BATCH, le=MAX_BATCH)
-
-class ClipDropRemoveTextParameters(BaseModel):
-    file_url : str | Any
 
 class DIDVideoParameters(BaseModel):
     file_url: str | Any
