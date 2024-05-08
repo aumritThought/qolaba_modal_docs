@@ -135,7 +135,7 @@ def upload_to_gcp(data : Imagetype | str, extension : str) -> str:
         random_string = str(uuid.uuid4())
 
         destination_blob_name = f"{current_time}_{random_string}.{extension}"
-        if(type(data) == Imagetype):
+        if(isinstance(data, Imagetype)):
             if data.mode == 'RGBA':
                 with io.BytesIO() as buffer:
                     data.save(buffer, format="PNG")

@@ -291,13 +291,6 @@ app_dict = {
         },
         "model_name" : "SDXL3_text2image" 
     },
-    
-    "ap-Nk4rV9bTzXq5YH2JpL3fWg": {
-        "app_id" : "sdxl3turbotext2image_api",
-        "init_parameters" : {
-        },
-        "model_name" : "SDXL3_Turbo_text2image" 
-    },
 
     "ap-sdSyd0idsndjnsnsndjsds": {
         "app_id" : "dalletext2image_api",

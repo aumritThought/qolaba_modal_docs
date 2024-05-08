@@ -152,3 +152,4 @@ loguru
 google-cloud-storage
 mistralai
 mediapipe
+anthropic
