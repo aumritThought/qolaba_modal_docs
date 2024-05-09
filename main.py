@@ -3,14 +3,16 @@ load_dotenv()
 from fastapi import FastAPI, UploadFile, Body
 from fastapi import Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from src.data_models.ModalAppSchemas import APIInput, APITaskResponse, TaskStatus
+from src.data_models.ModalAppSchemas import APIInput, APITaskResponse, TaskStatus, OpenAITTSParameters
 from src.FastAPIServer.celery.Worker import task_gen, get_task_status, initialize_shared_object
 from src.utils.Globals import check_token, upload_to_gcp
 from src.utils.Constants import app_dict
 from src.utils.Exceptions import handle_Request_exceptions, handle_exceptions
-import uvicorn, os, base64
+import uvicorn, os
 from fastapi.exceptions import RequestValidationError
 from transparent_background import Remover
+from src.FastAPIServer.services.ApiServices.OpenAIService import OpenAITexttoSpeech
+from fastapi.responses import StreamingResponse
 
 app = FastAPI()
 app.exception_handler(RequestValidationError)(handle_Request_exceptions)
@@ -78,6 +80,14 @@ def upload_file(file: UploadFile, file_type : str = Body(..., embed=True), api_k
                 status="SUCCESS"
     ).model_dump()
     return task_Response
+
+@app.post("/generate_stream_audio", response_model=APITaskResponse)
+@handle_exceptions
+def upload_file(parameters: OpenAITTSParameters, api_key: HTTPAuthorizationCredentials = Depends(auth_scheme)):
+    check_token(api_key)
+    tts = OpenAITexttoSpeech()
+    return StreamingResponse(tts.remote(parameters), media_type="application/json")
+
 
 if __name__ == "__main__":
     uvicorn.run(
