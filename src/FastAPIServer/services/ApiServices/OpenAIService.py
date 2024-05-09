@@ -1,11 +1,12 @@
-from src.data_models.ModalAppSchemas import DalleParameters
+from src.data_models.ModalAppSchemas import DalleParameters, OpenAITTSParameters, TTSOutput
 from src.utils.Globals import timing_decorator, upload_data_gcp, make_request, prepare_response
 from openai import OpenAI
 from src.utils.Constants import DALLE_SUPPORTED_HW
 from src.FastAPIServer.services.IService import IService
-from src.utils.Constants import OUTPUT_IMAGE_EXTENSION
+from src.utils.Constants import OUTPUT_IMAGE_EXTENSION, TTS_CHAR_COST
 import concurrent.futures 
-
+from typing import Iterator
+import json, base64
 
 
 class DalleText2Image(IService):
@@ -45,3 +46,24 @@ class DalleText2Image(IService):
 
         return prepare_response(results, Has_NSFW_Content, 0, 0)
 
+
+class OpenAITexttoSpeech(IService):
+    def __init__(self) -> None:
+        super().__init__()
+        self.client = OpenAI(api_key = self.openai_api_key)
+
+    def remote(self, parameters: OpenAITTSParameters) -> Iterator:
+        response = self.client.audio.speech.create(
+            model="tts-1",
+            voice="nova",
+            input=parameters.prompt,
+        )
+
+        for chunk in response.iter_bytes(chunk_size=4096):
+            encoded_data = base64.b64encode(chunk).decode('utf-8')
+
+            data = TTSOutput(output= encoded_data, cost=0)
+            yield json.dumps(data.model_dump())
+        data = TTSOutput(output= None, cost=len(parameters.prompt)*TTS_CHAR_COST)
+        yield json.dumps(data.model_dump())
+    

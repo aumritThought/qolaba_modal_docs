@@ -267,6 +267,13 @@ class DalleParameters(BaseModel):
     prompt: str
     quality : Optional[dalle_supported_quality] = "standard"  # type: ignore
 
+class OpenAITTSParameters(BaseModel):
+    prompt : str
+
+class TTSOutput(BaseModel):
+    output : str | None
+    cost : float
+
 class SDXLAPITextToImageParameters(SDXLText2ImageParameters):
     style_preset : Optional[sdxl_preset_list] = "enhance" # type: ignore
     # seed : Optionalint
