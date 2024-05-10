@@ -1,5 +1,5 @@
 from src.data_models.ModalAppSchemas import DalleParameters, OpenAITTSParameters, TTSOutput
-from src.utils.Globals import timing_decorator, upload_data_gcp, make_request, prepare_response
+from src.utils.Globals import timing_decorator, make_request, prepare_response
 from openai import OpenAI
 from src.utils.Constants import DALLE_SUPPORTED_HW
 from src.FastAPIServer.services.IService import IService
@@ -21,7 +21,7 @@ class DalleText2Image(IService):
 
         response = make_request(response.data[0].url, "GET")
 
-        return upload_data_gcp(response.content, OUTPUT_IMAGE_EXTENSION)
+        return response.content
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
@@ -44,7 +44,7 @@ class DalleText2Image(IService):
 
         Has_NSFW_Content = [False] * parameters.batch
 
-        return prepare_response(results, Has_NSFW_Content, 0, 0)
+        return prepare_response(results, Has_NSFW_Content, 0, 0, OUTPUT_IMAGE_EXTENSION)
 
 
 class OpenAITexttoSpeech(IService):

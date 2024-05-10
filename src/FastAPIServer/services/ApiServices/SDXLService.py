@@ -1,6 +1,6 @@
 import io, base64
 from src.data_models.ModalAppSchemas import SDXL3APITextToImageParameters, SDXLAPITextToImageParameters, SDXLAPIImageToImageParameters, SDXLAPIInpainting, SDXL3APIImageToImageParameters
-from src.utils.Globals import timing_decorator, make_request, upload_data_gcp, get_image_from_url, prepare_response, invert_bw_image_color, convert_to_aspect_ratio
+from src.utils.Globals import timing_decorator, make_request, get_image_from_url, prepare_response, invert_bw_image_color, convert_to_aspect_ratio
 from src.FastAPIServer.services.IService import IService
 from src.utils.Constants import OUTPUT_IMAGE_EXTENSION, extra_negative_prompt, SDXL3_RATIO_LIST
 from PIL.Image import Image as Imagetype
@@ -54,9 +54,9 @@ class SDXLText2Image(IService):
         image_urls = []
         for image in data["artifacts"]:
             image_urls.append(
-                upload_data_gcp(base64.b64decode(image["base64"]), OUTPUT_IMAGE_EXTENSION)
+                base64.b64decode(image["base64"])
             )
-        return prepare_response(image_urls, Has_NSFW_Content, 0, 0)
+        return prepare_response(image_urls, Has_NSFW_Content, 0, 0,  OUTPUT_IMAGE_EXTENSION)
 
 
 class SDXLImage2Image(IService):
@@ -109,10 +109,10 @@ class SDXLImage2Image(IService):
         image_urls = []
         for image in data["artifacts"]:
             image_urls.append(
-                upload_data_gcp(base64.b64decode(image["base64"]), OUTPUT_IMAGE_EXTENSION)
+                base64.b64decode(image["base64"])
             )
 
-        return prepare_response(image_urls, Has_NSFW_Content, 0, 0)
+        return prepare_response(image_urls, Has_NSFW_Content, 0, 0, OUTPUT_IMAGE_EXTENSION)
 
 class SDXLInpainting(IService):
     def __init__(self) -> None:
@@ -152,7 +152,7 @@ class SDXLInpainting(IService):
 
         image_url = None
         if(not(has_NSFW)):
-            image_url = upload_data_gcp(base64.b64decode(response.json()["image"]), OUTPUT_IMAGE_EXTENSION)
+            image_url = base64.b64decode(response.json()["image"])
         return [image_url, has_NSFW]
 
     @timing_decorator
@@ -185,7 +185,7 @@ class SDXLInpainting(IService):
                 image_urls.append(
                     results[i][0]
                 )
-        return prepare_response(image_urls, Has_NSFW_Content, 0, 0)
+        return prepare_response(image_urls, Has_NSFW_Content, 0, 0, OUTPUT_IMAGE_EXTENSION)
 
 
 class SDXLReplaceBackground(IService):
@@ -227,7 +227,7 @@ class SDXLReplaceBackground(IService):
 
         image_url = None
         if(not(has_NSFW)):
-            image_url = upload_data_gcp(base64.b64decode(response.json()["image"]), OUTPUT_IMAGE_EXTENSION)
+            image_url = base64.b64decode(response.json()["image"])
         return [image_url, has_NSFW]
 
     @timing_decorator
@@ -263,7 +263,7 @@ class SDXLReplaceBackground(IService):
                     results[i][0]
                 )
 
-        return prepare_response(image_urls, Has_NSFW_Content, 0, 0)
+        return prepare_response(image_urls, Has_NSFW_Content, 0, 0, OUTPUT_IMAGE_EXTENSION)
     
 class SDXL3Text2Image(IService):
     def __init__(self) -> None:
@@ -307,7 +307,7 @@ class SDXL3Text2Image(IService):
 
         image_url = None
         if(not(has_NSFW)):
-            image_url = upload_data_gcp(base64.b64decode(response.json()["image"]), OUTPUT_IMAGE_EXTENSION)
+            image_url = base64.b64decode(response.json()["image"])
         return [image_url, has_NSFW]
 
     @timing_decorator
@@ -330,7 +330,7 @@ class SDXL3Text2Image(IService):
                 image_urls.append(
                     results[i][0]
                 )
-        return prepare_response(image_urls, Has_NSFW_Content, 0, 0)
+        return prepare_response(image_urls, Has_NSFW_Content, 0, 0, OUTPUT_IMAGE_EXTENSION)
     
 
 class SDXL3Image2Image(IService):
@@ -377,7 +377,7 @@ class SDXL3Image2Image(IService):
 
         image_url = None
         if(not(has_NSFW)):
-            image_url = upload_data_gcp(base64.b64decode(response.json()["image"]), OUTPUT_IMAGE_EXTENSION)
+            image_url = base64.b64decode(response.json()["image"])
         return [image_url, has_NSFW]
 
     @timing_decorator
@@ -400,5 +400,5 @@ class SDXL3Image2Image(IService):
                 image_urls.append(
                     results[i][0]
                 )
-        return prepare_response(image_urls, Has_NSFW_Content, 0, 0)
+        return prepare_response(image_urls, Has_NSFW_Content, 0, 0, OUTPUT_IMAGE_EXTENSION)
     

@@ -55,7 +55,8 @@ class stableDiffusion:
         st = time.time()
         parameters : UpscaleParameters = UpscaleParameters(**parameters)
 
-        parameters.file_url = get_image_from_url(parameters.file_url)
+        if(not isinstance(parameters.file_url, Image.Image)):
+            parameters.file_url = get_image_from_url(parameters.file_url)
 
         parameters.file_url = parameters.file_url.convert("RGB")
 
