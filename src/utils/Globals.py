@@ -8,12 +8,12 @@ from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
 from transformers import CLIPImageProcessor
 import torch, time, os, requests, re, io, datetime, uuid, imageio, math
 from src.utils.Constants import BASE_IMAGE_COMMANDS, PYTHON_VERSION, REQUIREMENT_FILE_PATH, MEAN_HEIGHT, SDXL_REFINER_MODEL_PATH, google_credentials_info, OUTPUT_IMAGE_EXTENSION, SECRET_NAME, content_type, MAX_UPLOAD_RETRY
-from fastapi import HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials
 from requests import Response
 from google.cloud import storage
 from google.oauth2 import service_account
 import numpy as np
+from modal import Cls
 
 
 #Safety Checker Utils
@@ -119,22 +119,40 @@ def make_request(url: str, method: str, json_data: dict = None, headers: dict = 
     return response
 
 #Cloudinary
-def upload_data_gcp(data : Imagetype | str, extension : str) -> str:
+def upload_data_gcp(data : Imagetype | str, extension : str, upscale : bool = False) -> str:
     for i in range(0, MAX_UPLOAD_RETRY):
-        url = upload_to_gcp(data, extension)
+        url = upload_to_gcp(data, extension, upscale)
         if(url != None and url != ""):
             break
     if(url == "" or url == None):
         raise Exception("Received an empty URL")
     return url
             
-def upload_to_gcp(data : Imagetype | str, extension : str) -> str:
+def upload_to_gcp(data : Imagetype | str, extension : str, upscale : bool = False) -> str:
     try:
         st = time.time()
         current_time = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         random_string = str(uuid.uuid4())
 
-        destination_blob_name = f"{current_time}_{random_string}.{extension}"
+        destination_blob_name = f"{current_time}_{random_string}.{extension}"            
+        
+        if(upscale == True and extension == OUTPUT_IMAGE_EXTENSION):
+            if(not isinstance(data, Imagetype)):
+                image_buffer = io.BytesIO(data)
+                data = Image.open(image_buffer).convert("RGB")
+
+            Model = Cls.lookup("Ultrasharp_Upscaler", "stableDiffusion", environment_name = os.environ["environment"])
+            Model = Model({})
+        
+            output = TaskResponse(**Model.run_inference.remote({
+                "file_url" : data,
+                "scale" : 4
+            }))
+            if(output.Has_NSFW_Content[0] == True):
+                raise Exception("NSFW Content detected")
+            else:
+                data = output.result[0]
+
         if(isinstance(data, Imagetype)):
             if data.mode == 'RGBA':
                 with io.BytesIO() as buffer:
@@ -223,7 +241,7 @@ def timing_decorator(func: callable) -> callable:
         runtime = time.time() - start_time
 
         result = TaskResponse(**result)
-
+        result.time.startup_time = 0
         result.time.runtime = runtime
 
         return result.model_dump()
