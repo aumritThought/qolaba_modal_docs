@@ -38,7 +38,7 @@ stub.image = image
           memory = stub_dictionary[stub_name].memory,
           volumes = {VOLUME_PATH: vol},
           secrets = [Secret.from_name(SECRET_NAME)],
-          concurrency_limit=stub_dictionary[stub_name].num_containers)
+          concurrency_limit=5)
 class stableDiffusion:
     def __init__(self, init_parameters : dict) -> None:
         st = time.time()

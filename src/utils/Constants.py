@@ -144,7 +144,7 @@ dalle_supported_quality = constr(pattern = '|'.join(DALLE_SUPPORTED_QUALITY))
 
 
 # Celery configuration
-CELERY_RESULT_EXPIRATION_TIME = 14400
+CELERY_RESULT_EXPIRATION_TIME = 3600
 REDIS_URL = "redis://localhost:6379/0"
 CELERY_MAX_RETRY = 1
 CELERY_SOFT_LIMIT = 7200
@@ -152,6 +152,8 @@ CELERY_SOFT_LIMIT = 7200
 #Modal app cache configuration
 MAX_TIME_MODAL_APP_CACHE =  3600
 
+#OpenAI text to speech per character cost
+TTS_CHAR_COST = 0.000015
 
 #GOOGLE credential info
 google_credentials_info = {
@@ -290,13 +292,6 @@ app_dict = {
         "init_parameters" : {
         },
         "model_name" : "SDXL3_text2image" 
-    },
-    
-    "ap-Nk4rV9bTzXq5YH2JpL3fWg": {
-        "app_id" : "sdxl3turbotext2image_api",
-        "init_parameters" : {
-        },
-        "model_name" : "SDXL3_Turbo_text2image" 
     },
 
     "ap-sdSyd0idsndjnsnsndjsds": {
@@ -472,13 +467,6 @@ app_dict = {
         "init_parameters" : {
         },
         "model_name" : "promptparrot_text2text" 
-    },
-    "ap-3p72hG5NkRfw9DLozXbPQW": {
-        "app_id" : "Differential_Diffusion_inpainting_modal",
-        "init_parameters" : {
-        },
-        "model_name" : "inpainting_image2image" 
     }
-
 }
 

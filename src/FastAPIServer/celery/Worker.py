@@ -60,25 +60,26 @@ def create_task(parameters: dict) -> dict:
 
     elif(parameters.app_id in service_registry.modal_services):
         
-        # if(parameters.fast_inference == True):
-            # app = Cls.lookup(parameters.app_id.replace("_modal", ""), "stableDiffusion", environment_name = os.environ["environment"])
         app = app.with_options(gpu=parameters.inference_type)
 
         app = app(parameters.init_parameters)
         
         output_data = TaskResponse(**app.run_inference.remote(parameters.parameters))
-        urls = []
-        for i in output_data.result:
-            urls.append(upload_data_gcp(i, output_data.extension))
-        output_data.result = urls
+        
     else:
         raise Exception("Given APP Id is not available")
+
+    if(output_data.extension != None):
+        urls = []
+        for i in output_data.result:
+            urls.append(upload_data_gcp(i, output_data.extension, parameters.upscale))
+        output_data.result = urls
 
     if(output_data == None or output_data == {} or output_data == ""):
         raise Exception("Received an empty response from model")
 
     time_required = time.time() - st
-
+    
     if (output_data.time.runtime< time_required < output_data.time.runtime + output_data.time.startup_time):
         output_data.time.startup_time = 0
     
