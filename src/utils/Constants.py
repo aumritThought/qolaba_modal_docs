@@ -467,6 +467,12 @@ app_dict = {
         "init_parameters" : {
         },
         "model_name" : "promptparrot_text2text" 
+    },
+    "ap-5aH3nL9Pq2XvWmBk8YtRzN": {
+        "app_id" : "OOTDiffusion_modal",
+        "init_parameters" : {
+        },
+        "model_name" : "OOTDiffusion_image2image" 
     }
 }
 

@@ -33,6 +33,7 @@ class StubNames(BaseModel):
     qr_code_generation : str = "QRCode_Generation"
     frnd_face_consistent : str = "IPAdapter_FRND_face_consistent"
     stable_cascade_text_to_image : str = "Stable_Cascade"
+    oot_diffusion : str = "OOTDiffusion"
 
 class StubConfiguration(BaseModel):
     memory : int
@@ -100,6 +101,7 @@ class SDXLControlNetParameters(SDXLImage2ImageParameters):
 class UpscaleParameters(BaseModel):
     file_url : str | Any
     scale : Literal[2, 4, 8]
+    check_nsfw : Optional[bool] = True
 
 class VariationParameters(SDXLControlNetParameters):
     prompt: Optional[str] = None
@@ -120,7 +122,7 @@ class FRNDFaceAvatarParameters(BaseModel):
     num_inference_steps: int = Query(default=30, ge=MIN_INFERENCE_STEPS, le=40)
     guidance_scale: float = Query(default=7.5, ge=MIN_GUIDANCE_SCALE, le=MAX_GUIDANCE_SCALE)
     batch: int = Query(default=1, ge=MIN_BATCH, le=MAX_BATCH)
-    prompt: str | None = f"SFW Content, black plain background, joyous dating profile, VECTOR CARTOON ILLUSTRATION, half-body shot portrait enjoyable pleasing pleasurable nice {gender_word}, looking at camera, Relaxed, Charming, Cordial, Gracious, 5 o clock shadow, 3d bitmoji avatar render, pixar, high def textures 8k, highly detailed, 3d render, award winning, no background elements"
+    prompt: str | None = f"((establishing shot)), (((smiling studio photo))), joyous indian dating aesthetic, 3D pixar, looking at camera, enjoyable pleasurable {gender_word}, ((black winter t-shirt)), proper eyes, Relaxed, Charming, Cordial,  Relaxed, Charming, Cordial, Gracious, 3d bitmoji avatar render, dark background"
     negative_prompt: str | None = " "
     file_url: str | Any
     strength: float = Query(default= 1, gt=MIN_STRENGTH, le=MAX_STRENGTH)
@@ -311,6 +313,14 @@ class PromptParrotParameters(BaseModel):
     prompt : str
     batch : int
 
+
+class OOTDiffusionParameters(BaseModel):
+    file_url : str | Any
+    bg_img : str | Any
+    batch:  int = Query(default = 1, ge = MIN_BATCH, le = MAX_BATCH)
+    num_inference_steps: int = Query(default=30, ge=MIN_INFERENCE_STEPS, le=40)
+    scale : int = Query(default=2, ge=1, le=5)
+    category : int = Literal[0, 1, 2]
 
 class APITaskResponse(BaseModel):
     time_required : Optional[dict] = {}

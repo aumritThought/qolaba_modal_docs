@@ -1,9 +1,9 @@
-from src.data_models.ModalAppSchemas import TaskResponse, TimeData
+from src.data_models.ModalAppSchemas import TaskResponse, TimeData, UpscaleParameters
 from modal import Image as MIM
 from modal import Secret
 from PIL import Image
 from PIL.Image import Image as Imagetype
-from diffusers import DiffusionPipeline, StableDiffusionXLPipeline
+from diffusers import DiffusionPipeline
 from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
 from transformers import CLIPImageProcessor
 import torch, time, os, requests, re, io, datetime, uuid, imageio, math
@@ -40,9 +40,10 @@ def download_safety_checker():
 #Modal image Utils
 def get_base_image() -> MIM:
     return MIM.debian_slim(python_version = PYTHON_VERSION).run_commands(BASE_IMAGE_COMMANDS).pip_install_from_requirements(REQUIREMENT_FILE_PATH).run_function(download_safety_checker, gpu = "t4", secrets = [Secret.from_name(SECRET_NAME)])
+    
 
 #Modal app utils
-def get_refiner(pipe : StableDiffusionXLPipeline) -> DiffusionPipeline:
+def get_refiner(pipe) -> DiffusionPipeline:
     return DiffusionPipeline.from_pretrained(
             SDXL_REFINER_MODEL_PATH,
             text_encoder_2 = pipe.text_encoder_2,
@@ -130,7 +131,6 @@ def upload_data_gcp(data : Imagetype | str, extension : str, upscale : bool = Fa
             
 def upload_to_gcp(data : Imagetype | str, extension : str, upscale : bool = False) -> str:
     try:
-        st = time.time()
         current_time = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         random_string = str(uuid.uuid4())
 
@@ -144,10 +144,14 @@ def upload_to_gcp(data : Imagetype | str, extension : str, upscale : bool = Fals
             Model = Cls.lookup("Ultrasharp_Upscaler", "stableDiffusion", environment_name = os.environ["environment"])
             Model = Model({})
         
-            output = TaskResponse(**Model.run_inference.remote({
-                "file_url" : data,
-                "scale" : 4
-            }))
+            output = TaskResponse(
+                **Model.run_inference.remote(
+                    UpscaleParameters(
+                        file_url=data,
+                        scale=4,
+                        check_nsfw=False
+                    ).model_dump()  
+                ))
             if(output.Has_NSFW_Content[0] == True):
                 raise Exception("NSFW Content detected")
             else:
