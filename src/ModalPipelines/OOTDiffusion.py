@@ -10,11 +10,12 @@ from diffusers import UniPCMultistepScheduler
 from diffusers import AutoencoderKL
 from transformers import AutoProcessor, CLIPVisionModelWithProjection
 from transformers import CLIPTextModel, CLIPTokenizer
-from pathlib import Path
-import onnxruntime as ort
 import torch
 
-
+VIT_PATH = "openai/clip-vit-base-patch32"
+VAE_PATH = "../checkpoints/ootd"
+UNET_PATH = "../checkpoints/ootd/ootd_hd/checkpoint-36000"
+MODEL_PATH = "../checkpoints/ootd"
 
 class OOTDiffusion:
 
@@ -137,12 +138,16 @@ def download_weights():
 
     from preprocess.openpose.run_openpose import OpenPose
     from preprocess.humanparsing.run_parsing import Parsing
-    from ootd.inference_ootd_hd import OOTDiffusionHD
-
+    from ootd.inference_ootd_hd import OOTDiffusionHD #Need to run this to have the parsing module import
+    model_type = "hd"
+    VIT_PATH = "openai/clip-vit-large-patch14"
+    VAE_PATH = "checkpoints/ootd"
+    UNET_PATH = "checkpoints/ootd/ootd_hd/checkpoint-36000"
+    MODEL_PATH = "checkpoints/ootd"
     OpenPose(0)
     Parsing(0)
 
-    OOTDiffusion(0)
+    OOTDiffusion(0, VAE_PATH, UNET_PATH, MODEL_PATH, VIT_PATH)
 
 image = get_base_image().run_commands(
     ["git clone https://github.com/levihsu/OOTDiffusion",
