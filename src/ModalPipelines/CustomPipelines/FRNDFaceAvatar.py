@@ -24,9 +24,16 @@ def download_face_model():
     app.prepare(ctx_id=0, det_size=(640, 640))
     Remover()
 
+    pipe = StableDiffusionXLPipeline.from_pretrained(
+            "stabilityai/stable-diffusion-xl-base-1.0", torch_dtype=torch.float16, use_safetensors=True, variant="fp16"
+        )
+
+
 image = get_base_image().run_commands(
     "git clone https://github.com/tencent-ailab/IP-Adapter.git",
-    "wget https://huggingface.co/h94/IP-Adapter-FaceID/resolve/main/ip-adapter-faceid_sdxl.bin"
+    "wget https://huggingface.co/h94/IP-Adapter-FaceID/resolve/main/ip-adapter-faceid_sdxl.bin",
+    "python -m pip install protobuf --upgrade",
+    "pip install -U peft"
 ).run_function(download_face_model, secrets= [Secret.from_name(SECRET_NAME)])
 
 stub.image = image
@@ -52,11 +59,10 @@ class stableDiffusion:
             sdxl_model_list.get("Colorful"), torch_dtype=torch.float16, use_safetensors=True, variant="fp16", load_safety_checker = False
         )
         pipe.to("cuda")
-
         self.refiner = get_refiner(pipe)
 
-        # pipe.enable_xformers_memory_efficient_attention()
-        # self.refiner.enable_xformers_memory_efficient_attention()
+        pipe.enable_xformers_memory_efficient_attention()
+        self.refiner.enable_xformers_memory_efficient_attention()
 
         self.app = FaceAnalysis(name="buffalo_l", providers=['CUDAExecutionProvider', 'CPUExecutionProvider'])
         self.app.prepare(ctx_id=0, det_size=(640, 640))
@@ -67,7 +73,7 @@ class stableDiffusion:
         self.ip_model = IPAdapterFaceIDXL(pipe, ip_ckpt, device)
 
         self.remover = Remover()
-        
+
         self.safety_checker = SafetyChecker()
         self.container_execution_time = time.time() - st
     
@@ -90,11 +96,18 @@ class stableDiffusion:
 
         parameters : FRNDFaceAvatarParameters = FRNDFaceAvatarParameters(**parameters)
 
-        extra_negative_prompt="NSFW, nudity, no clothes, pornographic content, vagaina, nude breast, disfigured, kitsch, ugly, oversaturated, greain, low-res, Deformed, blurry, bad anatomy, poorly drawn face, mutation, mutated, extra limb, poorly drawn hands, missing limb, floating limbs, disconnected limbs, malformed hands, blur, out of focus, long neck, long body, disgusting, poorly drawn, childish, mutilated, mangled, old, surreal, calligraphy, sign, writing, watermark, text, body out of frame, extra legs, extra arms, extra feet, out of frame, poorly drawn feet, cross-eye"
+        extra_negative_prompt="visible teeth, Zoomed out, Zoomed in, half-body, Bad proportion, hands, fingers, Open mouth, blue lighting, Poorly drawn face, NSFW, nudity, no clothes, pornographic content, vagina, breast, disfigured, kitsch, oversaturated, greain, low-res, Deformed, blurry, out of focus, long neck, sign, writing, watermark, text, cross-eye"
 
         parameters.negative_prompt = parameters.negative_prompt + extra_negative_prompt
 
-        parameters.prompt = parameters.prompt.replace(gender_word, parameters.gender)
+        re_gender_word = parameters.gender
+
+        if(parameters.gender == "female"):
+            re_gender_word = f"{re_gender_word}, side part comb-over, very long hair"
+        else:
+            re_gender_word = f"{re_gender_word}, side part comb-over, haircut"
+
+        parameters.prompt = parameters.prompt.replace(gender_word, re_gender_word)
 
         parameters.file_url = get_image_from_url(parameters.file_url)
 
@@ -111,7 +124,8 @@ class stableDiffusion:
         images = []
 
         seed = random.randint(1, 10000000)
-
+        seed = 8360917
+        print(seed)
         for i in range(0, parameters.batch):
             image = self.ip_model.generate(
                 prompt = parameters.prompt,
@@ -121,11 +135,11 @@ class stableDiffusion:
                 width=parameters.width, 
                 height=parameters.height,
                 num_inference_steps = parameters.num_inference_steps,
-                denoising_end = 0.8,
+                denoising_end = 0.7,
                 guidance_scale = parameters.guidance_scale,
                 output_type="latent",
-                s_scale = 0.6,
-                scale = 0.6,
+                s_scale = 0.9,
+                scale = 0.9,
                 num_samples = 1, 
                 seed = seed
             )
@@ -135,7 +149,7 @@ class stableDiffusion:
                 prompt = parameters.prompt,
                 num_inference_steps = parameters.num_inference_steps,
                 guidance_scale = parameters.guidance_scale,
-                denoising_start=0.8,
+                denoising_start=0.7,
                 image=image[0],
             ).images[0]
 

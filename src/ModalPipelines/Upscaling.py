@@ -77,7 +77,7 @@ class stableDiffusion:
 
         images = [Image.fromarray(upsampler_output[:, :, ::-1], mode=img_mode)]
         
-        images, has_nsfw_content = generate_image_urls(images, self.safety_checker)
+        images, has_nsfw_content = generate_image_urls(images, self.safety_checker, parameters.check_nsfw)
 
         self.runtime = time.time() - st
         return prepare_response(images, has_nsfw_content, self.container_execution_time, self.runtime, OUTPUT_IMAGE_EXTENSION)

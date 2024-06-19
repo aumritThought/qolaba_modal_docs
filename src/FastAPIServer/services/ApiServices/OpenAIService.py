@@ -3,7 +3,7 @@ from src.utils.Globals import timing_decorator, make_request, prepare_response
 from openai import OpenAI
 from src.utils.Constants import DALLE_SUPPORTED_HW
 from src.FastAPIServer.services.IService import IService
-from src.utils.Constants import OUTPUT_IMAGE_EXTENSION, TTS_CHAR_COST
+from src.utils.Constants import OUTPUT_IMAGE_EXTENSION, TTS_CHAR_COST, IMAGE_GENERATION_ERROR, NSFW_CONTENT_DETECT_ERROR_MSG
 import concurrent.futures 
 from typing import Iterator
 import json, base64
@@ -15,9 +15,16 @@ class DalleText2Image(IService):
         self.client = OpenAI(api_key = self.openai_api_key)
 
     def make_dalle_api_request(self, prompt: str, Height_width: str, quality: str) -> str:
-        response = self.client.images.generate(
-            model="dall-e-3", prompt=prompt, size=Height_width, quality=quality, n=1
-        )
+        try:
+            response = self.client.images.generate(
+                model="dall-e-3", prompt=prompt, size=Height_width, quality=quality, n=1
+            )
+        except Exception as error:
+            if("content_policy_violation" in str(error)):
+                raise Exception(IMAGE_GENERATION_ERROR, NSFW_CONTENT_DETECT_ERROR_MSG)
+            else:
+                raise Exception(str(error))
+            
 
         response = make_request(response.data[0].url, "GET")
 

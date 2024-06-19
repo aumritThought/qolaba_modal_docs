@@ -467,6 +467,27 @@ app_dict = {
         "init_parameters" : {
         },
         "model_name" : "promptparrot_text2text" 
+    },
+    "ap-5aH3nL9Pq2XvWmBk8YtRzN": {
+        "app_id" : "OOTDiffusion_modal",
+        "init_parameters" : {
+        },
+        "model_name" : "OOTDiffusion_image2image" 
     }
 }
 
+
+
+#Error Configuration
+INTERNAL_ERROR = "Internal Error"
+
+ELEVENLABS_ERROR = "Elevenlabs Error"
+VOICE_ID_ERROR_MSG = "Voice not supported. Please try a different one."
+CLONE_AUDIO_LEN_ERROR_MSG = "Audio length must be between 60 and 600 seconds."
+CLONE_AUDIO_OPEN_ERROR_MSG = "No valid audio files detected. Please upload at least one working audio file."
+
+FACE_CONSISTENT_ERROR = "Face Consistent Error"
+FACE_DETECT_ERROR_MSG = "Unable to detect faces. Please provide a clear image."
+
+IMAGE_GENERATION_ERROR = "Image Generation Error"
+NSFW_CONTENT_DETECT_ERROR_MSG = "Request cancelled due to detection of NSFW content. Please ensure your prompt is appropriate." 

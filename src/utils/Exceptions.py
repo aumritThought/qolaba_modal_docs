@@ -7,7 +7,7 @@ from typing import Callable, Any
 from functools import wraps
 import traceback
 from src.data_models.ModalAppSchemas import APITaskResponse
-
+from src.utils.Constants import INTERNAL_ERROR
 
 async def handle_Request_exceptions(request: Request, exc: Exception):
     if isinstance(exc, RequestValidationError):
@@ -54,8 +54,11 @@ def handle_exceptions(func: Callable):
             traceback_str = "".join(
                 traceback.format_exception(None, exc, exc.__traceback__)
             )
-            error_data = str(exc),
-            error = "Internal Error"
+            try:
+                error, error_data = exc.args
+            except:
+                error_data = str(exc.args)
+                error = INTERNAL_ERROR
 
             task_response = APITaskResponse(
                 error=str(error),

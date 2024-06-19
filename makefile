@@ -14,6 +14,7 @@ deploy_main:
 	modal deploy src/ModalPipelines/SDXLTextToImage.py --env main
 	modal deploy src/ModalPipelines/Upscaling.py --env main
 	modal deploy src/ModalPipelines/Variation.py --env main
+	modal deploy src/ModalPipelines/OOTDiffusion.py --env main
 
 deploy_dev:
 	modal run -e dev src/repositories/ModalVolume.py
@@ -27,3 +28,4 @@ deploy_dev:
 	modal deploy src/ModalPipelines/SDXLTextToImage.py --env dev
 	modal deploy src/ModalPipelines/Upscaling.py --env dev
 	modal deploy src/ModalPipelines/Variation.py --env dev
+	modal deploy src/ModalPipelines/OOTDiffusion.py --env dev
