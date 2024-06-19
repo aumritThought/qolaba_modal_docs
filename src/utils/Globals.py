@@ -7,7 +7,7 @@ from diffusers import DiffusionPipeline
 from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
 from transformers import CLIPImageProcessor
 import torch, time, os, requests, re, io, datetime, uuid, imageio, math
-from src.utils.Constants import BASE_IMAGE_COMMANDS, PYTHON_VERSION, REQUIREMENT_FILE_PATH, MEAN_HEIGHT, SDXL_REFINER_MODEL_PATH, google_credentials_info, OUTPUT_IMAGE_EXTENSION, SECRET_NAME, content_type, MAX_UPLOAD_RETRY
+from src.utils.Constants import BASE_IMAGE_COMMANDS, IMAGE_GENERATION_ERROR, NSFW_CONTENT_DETECT_ERROR_MSG, PYTHON_VERSION, REQUIREMENT_FILE_PATH, MEAN_HEIGHT, SDXL_REFINER_MODEL_PATH, google_credentials_info, OUTPUT_IMAGE_EXTENSION, SECRET_NAME, content_type, MAX_UPLOAD_RETRY
 from fastapi.security import HTTPAuthorizationCredentials
 from requests import Response
 from google.cloud import storage
@@ -115,6 +115,9 @@ def make_request(url: str, method: str, json_data: dict = None, headers: dict = 
         response = requests.post(url, data=json_data, headers=headers, files = files, json = json)
 
     if(response.status_code != 200):
+        if("content_moderation" in response.text):
+            raise Exception(IMAGE_GENERATION_ERROR, NSFW_CONTENT_DETECT_ERROR_MSG)
+        
         raise Exception(str(response.text))
 
     return response
@@ -153,7 +156,7 @@ def upload_to_gcp(data : Imagetype | str, extension : str, upscale : bool = Fals
                     ).model_dump()  
                 ))
             if(output.Has_NSFW_Content[0] == True):
-                raise Exception("NSFW Content detected")
+                raise Exception(IMAGE_GENERATION_ERROR, NSFW_CONTENT_DETECT_ERROR_MSG)
             else:
                 data = output.result[0]
 

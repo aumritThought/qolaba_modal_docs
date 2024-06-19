@@ -2,6 +2,8 @@ from pydantic import BaseModel, Field, field_validator, model_validator, constr
 from fastapi import Query
 from typing import  Optional, Any, List, Literal
 from src.utils.Constants import (
+    ELEVENLABS_ERROR, 
+    VOICE_ID_ERROR_MSG,
     MIN_HEIGHT, MAX_HEIGHT, 
     MAX_INFERENCE_STEPS, 
     MIN_INFERENCE_STEPS, 
@@ -194,7 +196,7 @@ class AudioParameters(BaseModel):
         for i in voices_data:
             voice_dict.append(i.voice_id)
         if v not in voice_dict:
-            raise ValueError("Invalid input. The parameter must be one of: " + ", ".join(voice_dict))
+            raise ValueError(ELEVENLABS_ERROR, VOICE_ID_ERROR_MSG)
         return v
 
 class VoiceData(BaseModel):
