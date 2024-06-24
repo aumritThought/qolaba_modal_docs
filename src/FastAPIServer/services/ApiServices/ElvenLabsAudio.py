@@ -6,7 +6,7 @@ from pydub import AudioSegment
 from io import BytesIO
 from src.utils.Globals import timing_decorator, upload_data_gcp, make_request, prepare_response
 from src.FastAPIServer.services.IService import IService
-from src.utils.Constants import OUTPUT_AUDIO_EXTENSION
+from src.utils.Constants import OUTPUT_AUDIO_EXTENSION, ELEVENLABS_ERROR, CLONE_AUDIO_LEN_ERROR_MSG, CLONE_AUDIO_OPEN_ERROR_MSG
 
 class ElvenLabsAudio(IService):
     def __init__(self) -> None:
@@ -63,13 +63,13 @@ class ElvenLabsAudio(IService):
 
             if audio_length > 600 or audio_length < 60:
                 raise Exception(
-                    "Audio Length should be more than 60s and less than 600s"
+                    ELEVENLABS_ERROR, CLONE_AUDIO_LEN_ERROR_MSG
                 )
 
             list_of_saved_audios.append(file_name)
 
         if len(list_of_saved_audios) == 0:
-            raise Exception("Provide at least one proper audio URL")
+            raise Exception(ELEVENLABS_ERROR, CLONE_AUDIO_OPEN_ERROR_MSG)
 
         clone_settings = VoiceClone(
             name = parameters.clone_parameters.name,

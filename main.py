@@ -6,7 +6,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from src.data_models.ModalAppSchemas import APIInput, APITaskResponse, TaskStatus, OpenAITTSParameters
 from src.FastAPIServer.celery.Worker import task_gen, get_task_status, initialize_shared_object
 from src.utils.Globals import check_token, upload_to_gcp
-from src.utils.Constants import app_dict
+from src.utils.Constants import app_dict, INTERNAL_ERROR
 from src.utils.Exceptions import handle_Request_exceptions, handle_exceptions
 import uvicorn, os
 from fastapi.exceptions import RequestValidationError
@@ -55,7 +55,14 @@ def get_status(parameters : TaskStatus,
     task_result = get_task_status(parameters.task_id)
 
     if task_result.status == "FAILURE":
-        raise Exception(str(task_result.traceback))
+        error = INTERNAL_ERROR
+        error_details = str(task_result.info)
+        try:
+            error = task_result.info.args[0]
+            error_details = task_result.info.args[1]
+        except Exception as er:
+            pass
+        raise Exception(error, error_details)
     
     if(task_result.status == "PENDING"):
         task_Response = APITaskResponse(

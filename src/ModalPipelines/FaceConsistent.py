@@ -2,7 +2,7 @@ from modal import Stub, method, Volume, Secret
 from src.data_models.Configuration import stub_dictionary
 from src.data_models.ModalAppSchemas import StubNames, InitParameters, FaceConsistentParameters
 from src.utils.Globals import get_base_image, SafetyChecker, generate_image_urls, prepare_response, get_image_from_url, get_refiner
-from src.utils.Constants import VOLUME_NAME, VOLUME_PATH, SECRET_NAME, sdxl_model_list, extra_negative_prompt, OUTPUT_IMAGE_EXTENSION
+from src.utils.Constants import VOLUME_NAME, VOLUME_PATH, FACE_CONSISTENT_ERROR, FACE_DETECT_ERROR_MSG, SECRET_NAME, sdxl_model_list, extra_negative_prompt, OUTPUT_IMAGE_EXTENSION
 import torch, time, os, sys
 from diffusers import StableDiffusionXLPipeline
 from insightface.app import FaceAnalysis
@@ -97,7 +97,7 @@ class stableDiffusion:
         faces = self.app.get(face_img)
         
         if(len(faces) == 0):
-            raise Exception("Please provide proper image, Not able to detect the faces.")
+            raise Exception(FACE_CONSISTENT_ERROR, FACE_DETECT_ERROR_MSG)
 
         faceid_embeds = torch.from_numpy(faces[0].normed_embedding).unsqueeze(0)
         face_image = face_align.norm_crop(face_img, landmark=faces[0].kps, image_size=224)
