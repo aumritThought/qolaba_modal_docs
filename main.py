@@ -55,13 +55,13 @@ def get_status(parameters : TaskStatus,
     task_result = get_task_status(parameters.task_id)
 
     if task_result.status == "FAILURE":
-        error = INTERNAL_ERROR
-        error_details = str(task_result.info)
+        
         try:
             error = task_result.info.args[0]
             error_details = task_result.info.args[1]
         except Exception as er:
-            pass
+            error = INTERNAL_ERROR
+            error_details = str(task_result.info)
         raise Exception(error, error_details)
     
     if(task_result.status == "PENDING"):

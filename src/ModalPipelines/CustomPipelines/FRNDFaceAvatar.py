@@ -86,7 +86,7 @@ class stableDiffusion:
         elif len(hex_color) == 3: 
             r, g, b = int(hex_color[0]*2, 16), int(hex_color[1]*2, 16), int(hex_color[2]*2, 16)
         else:
-            raise ValueError("Invalid hex color format")
+            raise Exception("Invalid hex color format")
         
         return (r, g, b)
 

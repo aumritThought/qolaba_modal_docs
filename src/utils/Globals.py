@@ -7,7 +7,7 @@ from diffusers import DiffusionPipeline
 from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
 from transformers import CLIPImageProcessor
 import torch, time, os, requests, re, io, datetime, uuid, imageio, math
-from src.utils.Constants import BASE_IMAGE_COMMANDS, IMAGE_GENERATION_ERROR, NSFW_CONTENT_DETECT_ERROR_MSG, PYTHON_VERSION, REQUIREMENT_FILE_PATH, MEAN_HEIGHT, SDXL_REFINER_MODEL_PATH, google_credentials_info, OUTPUT_IMAGE_EXTENSION, SECRET_NAME, content_type, MAX_UPLOAD_RETRY
+from src.utils.Constants import BASE_IMAGE_COMMANDS,IMAGE_FETCH_ERROR, IMAGE_FETCH_ERROR_MSG, IMAGE_GENERATION_ERROR, NSFW_CONTENT_DETECT_ERROR_MSG, PYTHON_VERSION, REQUIREMENT_FILE_PATH, MEAN_HEIGHT, SDXL_REFINER_MODEL_PATH, google_credentials_info, OUTPUT_IMAGE_EXTENSION, SECRET_NAME, content_type, MAX_UPLOAD_RETRY
 from fastapi.security import HTTPAuthorizationCredentials
 from requests import Response
 from google.cloud import storage
@@ -210,12 +210,18 @@ def resize_image(img: Imagetype) -> Imagetype:
 
 
 def get_image_from_url(url: str) -> Imagetype:
+    try:
+        response : Response = make_request(url, method = "GET") 
+        image_data = io.BytesIO(response.content)
+        
 
-    response : Response = make_request(url, method = "GET") 
-    image_data = io.BytesIO(response.content)
-    image = Image.open(image_data).convert("RGB")
-    image = resize_image(image)
-    return image
+        image = Image.open(image_data).convert("RGB")
+        image = resize_image(image)
+        return image
+    except Exception as error:
+        print(f"Url of image : {url}")
+        print(str(error))
+        raise  Exception(IMAGE_FETCH_ERROR, IMAGE_FETCH_ERROR_MSG)
 
 def invert_bw_image_color(img: Imagetype) -> Imagetype:
     mask_array = np.array(img)
