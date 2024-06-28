@@ -170,7 +170,7 @@ google_credentials_info = {
     "universe_domain": os.environ["GCP_UNIVERSE_DOMAIN"]
 }
 
-OUTPUT_IMAGE_EXTENSION = "jpg"
+OUTPUT_IMAGE_EXTENSION = "webp"
 OUTPUT_AUDIO_EXTENSION = "mp3"
 OUTPUT_VIDEO_EXTENSION = "mp4"
 OUTPUT_PDF_EXTENSION = "pdf"
