@@ -170,7 +170,7 @@ google_credentials_info = {
     "universe_domain": os.environ["GCP_UNIVERSE_DOMAIN"]
 }
 
-OUTPUT_IMAGE_EXTENSION = "jpg"
+OUTPUT_IMAGE_EXTENSION = "webp"
 OUTPUT_AUDIO_EXTENSION = "mp3"
 OUTPUT_VIDEO_EXTENSION = "mp4"
 OUTPUT_PDF_EXTENSION = "pdf"
@@ -491,3 +491,6 @@ FACE_DETECT_ERROR_MSG = "Unable to detect faces. Please provide a clear image."
 
 IMAGE_GENERATION_ERROR = "Image Generation Error"
 NSFW_CONTENT_DETECT_ERROR_MSG = "Request cancelled due to detection of NSFW content. Please ensure your prompt is appropriate." 
+
+IMAGE_FETCH_ERROR = "Image URL Error"
+IMAGE_FETCH_ERROR_MSG = "Given image type is not supported. Please try with JPG or PNG."

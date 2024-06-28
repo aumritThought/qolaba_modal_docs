@@ -196,7 +196,7 @@ class AudioParameters(BaseModel):
         for i in voices_data:
             voice_dict.append(i.voice_id)
         if v not in voice_dict:
-            raise ValueError(ELEVENLABS_ERROR, VOICE_ID_ERROR_MSG)
+            raise Exception(ELEVENLABS_ERROR, VOICE_ID_ERROR_MSG)
         return v
 
 class VoiceData(BaseModel):
@@ -207,7 +207,7 @@ class VoiceData(BaseModel):
         choices = set(["cloned", "generated", "premade"])
         v=set(v)
         if not(v.issubset(choices)):
-            raise ValueError("Invalid input. The parameter must be one of: " + ", ".join(choices))
+            raise Exception("Invalid input. The parameter must be one of: " + ", ".join(choices))
         return list(v)
 
 class ElevenLabsParameters(BaseModel):
@@ -223,7 +223,7 @@ class ElevenLabsParameters(BaseModel):
     def validate_params(self):
         total_sum=sum([self.clone, self.voice_design, self.generate_audio])
         if(not(total_sum==1)):
-            raise ValueError("Only one of 'clone', 'voicedesign','list_of_voices', or 'generate_audio' must be True")
+            raise Exception("Only one of 'clone', 'voicedesign','list_of_voices', or 'generate_audio' must be True")
         return self
 
 

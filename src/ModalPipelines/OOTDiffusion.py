@@ -108,7 +108,7 @@ class OOTDiffusion:
                 prompt_embeds = self.text_encoder(self.tokenize_captions([category], 3).to(self.gpu_id))[0]
                 prompt_embeds = torch.cat([prompt_embeds, prompt_image], dim=1)
             else:
-                raise ValueError("model_type must be \'hd\' or \'dc\'!")
+                raise Exception("model_type must be \'hd\' or \'dc\'!")
 
             images = self.pipe(prompt_embeds=prompt_embeds,
                         image_garm=image_garm,
