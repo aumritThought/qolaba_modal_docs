@@ -477,6 +477,9 @@ app_dict = {
 }
 
 
+STAGING_API = "https://storage.googleapis.com/qolaba-staging/"
+CDN_API="https://cdn.qolaba.app/"
+
 
 #Error Configuration
 INTERNAL_ERROR = "Internal Error"
