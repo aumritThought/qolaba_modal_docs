@@ -476,6 +476,8 @@ app_dict = {
     }
 }
 
+BUCKET_NAME = os.environ["BUCKET_NAME"]
+STAGING_API = f"https://storage.googleapis.com/{BUCKET_NAME}/"
 
 
 #Error Configuration

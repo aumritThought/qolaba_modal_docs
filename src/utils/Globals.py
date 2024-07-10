@@ -7,7 +7,7 @@ from diffusers import DiffusionPipeline
 from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
 from transformers import CLIPImageProcessor
 import torch, time, os, requests, re, io, datetime, uuid, imageio, math
-from src.utils.Constants import BASE_IMAGE_COMMANDS,IMAGE_FETCH_ERROR, IMAGE_FETCH_ERROR_MSG, IMAGE_GENERATION_ERROR, NSFW_CONTENT_DETECT_ERROR_MSG, PYTHON_VERSION, REQUIREMENT_FILE_PATH, MEAN_HEIGHT, SDXL_REFINER_MODEL_PATH, google_credentials_info, OUTPUT_IMAGE_EXTENSION, SECRET_NAME, content_type, MAX_UPLOAD_RETRY
+from src.utils.Constants import BASE_IMAGE_COMMANDS, IMAGE_FETCH_ERROR, STAGING_API, IMAGE_FETCH_ERROR_MSG, IMAGE_GENERATION_ERROR, NSFW_CONTENT_DETECT_ERROR_MSG, PYTHON_VERSION, REQUIREMENT_FILE_PATH, MEAN_HEIGHT, SDXL_REFINER_MODEL_PATH, google_credentials_info, OUTPUT_IMAGE_EXTENSION, SECRET_NAME, content_type, MAX_UPLOAD_RETRY
 from fastapi.security import HTTPAuthorizationCredentials
 from requests import Response
 from google.cloud import storage
@@ -186,7 +186,9 @@ def upload_to_gcp(data : Imagetype | str, extension : str, upscale : bool = Fals
 
         blob.upload_from_file(byte_data)
 
-        return blob.public_url
+        url = blob.public_url
+        url = url.replace(STAGING_API, os.environ["CDN_API"])
+        return url
 
     except Exception as e:
         raise Exception(f"Error uploading to GCP: {e}")
