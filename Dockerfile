@@ -24,6 +24,14 @@ ARG TOKEN_ID
 
 ARG TOKEN_SECRET
 
+# Set environment variables
+ENV TOKEN_ID=$TOKEN_ID
+ENV TOKEN_SECRET=$TOKEN_SECRET
+
+# Debugging step: Print environment variables
+RUN echo "TOKEN_ID=$TOKEN_ID"
+RUN echo "TOKEN_SECRET=$TOKEN_SECRET"
+
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 RUN modal token set --token-id $TOKEN_ID --token-secret $TOKEN_SECRET
