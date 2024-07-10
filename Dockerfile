@@ -20,13 +20,13 @@ WORKDIR /root/app
 
 RUN pip install torch torchvision torchaudio && pip install -r requirements.txt
 
-ARG TOKEN_ID
+# ARG TOKEN_ID
 
-ARG TOKEN_SECRET
+# ARG TOKEN_SECRET
 
 # Set environment variables
-ENV TOKEN_ID=$TOKEN_ID
-ENV TOKEN_SECRET=$TOKEN_SECRET
+ENV TOKEN_ID
+ENV TOKEN_SECRET
 
 # Debugging step: Print environment variables
 RUN echo "TOKEN_ID=$TOKEN_ID"
