@@ -476,9 +476,8 @@ app_dict = {
     }
 }
 
-
-STAGING_API = "https://storage.googleapis.com/qolaba-staging/"
-CDN_API="https://cdn.qolaba.app/"
+BUCKET_NAME = os.environ["BUCKET_NAME"]
+STAGING_API = f"https://storage.googleapis.com/{BUCKET_NAME}/"
 
 
 #Error Configuration
