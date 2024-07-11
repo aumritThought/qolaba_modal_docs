@@ -24,10 +24,16 @@ steps:
 
   - name: 'gcr.io/cloud-builders/docker'
     entrypoint: 'bash'
-    args: [
-      '-c',
-      'docker build --build-kit -t gcr.io/$PROJECT_ID/${_APP_NAME}:latest -t gcr.io/$PROJECT_ID/${_APP_NAME}:${_COMMIT_SHA} --cache-from gcr.io/$PROJECT_ID/${_APP_NAME}:latest .',
-    ]
+    args:
+      - '-c'
+      - |
+        docker build \
+          -t gcr.io/$PROJECT_ID/${_APP_NAME}:latest \
+          -t gcr.io/$PROJECT_ID/${_APP_NAME}:${_COMMIT_SHA} \
+          --cache-from gcr.io/$PROJECT_ID/${_APP_NAME}:latest \
+          --build-arg TOKEN_ID=$$TOKEN_ID \
+          --build-arg TOKEN_SECRET=$$TOKEN_SECRET \
+          .
     waitFor: ['pull-latest-image']
     secretEnv: ['TOKEN_ID', 'TOKEN_SECRET']
 
