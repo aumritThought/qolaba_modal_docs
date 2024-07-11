@@ -7,6 +7,15 @@ substitutions:
   _ENVIRONMENT: '${BRANCH_NAME}'
 
 steps:
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "TOKEN_ID: $TOKEN_ID"
+        echo "TOKEN_SECRET: $TOKEN_SECRET"
+
+    secretEnv: ['TOKEN_ID', 'TOKEN_SECRET']
   - name: 'gcr.io/cloud-builders/docker'
     args: ['pull', 'gcr.io/$PROJECT_ID/${_APP_NAME}']
     id: 'pull-latest-image'
@@ -34,3 +43,4 @@ availableSecrets:
       env: 'TOKEN_ID'
     - versionName: projects/$PROJECT_ID/secrets/TOKEN_SECRET/versions/latest
       env: 'TOKEN_SECRET'
+      projects/287918448582/secrets/TOKEN_ID
