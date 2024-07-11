@@ -4,7 +4,7 @@ ARG TOKEN_ID
 
 ARG TOKEN_SECRET
 
-RUN echo "$$TOKEN_ID"
+RUN echo "$TOKEN_ID"
 
 RUN apt-get update && apt-get install ffmpeg libsm6 libxext6 supervisor -y
 
