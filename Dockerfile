@@ -1,13 +1,5 @@
 FROM python:3.11.8
 
-# Set environment variables
-ENV TOKEN_ID
-ENV TOKEN_SECRET
-
-# Debugging step: Print environment variables
-RUN echo "TOKEN_ID=$TOKEN_ID"
-RUN echo "TOKEN_SECRET=$TOKEN_SECRET"
-
 RUN apt-get update && apt-get install ffmpeg libsm6 libxext6 supervisor -y
 
 RUN apt install lsb-release curl gpg -y
@@ -28,11 +20,9 @@ WORKDIR /root/app
 
 RUN pip install torch torchvision torchaudio && pip install -r requirements.txt
 
-# ARG TOKEN_ID
+ARG TOKEN_ID
 
-# ARG TOKEN_SECRET
-
-
+ARG TOKEN_SECRET
 
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
