@@ -28,8 +28,8 @@ steps:
       '-t', 'gcr.io/$PROJECT_ID/${_APP_NAME}:latest', 
       '-t', 'gcr.io/$PROJECT_ID/${_APP_NAME}:${_COMMIT_SHA}', 
       '--cache-from', 'gcr.io/$PROJECT_ID/${_APP_NAME}:latest', 
-      '--build-arg', 'TOKEN_ID=$$TOKEN_ID',
-      '--build-arg', 'TOKEN_SECRET=$$TOKEN_SECRET',
+      '--build-arg', 'TOKEN_ID=$TOKEN_ID',
+      '--build-arg', 'TOKEN_SECRET=$TOKEN_SECRET',
       '.'
     ]
     waitFor: ['pull-latest-image']
