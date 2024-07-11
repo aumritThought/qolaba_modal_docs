@@ -7,7 +7,7 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['pull', 'gcr.io/$PROJECT_ID/${_APP_NAME}']
     id: 'pull-latest-image'
-    continueOnError: true
+    allowFailure: true
 
   - name: 'gcr.io/cloud-builders/docker'
     args: [
