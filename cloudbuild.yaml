@@ -1,8 +1,8 @@
 options:
   logging: CLOUD_LOGGING_ONLY
-  
+
 substitutions:
-  _APP_NAME: 'Modal-FastAPI-Server'
+  _APP_NAME: 'modal-fastapi-server'
   _COMMIT_SHA: '${SHORT_SHA}'
   _ENVIRONMENT: '${BRANCH_NAME}'
 
