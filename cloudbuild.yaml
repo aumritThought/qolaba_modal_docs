@@ -1,3 +1,6 @@
+options:
+  logging: CLOUD_LOGGING_ONLY
+  
 substitutions:
   _APP_NAME: 'Modal-FastAPI-Server'
   _COMMIT_SHA: '${SHORT_SHA}'
