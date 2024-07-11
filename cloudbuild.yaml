@@ -12,8 +12,8 @@ steps:
     args:
       - '-c'
       - |
-        echo "TOKEN_ID: $TOKEN_ID"
-        echo "TOKEN_SECRET: $TOKEN_SECRET"
+        echo "TOKEN_ID: $$TOKEN_ID"
+        echo "TOKEN_SECRET: $$TOKEN_SECRET"
     secretEnv: ['TOKEN_ID', 'TOKEN_SECRET']
 
 
