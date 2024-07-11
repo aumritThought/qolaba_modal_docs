@@ -1,5 +1,11 @@
 FROM python:3.11.8
 
+ARG TOKEN_ID
+
+ARG TOKEN_SECRET
+
+RUN echo "$TOKEN_ID"
+
 RUN apt-get update && apt-get install ffmpeg libsm6 libxext6 supervisor -y
 
 RUN apt install lsb-release curl gpg -y
@@ -19,10 +25,6 @@ ADD ./ /root/app
 WORKDIR /root/app
 
 RUN pip install torch torchvision torchaudio && pip install -r requirements.txt
-
-ARG TOKEN_ID
-
-ARG TOKEN_SECRET
 
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
