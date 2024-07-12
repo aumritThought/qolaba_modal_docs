@@ -24,7 +24,7 @@ class IService(ABC):
         self.openai_api_key = os.environ["OPENAI_API_KEY"]
 
         #claude definations
-        self.claude_api_key = os.environ["CLAUDE_KEY"]
+        self.claude_api_key = os.environ["CLAUDE_API_KEY"]
 
         #did definations
         self.did_api_key = os.environ["DID_KEY"]
