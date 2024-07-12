@@ -21,12 +21,12 @@ steps:
           .
     secretEnv: ['TOKEN_ID', 'TOKEN_SECRET']
   
-    - name: gcr.io/cloud-builders/docker
-      args:
-        - push
-        - >-
-          $_AR_HOSTNAME/$PROJECT_ID/cloud-run-source-deploy/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA
-      id: Push
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - >-
+        $_AR_HOSTNAME/$PROJECT_ID/cloud-run-source-deploy/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA
+    id: Push
   
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
     args:
