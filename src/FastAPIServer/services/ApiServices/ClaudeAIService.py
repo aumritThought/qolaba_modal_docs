@@ -1,18 +1,24 @@
 from src.data_models.ModalAppSchemas import PromptParrotParameters
 from src.utils.Globals import timing_decorator, prepare_response
-from src.utils.Constants import BASE_PROMPT_FOR_GENERATION
+from src.utils.Constants import BASE_PROMPT_FOR_GENERATION, google_credentials_info
 from src.FastAPIServer.services.IService import IService
 import concurrent.futures 
-from anthropic import Anthropic
+from anthropic import AnthropicVertex
+import google.auth
+import google.auth.transport.requests
 
 class PromptParrot(IService):
     def __init__(self) -> None:
         super().__init__()
-        self.client = Anthropic(api_key = self.claude_api_key)
+        self.client = AnthropicVertex(region="us-east5", project_id="marine-potion-404413")
+        self.credentials, project_id = google.auth.load_credentials_from_dict(google_credentials_info, scopes=["https://www.googleapis.com/auth/cloud-platform"],)
+        request = google.auth.transport.requests.Request()
+        self.credentials.refresh(request)
+        self.client.credentials = self.credentials
 
     def generate_prompt(self, query : str) -> str:
         response = self.client.messages.create(
-                model="claude-3-haiku-20240307",
+                model="claude-3-haiku@20240307",
                 messages=[
                     {"role": "user", "content": query}
                 ],
