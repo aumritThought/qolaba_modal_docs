@@ -152,4 +152,4 @@ loguru
 google-cloud-storage
 mistralai
 mediapipe
-anthropic
+anthropic==0.31.1
