@@ -42,13 +42,32 @@ steps:
           --build-arg ENVIRONMENT=$$ENVIRONMENT \
           --build-arg CDN_API=$$CDN_API \
           .
-    secretEnv: [
-      'TOKEN_ID', 'TOKEN_SECRET', 'API_KEY', 'BUCKET_NAME', 'CLAUDE_API_KEY', 'DID_KEY', 'ELEVENLABS_API_KEY',
-      'GCP_AUTH_PROVIDER_X509_CERT_URL', 'GCP_AUTH_URI', 'GCP_CLIENT_EMAIL', 'GCP_CLIENT_ID',
-      'GCP_CLIENT_X509_CERT_URL', 'GCP_PRIVATE_KEY', 'GCP_PRIVATE_KEY_ID', 'GCP_PROJECT_ID',
-      'GCP_TOKEN_URI', 'GCP_TYPE', 'GCP_UNIVERSE_DOMAIN', 'NUM_WORKERS',
-      'OPENAI_API_KEY', 'QOLABA_B2B_API_URL', 'SDXL_API_KEY', 'ENVIRONMENT', 'CDN_API'
-    ]
+    secretEnv:
+      - 'TOKEN_ID'
+      - 'TOKEN_SECRET'
+      - 'API_KEY'
+      - 'BUCKET_NAME'
+      - 'CLAUDE_API_KEY'
+      - 'DID_KEY'
+      - 'ELEVENLABS_API_KEY'
+      - 'GCP_AUTH_PROVIDER_X509_CERT_URL'
+      - 'GCP_AUTH_URI'
+      - 'GCP_CLIENT_EMAIL'
+      - 'GCP_CLIENT_ID'
+      - 'GCP_CLIENT_X509_CERT_URL'
+      - 'GCP_PRIVATE_KEY'
+      - 'GCP_PRIVATE_KEY_ID'
+      - 'GCP_PROJECT_ID'
+      - 'GCP_TOKEN_URI'
+      - 'GCP_TYPE'
+      - 'GCP_UNIVERSE_DOMAIN'
+      - 'NUM_WORKERS'
+      - 'OPENAI_API_KEY'
+      - 'QOLABA_B2B_API_URL'
+      - 'SDXL_API_KEY'
+      - 'ENVIRONMENT'
+      - 'CDN_API'
+  
   - name: gcr.io/cloud-builders/docker
     args:
       - push
@@ -58,11 +77,10 @@ steps:
   
   - name: 'gcr.io/cloud-builders/gke-deploy'
     args:
-    - run
-    - --filename=deployment-service.yaml
-    - --location=${_CLUSTER_LOCATION}
-    - --cluster=${_CLUSTER_NAME}
-
+      - run
+      - --filename=deployment-service.yaml
+      - --location=${_CLUSTER_LOCATION}
+      - --cluster=${_CLUSTER_NAME}
 
 images:
   - >-
@@ -118,9 +136,3 @@ availableSecrets:
       env: 'ENVIRONMENT'
     - versionName: projects/$PROJECT_ID/secrets/CDN_API/versions/latest
       env: 'CDN_API'
-
-
-
-
-
-
