@@ -1,0 +1,163 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: modal-fastapi-server
+  labels:
+    app: modal-fastapi-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: modal-fastapi-server
+  template:
+    metadata:
+      labels:
+        app: modal-fastapi-server
+    spec:
+      containers:
+      - name: modal-fastapi-server
+        image: $_AR_HOSTNAME/$PROJECT_ID/cloud-run-source-deploy/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA
+        ports:
+        - containerPort: 9000
+        env:
+        - name: API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: API_KEY
+              key: latest
+        - name: BUCKET_NAME
+          valueFrom:
+            secretKeyRef:
+              name: BUCKET_NAME
+              key: latest
+        - name: CLAUDE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: CLAUDE_API_KEY
+              key: latest
+        - name: DID_KEY
+          valueFrom:
+            secretKeyRef:
+              name: DID_KEY
+              key: latest
+        - name: ELEVENLABS_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ELEVENLABS_API_KEY
+              key: latest
+        - name: GCP_AUTH_PROVIDER_X509_CERT_URL
+          valueFrom:
+            secretKeyRef:
+              name: GCP_AUTH_PROVIDER_X509_CERT_URL
+              key: latest
+        - name: GCP_AUTH_URI
+          valueFrom:
+            secretKeyRef:
+              name: GCP_AUTH_URI
+              key: latest
+        - name: GCP_CLIENT_EMAIL
+          valueFrom:
+            secretKeyRef:
+              name: GCP_CLIENT_EMAIL
+              key: latest
+        - name: GCP_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: GCP_CLIENT_ID
+              key: latest
+        - name: GCP_CLIENT_X509_CERT_URL
+          valueFrom:
+            secretKeyRef:
+              name: GCP_CLIENT_X509_CERT_URL
+              key: latest
+        - name: GCP_PRIVATE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: GCP_PRIVATE_KEY
+              key: latest
+        - name: GCP_PRIVATE_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: GCP_PRIVATE_KEY_ID
+              key: latest
+        - name: GCP_PROJECT_ID
+          valueFrom:
+            secretKeyRef:
+              name: GCP_PROJECT_ID
+              key: latest
+        - name: GCP_TOKEN_URI
+          valueFrom:
+            secretKeyRef:
+              name: GCP_TOKEN_URI
+              key: latest
+        - name: GCP_TYPE
+          valueFrom:
+            secretKeyRef:
+              name: GCP_TYPE
+              key: latest
+        - name: GCP_UNIVERSE_DOMAIN
+          valueFrom:
+            secretKeyRef:
+              name: GCP_UNIVERSE_DOMAIN
+              key: latest
+        - name: HEY_GEN_KEY
+          valueFrom:
+            secretKeyRef:
+              name: HEY_GEN_KEY
+              key: latest
+        - name: NUM_WORKERS
+          valueFrom:
+            secretKeyRef:
+              name: NUM_WORKERS
+              key: latest
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: OPENAI_API_KEY
+              key: latest
+        - name: PORT
+          valueFrom:
+            secretKeyRef:
+              name: PORT
+              key: latest
+        - name: QOLABA_B2B_API_URL
+          valueFrom:
+            secretKeyRef:
+              name: QOLABA_B2B_API_URL
+              key: latest
+        - name: SDXL_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: SDXL_API_KEY
+              key: latest
+        - name: environment
+          valueFrom:
+            secretKeyRef:
+              name: environment_dev
+              key: latest
+        - name: CDN_API
+          valueFrom:
+            secretKeyRef:
+              name: CDN_API
+              key: latest
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: modal-fastapi-server-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: modal-fastapi-server
+  minReplicas: 1
+  maxReplicas: 2
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 80
