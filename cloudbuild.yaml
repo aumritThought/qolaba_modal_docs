@@ -11,61 +11,38 @@ substitutions:
 
 steps:
   - name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
     args:
-      - build
-      - '-f'
-      - 'Dockerfile'  # Specify the Dockerfile explicitly
-      - '-t'
-      - '$_AR_HOSTNAME/$PROJECT_ID/cloud-run-source-deploy/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA'
-      - '--build-arg'
-      - 'TOKEN_ID=$$TOKEN_ID'
-      - '--build-arg'
-      - 'TOKEN_SECRET=$$TOKEN_SECRET'
-      - '--build-arg'
-      - 'API_KEY=$$API_KEY'
-      - '--build-arg'
-      - 'BUCKET_NAME=$$BUCKET_NAME'
-      - '--build-arg'
-      - 'CLAUDE_API_KEY=$$CLAUDE_API_KEY'
-      - '--build-arg'
-      - 'DID_KEY=$$DID_KEY'
-      - '--build-arg'
-      - 'ELEVENLABS_API_KEY=$$ELEVENLABS_API_KEY'
-      - '--build-arg'
-      - 'GCP_AUTH_PROVIDER_X509_CERT_URL=$$GCP_AUTH_PROVIDER_X509_CERT_URL'
-      - '--build-arg'
-      - 'GCP_AUTH_URI=$$GCP_AUTH_URI'
-      - '--build-arg'
-      - 'GCP_CLIENT_EMAIL=$$GCP_CLIENT_EMAIL'
-      - '--build-arg'
-      - 'GCP_CLIENT_ID=$$GCP_CLIENT_ID'
-      - '--build-arg'
-      - 'GCP_CLIENT_X509_CERT_URL=$$GCP_CLIENT_X509_CERT_URL'
-      - '--build-arg'
-      - 'GCP_PRIVATE_KEY=$$GCP_PRIVATE_KEY'
-      - '--build-arg'
-      - 'GCP_PRIVATE_KEY_ID=$$GCP_PRIVATE_KEY_ID'
-      - '--build-arg'
-      - 'GCP_PROJECT_ID=$$GCP_PROJECT_ID'
-      - '--build-arg'
-      - 'GCP_TOKEN_URI=$$GCP_TOKEN_URI'
-      - '--build-arg'
-      - 'GCP_TYPE=$$GCP_TYPE'
-      - '--build-arg'
-      - 'GCP_UNIVERSE_DOMAIN=$$GCP_UNIVERSE_DOMAIN'
-      - '--build-arg'
-      - 'NUM_WORKERS=$$NUM_WORKERS'
-      - '--build-arg'
-      - 'OPENAI_API_KEY=$$OPENAI_API_KEY'
-      - '--build-arg'
-      - 'QOLABA_B2B_API_URL=$$QOLABA_B2B_API_URL'
-      - '--build-arg'
-      - 'SDXL_API_KEY=$$SDXL_API_KEY'
-      - '--build-arg'
-      - 'ENVIRONMENT=$$ENVIRONMENT'
-      - '--build-arg'
-      - 'CDN_API=$$CDN_API'
-      - '.'
+      - '-c'
+      - |
+        docker build \
+          -f Dockerfile \  
+          -t $_AR_HOSTNAME/$PROJECT_ID/cloud-run-source-deploy/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA \
+          --build-arg TOKEN_ID=$$TOKEN_ID \
+          --build-arg TOKEN_SECRET=$$TOKEN_SECRET \
+          --build-arg API_KEY=$$API_KEY \
+          --build-arg BUCKET_NAME=$$BUCKET_NAME \
+          --build-arg CLAUDE_API_KEY=$$CLAUDE_API_KEY \
+          --build-arg DID_KEY=$$DID_KEY \
+          --build-arg ELEVENLABS_API_KEY=$$ELEVENLABS_API_KEY \
+          --build-arg GCP_AUTH_PROVIDER_X509_CERT_URL=$$GCP_AUTH_PROVIDER_X509_CERT_URL \
+          --build-arg GCP_AUTH_URI=$$GCP_AUTH_URI \
+          --build-arg GCP_CLIENT_EMAIL=$$GCP_CLIENT_EMAIL \
+          --build-arg GCP_CLIENT_ID=$$GCP_CLIENT_ID \
+          --build-arg GCP_CLIENT_X509_CERT_URL=$$GCP_CLIENT_X509_CERT_URL \
+          --build-arg GCP_PRIVATE_KEY=$$GCP_PRIVATE_KEY \
+          --build-arg GCP_PRIVATE_KEY_ID=$$GCP_PRIVATE_KEY_ID \
+          --build-arg GCP_PROJECT_ID=$$GCP_PROJECT_ID \
+          --build-arg GCP_TOKEN_URI=$$GCP_TOKEN_URI \
+          --build-arg GCP_TYPE=$$GCP_TYPE \
+          --build-arg GCP_UNIVERSE_DOMAIN=$$GCP_UNIVERSE_DOMAIN \
+          --build-arg NUM_WORKERS=$$NUM_WORKERS \
+          --build-arg OPENAI_API_KEY=$$OPENAI_API_KEY \
+          --build-arg QOLABA_B2B_API_URL=$$QOLABA_B2B_API_URL \
+          --build-arg SDXL_API_KEY=$$SDXL_API_KEY \
+          --build-arg ENVIRONMENT=$$ENVIRONMENT \
+          --build-arg CDN_API=$$CDN_API \
+          .  
     secretEnv:
       - 'TOKEN_ID'
       - 'TOKEN_SECRET'
