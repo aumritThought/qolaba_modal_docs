@@ -35,7 +35,6 @@ steps:
           --build-arg GCP_TOKEN_URI=$$GCP_TOKEN_URI \
           --build-arg GCP_TYPE=$$GCP_TYPE \
           --build-arg GCP_UNIVERSE_DOMAIN=$$GCP_UNIVERSE_DOMAIN \
-          --build-arg HEY_GEN_KEY=$$HEY_GEN_KEY \
           --build-arg NUM_WORKERS=$$NUM_WORKERS \
           --build-arg OPENAI_API_KEY=$$OPENAI_API_KEY \
           --build-arg QOLABA_B2B_API_URL=$$QOLABA_B2B_API_URL \
@@ -47,7 +46,7 @@ steps:
       'TOKEN_ID', 'TOKEN_SECRET', 'API_KEY', 'BUCKET_NAME', 'CLAUDE_API_KEY', 'DID_KEY', 'ELEVENLABS_API_KEY',
       'GCP_AUTH_PROVIDER_X509_CERT_URL', 'GCP_AUTH_URI', 'GCP_CLIENT_EMAIL', 'GCP_CLIENT_ID',
       'GCP_CLIENT_X509_CERT_URL', 'GCP_PRIVATE_KEY', 'GCP_PRIVATE_KEY_ID', 'GCP_PROJECT_ID',
-      'GCP_TOKEN_URI', 'GCP_TYPE', 'GCP_UNIVERSE_DOMAIN', 'HEY_GEN_KEY', 'NUM_WORKERS',
+      'GCP_TOKEN_URI', 'GCP_TYPE', 'GCP_UNIVERSE_DOMAIN', 'NUM_WORKERS',
       'OPENAI_API_KEY', 'QOLABA_B2B_API_URL', 'SDXL_API_KEY', 'ENVIRONMENT', 'CDN_API'
     ]
   - name: gcr.io/cloud-builders/docker
@@ -107,8 +106,6 @@ availableSecrets:
       env: 'GCP_TYPE'
     - versionName: projects/$PROJECT_ID/secrets/GCP_UNIVERSE_DOMAIN/versions/latest
       env: 'GCP_UNIVERSE_DOMAIN'
-    - versionName: projects/$PROJECT_ID/secrets/HEY_GEN_KEY/versions/latest
-      env: 'HEY_GEN_KEY'
     - versionName: projects/$PROJECT_ID/secrets/NUM_WORKERS/versions/latest
       env: 'NUM_WORKERS'
     - versionName: projects/$PROJECT_ID/secrets/OPENAI_API_KEY/versions/latest
