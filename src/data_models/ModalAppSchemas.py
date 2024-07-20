@@ -188,16 +188,16 @@ class AudioParameters(BaseModel):
     style: float = Query(default=0.0,ge=0, le=1)
     use_speaker_boost : Optional[bool] = True 
 
-    @field_validator("voice_id")
-    def validate_voice_id(cls, v):
-        set_api_key(os.environ["ELEVENLABS_API_KEY"])
-        voices_data : List[Voice] = voices()
-        voice_dict=[]
-        for i in voices_data:
-            voice_dict.append(i.voice_id)
-        if v not in voice_dict:
-            raise Exception(ELEVENLABS_ERROR, VOICE_ID_ERROR_MSG)
-        return v
+    # @field_validator("voice_id")
+    # def validate_voice_id(cls, v):
+    #     set_api_key(os.environ["ELEVENLABS_API_KEY"])
+    #     voices_data : List[Voice] = voices()
+    #     voice_dict=[]
+    #     for i in voices_data:
+    #         voice_dict.append(i.voice_id)
+    #     if v not in voice_dict:
+    #         raise Exception(ELEVENLABS_ERROR, VOICE_ID_ERROR_MSG)
+    #     return v
 
 class VoiceData(BaseModel):
     category: Optional[List[str]]=["premade"]
