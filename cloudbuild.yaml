@@ -16,7 +16,7 @@ steps:
       - '-c'
       - |
         docker build \
-          -f Dockerfile \  
+          -f Dockerfile \
           -t $_AR_HOSTNAME/$PROJECT_ID/cloud-run-source-deploy/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA \
           --build-arg TOKEN_ID=$$TOKEN_ID \
           --build-arg TOKEN_SECRET=$$TOKEN_SECRET \
@@ -42,7 +42,7 @@ steps:
           --build-arg SDXL_API_KEY=$$SDXL_API_KEY \
           --build-arg ENVIRONMENT=$$ENVIRONMENT \
           --build-arg CDN_API=$$CDN_API \
-          .  
+          .
     secretEnv:
       - 'TOKEN_ID'
       - 'TOKEN_SECRET'
@@ -69,11 +69,10 @@ steps:
       - 'ENVIRONMENT'
       - 'CDN_API'
   
-  - name: gcr.io/cloud-builders/docker
+  - name: 'gcr.io/cloud-builders/docker'
     args:
       - push
-      - >-
-        $_AR_HOSTNAME/$PROJECT_ID/cloud-run-source-deploy/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA
+      - $_AR_HOSTNAME/$PROJECT_ID/cloud-run-source-deploy/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA
     id: Push
   
   - name: 'gcr.io/cloud-builders/gke-deploy'
@@ -84,8 +83,7 @@ steps:
       - --cluster=${_CLUSTER_NAME}
 
 images:
-  - >-
-    $_AR_HOSTNAME/$PROJECT_ID/cloud-run-source-deploy/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA
+  - $_AR_HOSTNAME/$PROJECT_ID/cloud-run-source-deploy/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA
 
 availableSecrets:
   secretManager:
