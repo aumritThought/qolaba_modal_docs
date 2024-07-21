@@ -8,7 +8,7 @@ substitutions:
   _AR_HOSTNAME: us-central1-docker.pkg.dev
   _CLUSTER_LOCATION: us-central1
   _CLUSTER_NAME: modal-fastapi-server
-  
+
 steps:
   - name: 'gcr.io/cloud-builders/docker'
     entrypoint: 'bash'
@@ -16,7 +16,7 @@ steps:
       - '-c'
       - |
         docker build \
-          -t $$_AR_HOSTNAME/$PROJECT_ID/cloud-run-source-deploy/$REPO_NAME/$$_SERVICE_NAME:$COMMIT_SHA \
+          -t $_AR_HOSTNAME/$PROJECT_ID/cloud-run-source-deploy/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA \
           --build-arg TOKEN_ID="$$TOKEN_ID" \
           --build-arg TOKEN_SECRET="$$TOKEN_SECRET" \
           --build-arg API_KEY="$$API_KEY" \
