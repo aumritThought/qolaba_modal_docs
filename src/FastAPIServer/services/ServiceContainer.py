@@ -22,7 +22,8 @@ class ServiceContainer(containers.DeclarativeContainer):
 
 @synchronizer.create_blocking
 async def list_apps() -> list[str]:
-    client = await _Client.from_env()
+    config = {'server_url': 'https://api.modal.com', 'token_id': os.environ["TOKEN_ID"], 'token_secret': os.environ["TOKEN_SECRET"], 'task_id': None, "task_secret" : None}
+    client = await _Client.from_env(config)
     env = ensure_env(os.environ["environment"])
 
     res: api_pb2.AppListResponse = await client.stub.AppList(
