@@ -1,0 +1,68 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: modal-fastapi-server
+  labels:
+    app: modal-fastapi-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: modal-fastapi-server
+  template:
+    metadata:
+      labels:
+        app: modal-fastapi-server
+    spec:
+      containers:
+      - name: modal-fastapi-server
+        image: ${_IMAGE_NAME}
+        ports:
+        - containerPort: 9000
+        resources:
+          requests:
+            cpu: "4"
+            memory: "14Gi"
+          limits:
+            cpu: "4"
+            memory: "16Gi"
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: modal-fastapi-server-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: modal-fastapi-server
+  minReplicas: 1
+  maxReplicas: 2
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 80
+
+---
+apiVersion: "v1"
+kind: "Service"
+metadata:
+  name: "modal-fastapi-server-service"
+  namespace: "default"
+  labels:
+    app: "modal-fastapi-server"
+    app.kubernetes.io/managed-by: "gcp-cloud-build-deploy"
+spec:
+  ports:
+  - protocol: "TCP"
+    port: 80
+    targetPort: 9000
+  selector:
+    app: "modal-fastapi-server"
+  type: "LoadBalancer"
+  loadBalancerIP: ""
