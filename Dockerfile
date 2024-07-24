@@ -71,8 +71,8 @@ ENV QOLABA_B2B_API_URL=${QOLABA_B2B_API_URL}
 ENV SDXL_API_KEY=${SDXL_API_KEY}
 ENV environment=${ENVIRONMENT}
 ENV CDN_API=${CDN_API}
-
-RUN echo $TOKEN_ID
+ENV TOKEN_ID=${TOKEN_ID}
+ENV TOKEN_SECRET=${TOKEN_SECRET}
 
 # Rest of your Dockerfile instructions
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
