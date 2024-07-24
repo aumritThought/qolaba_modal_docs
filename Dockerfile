@@ -72,8 +72,6 @@ ENV SDXL_API_KEY=${SDXL_API_KEY}
 ENV environment=${ENVIRONMENT}
 ENV CDN_API=${CDN_API}
 
-RUN echo $TOKEN_ID
-
 # Rest of your Dockerfile instructions
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
