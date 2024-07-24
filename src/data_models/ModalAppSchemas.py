@@ -51,6 +51,7 @@ class TimeData(BaseModel):
 class TaskResponse(BaseModel):
     result : Any
     Has_NSFW_Content : list[bool]
+    low_res_urls : Optional[list[str]] = []
     time : TimeData
     extension : str | None
 
