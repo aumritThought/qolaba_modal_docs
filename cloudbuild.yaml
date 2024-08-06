@@ -6,9 +6,56 @@ substitutions:
   _SERVICE_NAME: modal-fastapi-sls-server
   _DEPLOY_REGION: us-central1
   _AR_HOSTNAME: us-central1-docker.pkg.dev
-
+  _PROD_SERVICE_NAME: modal-fastapi-sls-server-prod
+  _DEV_SERVICE_NAME: modal-fastapi-sls-server
 
 steps:
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        if [[ "$BRANCH_NAME" == "master" ]]; then
+          echo "Using main alias"
+          echo "main" > /workspace/secret_alias.txt
+        else
+          echo "Using dev alias"
+          echo "dev" > /workspace/secret_alias.txt
+        fi
+
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        export _SECRET_ALIAS=$(cat /workspace/secret_alias.txt)
+        echo "Secret alias: $$_SECRET_ALIAS"
+
+        gcloud secrets versions access $$_SECRET_ALIAS --secret="TOKEN_ID" > /workspace/TOKEN_ID.txt
+        gcloud secrets versions access $$_SECRET_ALIAS --secret="TOKEN_SECRET" > /workspace/TOKEN_SECRET.txt
+        gcloud secrets versions access $$_SECRET_ALIAS --secret="API_KEY" > /workspace/API_KEY.txt
+        gcloud secrets versions access $$_SECRET_ALIAS --secret="BUCKET_NAME" > /workspace/BUCKET_NAME.txt
+        gcloud secrets versions access $$_SECRET_ALIAS --secret="CLAUDE_API_KEY" > /workspace/CLAUDE_API_KEY.txt
+        gcloud secrets versions access $$_SECRET_ALIAS --secret="DID_KEY" > /workspace/DID_KEY.txt
+        gcloud secrets versions access $$_SECRET_ALIAS --secret="ELEVENLABS_API_KEY" > /workspace/ELEVENLABS_API_KEY.txt
+        gcloud secrets versions access $$_SECRET_ALIAS --secret="GCP_AUTH_PROVIDER_X509_CERT_URL" > /workspace/GCP_AUTH_PROVIDER_X509_CERT_URL.txt
+        gcloud secrets versions access $$_SECRET_ALIAS --secret="GCP_AUTH_URI" > /workspace/GCP_AUTH_URI.txt
+        gcloud secrets versions access $$_SECRET_ALIAS --secret="GCP_CLIENT_EMAIL" > /workspace/GCP_CLIENT_EMAIL.txt
+        gcloud secrets versions access $$_SECRET_ALIAS --secret="GCP_CLIENT_ID" > /workspace/GCP_CLIENT_ID.txt
+        gcloud secrets versions access $$_SECRET_ALIAS --secret="GCP_CLIENT_X509_CERT_URL" > /workspace/GCP_CLIENT_X509_CERT_URL.txt
+        gcloud secrets versions access $$_SECRET_ALIAS --secret="GCP_PRIVATE_KEY" > /workspace/GCP_PRIVATE_KEY.txt
+        gcloud secrets versions access $$_SECRET_ALIAS --secret="GCP_PRIVATE_KEY_ID" > /workspace/GCP_PRIVATE_KEY_ID.txt
+        gcloud secrets versions access $$_SECRET_ALIAS --secret="GCP_PROJECT_ID" > /workspace/GCP_PROJECT_ID.txt
+        gcloud secrets versions access $$_SECRET_ALIAS --secret="GCP_TOKEN_URI" > /workspace/GCP_TOKEN_URI.txt
+        gcloud secrets versions access $$_SECRET_ALIAS --secret="GCP_TYPE" > /workspace/GCP_TYPE.txt
+        gcloud secrets versions access $$_SECRET_ALIAS --secret="GCP_UNIVERSE_DOMAIN" > /workspace/GCP_UNIVERSE_DOMAIN.txt
+        gcloud secrets versions access $$_SECRET_ALIAS --secret="NUM_WORKERS" > /workspace/NUM_WORKERS.txt
+        gcloud secrets versions access $$_SECRET_ALIAS --secret="OPENAI_API_KEY" > /workspace/OPENAI_API_KEY.txt
+        gcloud secrets versions access $$_SECRET_ALIAS --secret="QOLABA_B2B_API_URL" > /workspace/QOLABA_B2B_API_URL.txt
+        gcloud secrets versions access $$_SECRET_ALIAS --secret="SDXL_API_KEY" > /workspace/SDXL_API_KEY.txt
+        gcloud secrets versions access $$_SECRET_ALIAS --secret="environment_dev" > /workspace/ENVIRONMENT.txt
+        gcloud secrets versions access $$_SECRET_ALIAS --secret="CDN_API" > /workspace/CDN_API.txt
+
   - name: 'gcr.io/cloud-builders/docker'
     entrypoint: 'bash'
     args:
@@ -16,10 +63,31 @@ steps:
       - |
         docker build \
           -t $_AR_HOSTNAME/$PROJECT_ID/cloud-run-source-deploy/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA \
-          --build-arg TOKEN_ID=$$TOKEN_ID \
-          --build-arg TOKEN_SECRET=$$TOKEN_SECRET \
+          --build-arg TOKEN_ID="$(cat /workspace/TOKEN_ID.txt)" \
+          --build-arg TOKEN_SECRET="$(cat /workspace/TOKEN_SECRET.txt)" \
+          --build-arg API_KEY="$(cat /workspace/API_KEY.txt)" \
+          --build-arg BUCKET_NAME="$(cat /workspace/BUCKET_NAME.txt)" \
+          --build-arg CLAUDE_API_KEY="$(cat /workspace/CLAUDE_API_KEY.txt)" \
+          --build-arg DID_KEY="$(cat /workspace/DID_KEY.txt)" \
+          --build-arg ELEVENLABS_API_KEY="$(cat /workspace/ELEVENLABS_API_KEY.txt)" \
+          --build-arg GCP_AUTH_PROVIDER_X509_CERT_URL="$(cat /workspace/GCP_AUTH_PROVIDER_X509_CERT_URL.txt)" \
+          --build-arg GCP_AUTH_URI="$(cat /workspace/GCP_AUTH_URI.txt)" \
+          --build-arg GCP_CLIENT_EMAIL="$(cat /workspace/GCP_CLIENT_EMAIL.txt)" \
+          --build-arg GCP_CLIENT_ID="$(cat /workspace/GCP_CLIENT_ID.txt)" \
+          --build-arg GCP_CLIENT_X509_CERT_URL="$(cat /workspace/GCP_CLIENT_X509_CERT_URL.txt)" \
+          --build-arg GCP_PRIVATE_KEY="$(cat /workspace/GCP_PRIVATE_KEY.txt)" \
+          --build-arg GCP_PRIVATE_KEY_ID="$(cat /workspace/GCP_PRIVATE_KEY_ID.txt)" \
+          --build-arg GCP_PROJECT_ID="$(cat /workspace/GCP_PROJECT_ID.txt)" \
+          --build-arg GCP_TOKEN_URI="$(cat /workspace/GCP_TOKEN_URI.txt)" \
+          --build-arg GCP_TYPE="$(cat /workspace/GCP_TYPE.txt)" \
+          --build-arg GCP_UNIVERSE_DOMAIN="$(cat /workspace/GCP_UNIVERSE_DOMAIN.txt)" \
+          --build-arg NUM_WORKERS="$(cat /workspace/NUM_WORKERS.txt)" \
+          --build-arg OPENAI_API_KEY="$(cat /workspace/OPENAI_API_KEY.txt)" \
+          --build-arg QOLABA_B2B_API_URL="$(cat /workspace/QOLABA_B2B_API_URL.txt)" \
+          --build-arg SDXL_API_KEY="$(cat /workspace/SDXL_API_KEY.txt)" \
+          --build-arg ENVIRONMENT="$(cat /workspace/ENVIRONMENT.txt)" \
+          --build-arg CDN_API="$(cat /workspace/CDN_API.txt)" \
           .
-    secretEnv: ['TOKEN_ID', 'TOKEN_SECRET']
   
   - name: gcr.io/cloud-builders/docker
     args:
@@ -29,35 +97,24 @@ steps:
     id: Push
   
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
+    entrypoint: 'bash'
     args:
-      - run
-      - services
-      - update
-      - $_SERVICE_NAME
-      - '--platform=managed'
-      - >-
-        --image=$_AR_HOSTNAME/$PROJECT_ID/cloud-run-source-deploy/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA
-      - >-
-        --labels=managed-by=gcp-cloud-build-deploy-cloud-run,commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID
-      - '--region=$_DEPLOY_REGION'
-      - '--quiet'
+      - '-c'
+      - |
+        if [[ "$BRANCH_NAME" == "master" ]]; then
+          export DEPLOY_SERVICE_NAME=$_PROD_SERVICE_NAME
+        else
+          export DEPLOY_SERVICE_NAME=$_DEV_SERVICE_NAME
+        fi
+        
+        gcloud run services update $$DEPLOY_SERVICE_NAME \
+          --platform=managed \
+          --image=$_AR_HOSTNAME/$PROJECT_ID/cloud-run-source-deploy/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA \
+          --labels=managed-by=gcp-cloud-build-deploy-cloud-run,commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID \
+          --region=$_DEPLOY_REGION \
+          --quiet
     id: Deploy
-    entrypoint: gcloud
-
 
 images:
   - >-
     $_AR_HOSTNAME/$PROJECT_ID/cloud-run-source-deploy/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA
-
-availableSecrets:
-  secretManager:
-    - versionName: projects/$PROJECT_ID/secrets/TOKEN_ID/versions/latest
-      env: 'TOKEN_ID'
-    - versionName: projects/$PROJECT_ID/secrets/TOKEN_SECRET/versions/latest
-      env: 'TOKEN_SECRET'
-
-
-
-
-
-

@@ -241,10 +241,20 @@ def get_seed_generator(seed: int) -> torch.Generator:
     return generator
 
 
-
-
-    
-
+def compress_image(image : Imagetype, max_size : int = 100) -> bytes | str:
+    quality = 50
+    while True:
+        with io.BytesIO() as buffer:
+            image.save(buffer, format="WebP", quality=quality, optimize=True)
+            temp_output : bytes = buffer.getvalue()
+            size = buffer.getbuffer().nbytes
+        
+        if size/1024 <= max_size:
+            return temp_output
+        elif quality <= 20:  
+            return temp_output
+        else:
+            quality -= 10
     
 #API app utils
 def timing_decorator(func: callable) -> callable:

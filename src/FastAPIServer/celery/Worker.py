@@ -1,12 +1,15 @@
 from celery import Celery
-import time
+import time, io
 from celery.signals import worker_init, worker_process_init
-from src.utils.Constants import REDIS_URL, CELERY_RESULT_EXPIRATION_TIME, CELERY_MAX_RETRY, CELERY_SOFT_LIMIT
+from src.utils.Constants import REDIS_URL, CELERY_RESULT_EXPIRATION_TIME, CELERY_MAX_RETRY, CELERY_SOFT_LIMIT, OUTPUT_IMAGE_EXTENSION
 from src.data_models.ModalAppSchemas import APIInput, APITaskResponse, TaskResponse
 from celery.result import AsyncResult
 from src.FastAPIServer.services.ServiceContainer import ServiceContainer, ServiceRegistry
-from src.utils.Globals import upload_data_gcp
-
+from src.utils.Globals import upload_data_gcp, compress_image
+from PIL import Image
+import concurrent.futures
+from PIL import Image
+import io
 
 celery = Celery(
     "task_scheduler",
@@ -34,6 +37,16 @@ def initialize_shared_object():
     service_registry.register_internal_services() 
     
     pass
+
+def upload_image(index, image_data, extension, upscale=False):
+    url = upload_data_gcp(image_data, extension, upscale)
+    return index, url
+
+def upload_low_res_image(index, image_data, extension):
+    low_rs_image = Image.open(io.BytesIO(image_data))
+    low_rs_image = compress_image(low_rs_image)
+    url = upload_data_gcp(low_rs_image, extension)
+    return index, url
 
 @worker_process_init.connect
 def on_worker_init(**kwargs):
@@ -69,14 +82,34 @@ def create_task(parameters: dict) -> dict:
     else:
         raise Exception("Given APP Id is not available")
 
-    if(output_data.extension != None):
-        urls = []
-        for i in output_data.result:
-            urls.append(upload_data_gcp(i, output_data.extension, parameters.upscale))
-        output_data.result = urls
 
-    if(output_data == None or output_data == {} or output_data == ""):
-        raise Exception("Received an empty response from model")
+    if output_data.extension is not None:
+        urls = [None] * len(output_data.result)
+        low_res_urls = [None] * len(output_data.result)
+
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            full_res_futures = [executor.submit(upload_image, i, img, output_data.extension, parameters.upscale) 
+                                for i, img in enumerate(output_data.result)]
+
+            if output_data.extension == OUTPUT_IMAGE_EXTENSION:
+                low_res_futures = [executor.submit(upload_low_res_image, i, img, output_data.extension) 
+                                for i, img in enumerate(output_data.result)]
+            else:
+                low_res_futures = []
+
+            for future in concurrent.futures.as_completed(full_res_futures):
+                index, url = future.result()
+                urls[index] = url
+
+            for future in concurrent.futures.as_completed(low_res_futures):
+                index, url = future.result()
+                low_res_urls[index] = url
+
+        output_data.result = urls
+        output_data.low_res_urls = low_res_urls
+
+        if(output_data == None or output_data == {} or output_data == ""):
+            raise Exception("Received an empty response from model")
 
     time_required = time.time() - st
     
@@ -88,7 +121,7 @@ def create_task(parameters: dict) -> dict:
     task_response = APITaskResponse(
          status="SUCCESS",
          input = parameters.model_dump(),
-         output = {"result" : output_data.result, "Has_NSFW_Content" : output_data.Has_NSFW_Content},
+         output = {"result" : output_data.result, "Has_NSFW_Content" : output_data.Has_NSFW_Content, "low_res_urls" : output_data.low_res_urls},
          time_required = output_data.time.model_dump()
     )
 
