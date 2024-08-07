@@ -31,8 +31,8 @@ async def list_apps() -> list[str]:
     )
     list_apps = []
     for i in res.apps:
-        if i.state == 3 and i.object_entity == "ap":
-            list_apps.append(i.description)
+        # if i.state == 3 and i.object_entity == "ap":
+        list_apps.append(i.description)
 
     return list_apps
 

@@ -323,7 +323,7 @@ class OOTDiffusionParameters(BaseModel):
     batch:  int = Query(default = 1, ge = MIN_BATCH, le = MAX_BATCH)
     num_inference_steps: int = Query(default=30, ge=MIN_INFERENCE_STEPS, le=40)
     scale : int = Query(default=2, ge=1, le=5)
-    category : int = Literal[0, 1, 2]
+    category : Optional[Literal[0, 1, 2]] = 0
 
 class APITaskResponse(BaseModel):
     time_required : Optional[dict] = {}
