@@ -153,3 +153,4 @@ google-cloud-storage
 mistralai
 mediapipe
 anthropic==0.31.1
+replicate

@@ -18,3 +18,4 @@ modal==0.61.3
 diffusers
 transformers
 pydub
+replicate
