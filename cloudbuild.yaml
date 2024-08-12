@@ -55,7 +55,7 @@ steps:
         gcloud secrets versions access $$_SECRET_ALIAS --secret="SDXL_API_KEY" > /workspace/SDXL_API_KEY.txt
         gcloud secrets versions access $$_SECRET_ALIAS --secret="environment_dev" > /workspace/ENVIRONMENT.txt
         gcloud secrets versions access $$_SECRET_ALIAS --secret="CDN_API" > /workspace/CDN_API.txt
-
+        gcloud secrets versions access $$_SECRET_ALIAS --secret="REPLICATE_API_TOKEN" > /workspace/REPLICATE_API_TOKEN.txt
   - name: 'gcr.io/cloud-builders/docker'
     entrypoint: 'bash'
     args:
@@ -87,6 +87,7 @@ steps:
           --build-arg SDXL_API_KEY="$(cat /workspace/SDXL_API_KEY.txt)" \
           --build-arg ENVIRONMENT="$(cat /workspace/ENVIRONMENT.txt)" \
           --build-arg CDN_API="$(cat /workspace/CDN_API.txt)" \
+          --build-arg CDN_API="$(cat /workspace/REPLICATE_API_TOKEN.txt)" \
           .
   
   - name: gcr.io/cloud-builders/docker
