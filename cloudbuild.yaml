@@ -87,7 +87,7 @@ steps:
           --build-arg SDXL_API_KEY="$(cat /workspace/SDXL_API_KEY.txt)" \
           --build-arg ENVIRONMENT="$(cat /workspace/ENVIRONMENT.txt)" \
           --build-arg CDN_API="$(cat /workspace/CDN_API.txt)" \
-          --build-arg CDN_API="$(cat /workspace/REPLICATE_API_TOKEN.txt)" \
+          --build-arg REPLICATE_API_TOKEN="$(cat /workspace/REPLICATE_API_TOKEN.txt)" \
           .
   
   - name: gcr.io/cloud-builders/docker
