@@ -303,13 +303,26 @@ app_dict = {
         "model_name" : "dalle_text2image" 
     },
     "ap-fGhKl3mfkdlpqrsTuvwxYz": {
-        "app_id" : "fluxtext2image_api",
+        "app_id" : "fluxprotext2image_api",
         "init_parameters" : {
         },
-        "model_name" : "flux_text2image" 
+        "model_name" : "fluxpro_text2image" 
+    },
+    "ap-fGhKl3mfkdlpqrtsUVWcba": {
+        "app_id" : "fluxdevtext2image_api",
+        "init_parameters" : {
+        },
+        "model_name" : "fluxdev_text2image" 
     },
 
 
+
+    "ap-fGhKl3mfkdlpqrshuwwabc": {
+        "app_id" : "fluxdevimage2image_api",
+        "init_parameters" : {
+        },
+        "model_name" : "fluxdev_image2image" 
+    },
     "ap-Jf2aKs8dPqXzRb1Yv6hN7L": {
         "app_id" : "SDXL_Image_To_Image_modal",
         "init_parameters" : {
