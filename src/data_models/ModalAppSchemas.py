@@ -83,6 +83,12 @@ class FluxText2ImageParameters(BaseModel):
     file_url : Optional[str] = None
     output_quality : Optional[int] = 100
     strength : float = Query(default = 0.7, gt = MIN_STRENGTH, le = MAX_STRENGTH)
+
+    @model_validator(mode='before')
+    def validate_params(self):
+        print(self)
+        self["guidance_scale"] = 2 + ((self["guidance_scale"] - 4)/ 8) * 3
+        return self
     
 class SDXLText2ImageParameters(BaseModel):
     height: int = Query(ge = MIN_HEIGHT, le = MAX_HEIGHT)
