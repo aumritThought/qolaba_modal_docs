@@ -70,8 +70,20 @@ class TaskResponse(BaseModel):
 #     negative_prompt: Optional[str] = " "
 #     lora_scale : float = Query(default = 0.5, gt = 0, le = 1)
     
-
-
+class FluxText2ImageParameters(BaseModel):
+    height: int = Query(default=1024, ge = MIN_HEIGHT, le = MAX_HEIGHT)
+    width: int = Query(default=1024, ge=MIN_HEIGHT, le = MAX_HEIGHT)
+    num_inference_steps: int = Query(ge = MIN_INFERENCE_STEPS, le = MAX_INFERENCE_STEPS) 
+    guidance_scale:  float = Query(ge = 2, le = 5)
+    batch:  int = Query(ge = MIN_BATCH, le = MAX_BATCH)
+    prompt: str
+    interval : float = Query(default=2, ge = 1, le = 4)
+    safety_tolerance : float = Query(default=2, ge = 1, le = 5)
+    aspect_ratio : Optional[str] = "1:1"
+    file_url : Optional[str] = None
+    output_quality : Optional[int] = 100
+    strength : float = Query(default = 0.7, gt = MIN_STRENGTH, le = MAX_STRENGTH)
+    
 class SDXLText2ImageParameters(BaseModel):
     height: int = Query(ge = MIN_HEIGHT, le = MAX_HEIGHT)
     width: int = Query(ge=MIN_HEIGHT, le = MAX_HEIGHT)

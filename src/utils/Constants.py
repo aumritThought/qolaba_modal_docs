@@ -142,6 +142,8 @@ DALLE_SUPPORTED_HW = ["1024x1024", "1024x1792", "1792x1024"]
 DALLE_SUPPORTED_QUALITY = ["hd", "standard"]
 dalle_supported_quality = constr(pattern = '|'.join(DALLE_SUPPORTED_QUALITY))
 
+#Flux ratio list
+FLUX_RATIO_LIST = ["1:1", "16:9", "2:3", "3:2", "4:5", "5:4", "9:16"]
 
 # Celery configuration
 CELERY_RESULT_EXPIRATION_TIME = 3600
@@ -300,8 +302,27 @@ app_dict = {
         },
         "model_name" : "dalle_text2image" 
     },
+    "ap-fGhKl3mfkdlpqrsTuvwxYz": {
+        "app_id" : "fluxprotext2image_api",
+        "init_parameters" : {
+        },
+        "model_name" : "fluxpro_text2image" 
+    },
+    "ap-fGhKl3mfkdlpqrtsUVWcba": {
+        "app_id" : "fluxdevtext2image_api",
+        "init_parameters" : {
+        },
+        "model_name" : "fluxdev_text2image" 
+    },
 
 
+
+    "ap-fGhKl3mfkdlpqrshuwwabc": {
+        "app_id" : "fluxdevimage2image_api",
+        "init_parameters" : {
+        },
+        "model_name" : "fluxdev_image2image" 
+    },
     "ap-Jf2aKs8dPqXzRb1Yv6hN7L": {
         "app_id" : "SDXL_Image_To_Image_modal",
         "init_parameters" : {

@@ -1,7 +1,7 @@
 from dependency_injector import containers, providers
 
 # Do not remove this line. It imports the classes from this file into memory because of that, it is easy to identify that they are subscriber of Iservice class
-from src.FastAPIServer.services.ApiServices import DIDVideoService, ElvenLabsAudio, OpenAIService, SDXLService, ClaudeAIService
+from src.FastAPIServer.services.ApiServices import DIDVideoService, ElvenLabsAudio, OpenAIService, SDXLService, ClaudeAIService, ReplicateService
 ####
 
 from src.FastAPIServer.services.IService import IService
@@ -49,11 +49,14 @@ class ServiceRegistry:
             service_name = f"{service_name}_api"
             setattr(self.container, service_name, providers.Singleton(cls))
             self.api_services.append(service_name)
-        for cls in list_apps():      
-            Model = Cls.lookup(cls, "stableDiffusion", environment_name = os.environ["environment"])
-            cls = f"{cls}_modal"
-            setattr(self.container, cls, Model)
-            self.modal_services.append(cls)
+        for cls in list_apps():
+            try:      
+                Model = Cls.lookup(cls, "stableDiffusion", environment_name = os.environ["environment"])
+                cls = f"{cls}_modal"
+                setattr(self.container, cls, Model)
+                self.modal_services.append(cls)
+            except:
+                pass
 
     def register_new_modal_service(self, app_name):
         app_list = list_apps()

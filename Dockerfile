@@ -18,6 +18,8 @@ ADD ./ /root/app
 
 WORKDIR /root/app
 
+RUN pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+
 RUN pip install -r req_docker_deploy.txt
 
 ARG TOKEN_ID
@@ -47,7 +49,7 @@ ARG QOLABA_B2B_API_URL
 ARG SDXL_API_KEY
 ARG ENVIRONMENT
 ARG CDN_API
-
+ARG REPLICATE_API_TOKEN
 # Set environment variables
 ENV API_KEY=${API_KEY}
 ENV BUCKET_NAME=${BUCKET_NAME}
@@ -73,6 +75,7 @@ ENV environment=${ENVIRONMENT}
 ENV CDN_API=${CDN_API}
 ENV TOKEN_ID=${TOKEN_ID}
 ENV TOKEN_SECRET=${TOKEN_SECRET}
+ENV REPLICATE_API_TOKEN=${REPLICATE_API_TOKEN}
 
 # Rest of your Dockerfile instructions
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
