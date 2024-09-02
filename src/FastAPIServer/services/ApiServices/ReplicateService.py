@@ -1,4 +1,4 @@
-from src.data_models.ModalAppSchemas import FluxText2ImageParameters
+from src.data_models.ModalAppSchemas import FluxText2ImageParameters, FluxImage2ImageParameters
 from src.utils.Globals import timing_decorator, make_request, get_image_from_url, prepare_response, convert_to_aspect_ratio
 from src.FastAPIServer.services.IService import IService
 from src.utils.Constants import OUTPUT_IMAGE_EXTENSION, FLUX_RATIO_LIST
@@ -101,7 +101,7 @@ class FluxDevImage2Image(IService):
     def __init__(self) -> None:
         super().__init__()
 
-    def make_api_request(self, parameters : FluxText2ImageParameters) -> str:
+    def make_api_request(self, parameters : FluxImage2ImageParameters) -> str:
         
         input = {
             "prompt": parameters.prompt,
@@ -123,7 +123,7 @@ class FluxDevImage2Image(IService):
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
-        parameters : FluxText2ImageParameters = FluxText2ImageParameters(**parameters)
+        parameters : FluxImage2ImageParameters = FluxImage2ImageParameters(**parameters)
 
         # aspect_ratio = convert_to_aspect_ratio(parameters.width, parameters.height)
 
