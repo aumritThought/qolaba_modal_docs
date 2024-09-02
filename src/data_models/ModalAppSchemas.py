@@ -82,11 +82,26 @@ class FluxText2ImageParameters(BaseModel):
     aspect_ratio : Optional[str] = "1:1"
     file_url : Optional[str] = None
     output_quality : Optional[int] = 100
+
+    @model_validator(mode='before')
+    def validate_params(self):
+        self["guidance_scale"] = 2 + ((self["guidance_scale"] - 4)/ 8) * 3
+        return self
+    
+class FluxImage2ImageParameters(BaseModel):
+    num_inference_steps: int = Query(ge = MIN_INFERENCE_STEPS, le = MAX_INFERENCE_STEPS) 
+    guidance_scale:  float = Query(ge = 2, le = 5)
+    batch:  int = Query(ge = MIN_BATCH, le = MAX_BATCH)
+    prompt: str
+    interval : float = Query(default=2, ge = 1, le = 4)
+    safety_tolerance : float = Query(default=2, ge = 1, le = 5)
+    aspect_ratio : Optional[str] = "1:1"
+    file_url : Optional[str] = None
+    output_quality : Optional[int] = 100
     strength : float = Query(default = 0.7, gt = MIN_STRENGTH, le = MAX_STRENGTH)
 
     @model_validator(mode='before')
     def validate_params(self):
-        print(self)
         self["guidance_scale"] = 2 + ((self["guidance_scale"] - 4)/ 8) * 3
         return self
     
