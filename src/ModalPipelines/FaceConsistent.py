@@ -1,4 +1,4 @@
-from modal import Stub, method, Volume, Secret
+from modal import App, method, Volume, Secret
 from src.data_models.Configuration import stub_dictionary
 from src.data_models.ModalAppSchemas import StubNames, InitParameters, FaceConsistentParameters
 from src.utils.Globals import get_base_image, SafetyChecker, generate_image_urls, prepare_response, get_image_from_url, get_refiner
@@ -11,9 +11,9 @@ import numpy as np
 
 stub_name = StubNames().face_consistent
 
-stub = Stub(stub_name)
+app = App(stub_name)
 
-vol = Volume.persisted(VOLUME_NAME)
+vol = Volume.from_name(VOLUME_NAME)
 
 def download_face_model():
     os.chdir("../IP-Adapter")
@@ -36,14 +36,14 @@ def download_face_model():
 image = get_base_image().run_commands(
     "git clone https://github.com/tencent-ailab/IP-Adapter.git",
     "wget https://huggingface.co/h94/IP-Adapter-FaceID/resolve/main/ip-adapter-faceid_sdxl.bin",
-    "pip install --upgrade --force-reinstall onnxruntime-gpu --extra-index-url https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/"
+    "pip install --upgrade --force-reinstall onnxruntime-gpu --extra-index-url https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/",
 ).run_function(download_face_model, secrets= [Secret.from_name(SECRET_NAME)], gpu="a10g")
 
-stub.image = image
+app.image = image
 
 
 
-@stub.cls(gpu = stub_dictionary[stub_name].gpu, 
+@app.cls(gpu = stub_dictionary[stub_name].gpu, 
           container_idle_timeout = stub_dictionary[stub_name].container_idle_timeout,
           memory = stub_dictionary[stub_name].memory,
           volumes = {VOLUME_PATH: vol},

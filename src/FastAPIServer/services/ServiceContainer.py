@@ -10,7 +10,7 @@ from fastapi import HTTPException
 from modal.client import _Client
 from modal.environments import ensure_env
 from modal_proto import api_pb2
-from modal_utils.async_utils import synchronizer
+from modal._utils.async_utils import synchronizer
 import os
 from modal import Cls
 from transparent_background import Remover

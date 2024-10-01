@@ -1,4 +1,4 @@
-from modal import Stub, method, Volume, Secret
+from modal import App, method, Volume, Secret
 from src.data_models.Configuration import stub_dictionary
 from src.data_models.ModalAppSchemas import StubNames, InitParameters, UpscaleParameters
 from src.utils.Globals import get_base_image, SafetyChecker, generate_image_urls, prepare_response, get_image_from_url
@@ -11,17 +11,17 @@ from imaginairy.vendored.realesrgan import RealESRGANer
 
 stub_name = StubNames().ultrasharp_upscaler
 
-stub = Stub(stub_name)
+app = App(stub_name)
 
-vol = Volume.persisted(VOLUME_NAME)
+vol = Volume.from_name(VOLUME_NAME)
 
 image = get_base_image()
 
-stub.image = image
+app.image = image
 
 
 
-@stub.cls(gpu = stub_dictionary[stub_name].gpu, 
+@app.cls(gpu = stub_dictionary[stub_name].gpu, 
           container_idle_timeout = stub_dictionary[stub_name].container_idle_timeout,
           memory = stub_dictionary[stub_name].memory,
           volumes = {VOLUME_PATH: vol},

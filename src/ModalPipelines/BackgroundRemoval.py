@@ -1,4 +1,4 @@
-from modal import Stub, method, Volume, Secret
+from modal import App, method, Volume, Secret
 from src.data_models.Configuration import stub_dictionary
 from src.data_models.ModalAppSchemas import StubNames, BackGroundRemoval
 from src.utils.Globals import get_base_image, SafetyChecker, generate_image_urls, prepare_response, get_image_from_url
@@ -8,19 +8,19 @@ from transparent_background import Remover
 
 stub_name = StubNames().background_removal
 
-stub = Stub(stub_name)
+app = App(stub_name)
 
-vol = Volume.persisted(VOLUME_NAME)
+vol = Volume.from_name(VOLUME_NAME)
 
 image = get_base_image()
 
 def download_removal_model():
     Remover()
 
-stub.image = image.run_function(download_removal_model, secrets = [Secret.from_name(SECRET_NAME)])
+app.image = image.run_function(download_removal_model, secrets = [Secret.from_name(SECRET_NAME)])
 
 
-@stub.cls(gpu = stub_dictionary[stub_name].gpu, 
+@app.cls(gpu = stub_dictionary[stub_name].gpu, 
           container_idle_timeout = stub_dictionary[stub_name].container_idle_timeout,
           memory = stub_dictionary[stub_name].memory,
           volumes = {VOLUME_PATH: vol},

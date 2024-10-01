@@ -14,7 +14,7 @@ loguru
 google-cloud-storage
 mediapipe
 anthropic==0.31.1
-modal==0.61.3
+modal
 diffusers
 transformers
 pydub
