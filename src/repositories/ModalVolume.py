@@ -1,4 +1,4 @@
-from modal import Stub, Volume, Secret
+from modal import App, Volume, Secret
 from src.utils.Constants import *
 from src.utils.Globals import get_base_image
 import os
@@ -6,13 +6,13 @@ from diffusers import DiffusionPipeline
 import torch
 
 
-stub = Stub("volume-stub", secrets=[Secret.from_name("environment_configuration")])
+app = App("volume-stub", secrets=[Secret.from_name("environment_configuration")])
 
 image = get_base_image()
 
-vol = Volume.persisted(VOLUME_NAME)
+vol = Volume.from_name(VOLUME_NAME)
 
-@stub.function(volumes={VOLUME_PATH: vol} ,  image = image, timeout = 72000)
+@app.function(volumes={VOLUME_PATH: vol} ,  image = image, timeout = 72000)
 def download_models():
 
     if not os.path.isfile(SDXL_3DCARTOON_MODEL):
@@ -102,6 +102,6 @@ def download_models():
 
 
 
-@stub.local_entrypoint()
+@app.local_entrypoint()
 def run():
     download_models.remote()

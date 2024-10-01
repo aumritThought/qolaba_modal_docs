@@ -1,4 +1,4 @@
-from modal import Stub, method, Volume, Secret
+from modal import App, method, Volume, Secret
 import torch.version
 from src.data_models.Configuration import stub_dictionary
 from src.data_models.ModalAppSchemas import StubNames, OOTDiffusionParameters
@@ -128,9 +128,9 @@ class OOTDiffusion:
 
 stub_name = StubNames().oot_diffusion
 
-stub = Stub(stub_name)
+app = App(stub_name)
 
-vol = Volume.persisted(VOLUME_NAME)
+vol = Volume.from_name(VOLUME_NAME)
 
 def download_weights():
     os.chdir("../OOTDiffusion/")
@@ -165,11 +165,11 @@ image = get_base_image().run_commands(
 ],
 ).run_function(download_weights, secrets= [Secret.from_name(SECRET_NAME)], gpu="a10g")
 
-stub.image = image
+app.image = image
 
 
 
-@stub.cls(gpu = stub_dictionary[stub_name].gpu, 
+@app.cls(gpu = stub_dictionary[stub_name].gpu, 
           container_idle_timeout = stub_dictionary[stub_name].container_idle_timeout,
           memory = stub_dictionary[stub_name].memory,
           volumes = {VOLUME_PATH: vol},
