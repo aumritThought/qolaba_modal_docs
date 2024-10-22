@@ -3,8 +3,7 @@ from src.utils.Globals import timing_decorator, make_request, get_image_from_url
 from src.FastAPIServer.services.IService import IService
 from src.utils.Constants import OUTPUT_IMAGE_EXTENSION, FLUX_RATIO_LIST
 import concurrent.futures 
-import replicate
-
+import replicate, base64
 
 class FluxProText2Image(IService):
     def __init__(self) -> None:
@@ -23,11 +22,14 @@ class FluxProText2Image(IService):
 
         response = replicate.run(
             "black-forest-labs/flux-pro",
-            input=input
+            input=input,
+            use_file_output=False
         )
-        response = make_request(response, "GET")
-
-        return response.content
+        header, encoded = str(response).split(",", 1)
+    
+        data = base64.b64decode(encoded)
+        
+        return data
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
@@ -68,11 +70,14 @@ class FluxDevText2Image(IService):
 
         response = replicate.run(
             "black-forest-labs/flux-dev",
-            input=input
+            input=input,
+            use_file_output=False
         )
-        response = make_request(response[0], "GET")
-
-        return response.content
+        header, encoded = str(response[0]).split(",", 1)
+    
+        data = base64.b64decode(encoded)
+        
+        return data
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
@@ -115,11 +120,14 @@ class FluxDevImage2Image(IService):
 
         response = replicate.run(
             "black-forest-labs/flux-dev",
-            input=input
+            input=input,
+            use_file_output=False
         )
-        response = make_request(response[0], "GET")
-
-        return response.content
+        header, encoded = str(response[0]).split(",", 1)
+    
+        data = base64.b64decode(str(encoded))
+        
+        return data
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
