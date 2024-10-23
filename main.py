@@ -69,8 +69,7 @@ def get_status(parameters : TaskStatus,
                 task_id=parameters.task_id,
                 input=parameters.model_dump(),
                 status=task_result.status,
-                output= task_result.result
-                ).model_dump()
+        ).model_dump()
         
         return task_Response
     else:
