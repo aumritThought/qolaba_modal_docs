@@ -70,6 +70,10 @@ class TaskResponse(BaseModel):
 #     negative_prompt: Optional[str] = " "
 #     lora_scale : float = Query(default = 0.5, gt = 0, le = 1)
     
+class MusicGenParameters(BaseModel):
+    prompt : str
+
+
 class FluxText2ImageParameters(BaseModel):
     height: int = Query(default=1024, ge = MIN_HEIGHT, le = MAX_HEIGHT)
     width: int = Query(default=1024, ge=MIN_HEIGHT, le = MAX_HEIGHT)
