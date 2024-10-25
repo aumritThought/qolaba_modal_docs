@@ -56,6 +56,7 @@ steps:
         gcloud secrets versions access $$_SECRET_ALIAS --secret="environment_dev" > /workspace/ENVIRONMENT.txt
         gcloud secrets versions access $$_SECRET_ALIAS --secret="CDN_API" > /workspace/CDN_API.txt
         gcloud secrets versions access $$_SECRET_ALIAS --secret="REPLICATE_API_TOKEN" > /workspace/REPLICATE_API_TOKEN.txt
+        gcloud secrets versions access $$_SECRET_ALIAS --secret="MUSIC_GEN_API_KEY" > /workspace/MUSIC_GEN_API_KEY.txt
   - name: 'gcr.io/cloud-builders/docker'
     entrypoint: 'bash'
     args:
@@ -88,6 +89,7 @@ steps:
           --build-arg ENVIRONMENT="$(cat /workspace/ENVIRONMENT.txt)" \
           --build-arg CDN_API="$(cat /workspace/CDN_API.txt)" \
           --build-arg REPLICATE_API_TOKEN="$(cat /workspace/REPLICATE_API_TOKEN.txt)" \
+          --build-arg MUSIC_GEN_API_KEY="$(cat /workspace/MUSIC_GEN_API_KEY.txt)" \
           .
   
   - name: gcr.io/cloud-builders/docker

@@ -108,6 +108,9 @@ MAX_FPS = 30
 MIN_FPS = 5
 
 
+#Music Gen config
+MUSIC_GEN_API = "https://api.musicfy.lol/v1/generate-music"
+
 #Did api configuration
 DID_TALK_API = "https://api.d-id.com/talks"
 DID_AVATAR_STYLES = ["circle", "normal", "closeUp"]
@@ -393,6 +396,12 @@ app_dict = {
         "init_parameters" : {
         },
         "model_name" : "Elven_labs_audio" 
+    },
+    "ap-a124dfigzcUFbggGAgchrr": {
+        "app_id" : "musicgen_api",
+        "init_parameters" : {
+        },
+        "model_name" : "MusicGen_audio" 
     },
     "ap-a1b2c3d4e5f6g7h8i9j0kq": {
         "app_id" : "SDXL_controlnet_modal",
