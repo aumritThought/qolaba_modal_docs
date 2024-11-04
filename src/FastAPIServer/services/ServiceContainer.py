@@ -1,7 +1,7 @@
 from dependency_injector import containers, providers
 
 # Do not remove this line. It imports the classes from this file into memory because of that, it is easy to identify that they are subscriber of Iservice class
-from src.FastAPIServer.services.ApiServices import MusicGene, DIDVideoService, ElvenLabsAudio, OpenAIService, SDXLService, ClaudeAIService, ReplicateService
+from src.FastAPIServer.services.ApiServices import IdeogramService, FalAIService, MusicGene, DIDVideoService, ElvenLabsAudio, OpenAIService, SDXLService, ClaudeAIService, ReplicateService
 ####
 
 from src.FastAPIServer.services.IService import IService

@@ -111,6 +111,49 @@ MIN_FPS = 5
 #Music Gen config
 MUSIC_GEN_API = "https://api.musicfy.lol/v1/generate-music"
 
+#Ideogram url
+IDEOGRAM_GENERATE_URL = "https://api.ideogram.ai/generate"
+IDEOGRAM_ASPECT_RATIO = {
+   "9:16" : "ASPECT_9_16",
+   "16:9" : "ASPECT_16_9",
+    "3:2" : "ASPECT_3_2",
+   "2:3" : "ASPECT_2_3",
+   "4:3" : "ASPECT_4_3",
+    "3:4" : "ASPECT_3_4",
+    "1:1" : "ASPECT_1_1",
+    "1:3" : "ASPECT_1_3",
+    "3:1" : "ASPECT_3_1"
+}
+
+#Recraft V3 style list
+RECRAFT_V3_STYLES = [
+    "any",
+    "realistic_image",
+    "digital_illustration",
+    "vector_illustration",
+    "realistic_image/b_and_w",
+    "realistic_image/hard_flash",
+    "realistic_image/hdr",
+    "realistic_image/natural_light",
+    "realistic_image/studio_portrait",
+    "realistic_image/enterprise",
+    "realistic_image/motion_blur",
+    "digital_illustration/pixel_art",
+    "digital_illustration/hand_drawn",
+    "digital_illustration/grain",
+    "digital_illustration/infantile_sketch",
+    "digital_illustration/2d_art_poster",
+    "digital_illustration/handmade_3d",
+    "digital_illustration/hand_drawn_outline",
+    "digital_illustration/engraving_color",
+    "digital_illustration/2d_art_poster_2",
+    "vector_illustration/engraving",
+    "vector_illustration/line_art",
+    "vector_illustration/line_circuit",
+    "vector_illustration/linocut"
+]
+recraft_v3_style_cond = constr(pattern = '|'.join(RECRAFT_V3_STYLES))
+
 #Did api configuration
 DID_TALK_API = "https://api.d-id.com/talks"
 DID_AVATAR_STYLES = ["circle", "normal", "closeUp"]
@@ -306,22 +349,51 @@ app_dict = {
         "model_name" : "dalle_text2image" 
     },
     "ap-fGhKl3mfkdlpqrsTuvwxYz": {
-        "app_id" : "fluxprotext2image_api",
+        "app_id" : "falaifluxprotext2image_api",
         "init_parameters" : {
         },
         "model_name" : "fluxpro_text2image" 
     },
     "ap-fGhKl3mfkdlpqrtsUVWcba": {
-        "app_id" : "fluxdevtext2image_api",
+        "app_id" : "falaifluxdevtext2image_api",
         "init_parameters" : {
         },
         "model_name" : "fluxdev_text2image" 
     },
-
+    "ap-hJkLm4nqzxybwvUTSRdca": {
+        "app_id" : "ideogramtext2image_api",
+        "init_parameters" : {
+        },
+        "model_name" : "ideogram_text2image" 
+    },
+    "ap-jKlMn5opqzabcXyZtUVw": {
+        "app_id" : "falairefactorv3text2image_api",
+        "init_parameters" : {
+        },
+        "model_name" : "refactorv3_text2image" 
+    },
+    "ap-mNopQ8rstuvwXYZabcde": {
+        "app_id" : "falaisd35largetext2image_api",
+        "init_parameters" : {
+        },
+        "model_name" : "sd35_text2image" 
+    },
+    "ap-rStUv6xyzabcdPQRSefg": {
+        "app_id" : "falaisd35largeturbotext2image_api",
+        "init_parameters" : {
+        },
+        "model_name" : "sd35_turbo_text2image" 
+    },
+    "ap-nOpQr7stuvwxYzABcdef": {
+        "app_id" : "falaisd35mediumtext2image_api",
+        "init_parameters" : {
+        },
+        "model_name" : "sd35_medium_text2image" 
+    },
 
 
     "ap-fGhKl3mfkdlpqrshuwwabc": {
-        "app_id" : "fluxdevimage2image_api",
+        "app_id" : "falaifluxdevimage2image_api",
         "init_parameters" : {
         },
         "model_name" : "fluxdev_image2image" 
