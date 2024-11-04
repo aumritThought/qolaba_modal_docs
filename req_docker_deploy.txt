@@ -19,3 +19,4 @@ diffusers
 transformers
 pydub
 replicate
+fal-client
