@@ -97,6 +97,48 @@ class FalAIFluxDevText2Image(IService):
 
         return prepare_response(results, Has_NSFW_Content, 0, 0, OUTPUT_IMAGE_EXTENSION)
     
+class FalAIFluxschnellText2Image(IService):
+    def __init__(self) -> None:
+        super().__init__()
+
+    def make_api_request(self, parameters : FluxText2ImageParameters) -> str:
+        input = {
+            "prompt": parameters.prompt,
+            "image_size": {
+                    "width": parameters.height,
+                    "height": parameters.width
+            },
+            "num_inference_steps": 12,
+            "num_images": 1,
+            "enable_safety_checker": True
+        }
+        result = fal_client.subscribe(
+            "fal-ai/flux/schnell",
+            arguments=input,
+            with_logs=False,
+        )  
+        if(sum(result["has_nsfw_concepts"])==1):
+            raise Exception(IMAGE_GENERATION_ERROR, NSFW_CONTENT_DETECT_ERROR_MSG)
+
+        response = make_request(result["images"][0]["url"], "GET")
+
+        return response.content
+
+    @timing_decorator
+    def remote(self, parameters: dict) -> dict:
+        parameters : FluxText2ImageParameters = FluxText2ImageParameters(**parameters)
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
+            futures = []
+            for i in range(parameters.batch):
+                future = executor.submit(self.make_api_request, parameters)
+                futures.append(future)
+            
+            results = [future.result() for future in futures]
+
+        Has_NSFW_Content = [False] * parameters.batch
+
+        return prepare_response(results, Has_NSFW_Content, 0, 0, OUTPUT_IMAGE_EXTENSION)
 
 class FalAIFluxDevImage2Image(IService):
     def __init__(self) -> None:
