@@ -13,10 +13,12 @@ openai
 loguru
 google-cloud-storage
 mediapipe
-anthropic==0.31.1
+anthropic
 modal
 diffusers
 transformers
 pydub
 replicate
 fal-client
+google-cloud-aiplatform
+vertexai
