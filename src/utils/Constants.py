@@ -364,6 +364,12 @@ app_dict = {
         },
         "model_name" : "fluxdev_text2image" 
     },
+    "ap-jXyZa9bcdefghijklmnopq": {
+        "app_id" : "falaifluxschnelltext2image_api",
+        "init_parameters" : {
+        },
+        "model_name" : "fluxschnell_text2image" 
+    },
     "ap-hJkLm4nqzxybwvUTSRdca": {
         "app_id" : "ideogramtext2image_api",
         "init_parameters" : {
