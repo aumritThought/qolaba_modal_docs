@@ -1,5 +1,5 @@
 from src.data_models.ModalAppSchemas import FluxText2ImageParameters, FluxImage2ImageParameters, RecraftV3Text2ImageParameters, SDXLText2ImageParameters
-from src.utils.Globals import timing_decorator, prepare_response
+from src.utils.Globals import timing_decorator, prepare_response, make_request
 from src.FastAPIServer.services.IService import IService
 from src.utils.Constants import OUTPUT_IMAGE_EXTENSION, IMAGE_GENERATION_ERROR, NSFW_CONTENT_DETECT_ERROR_MSG
 import concurrent.futures 
@@ -159,15 +159,11 @@ class FalAIRefactorV3Text2Image(IService):
             "fal-ai/recraft-v3",
             arguments=input,
             with_logs=False,
-        )  
-        if(sum(result["has_nsfw_concepts"])==1):
-            raise Exception(IMAGE_GENERATION_ERROR, NSFW_CONTENT_DETECT_ERROR_MSG)
+        ) 
 
-        header, encoded = str(result["images"][0]["url"]).split(",", 1)
-    
-        data = base64.b64decode(encoded)
-        
-        return data
+        response = make_request(result["images"][0]["url"], "GET")
+
+        return response.content
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
