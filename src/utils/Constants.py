@@ -125,6 +125,10 @@ IDEOGRAM_ASPECT_RATIO = {
     "3:1" : "ASPECT_3_1"
 }
 
+#Imagegen aspect ratios
+IMAGEGEN_ASPECT_RATIOS = ["9:16", "16:9", "4:3", "3:4", "1:1"]
+
+
 #Recraft V3 style list
 RECRAFT_V3_STYLES = [
     "any",
@@ -390,7 +394,12 @@ app_dict = {
         },
         "model_name" : "sd35_medium_text2image" 
     },
-
+    "ap-n2p3fg3gsvbgnYeEEdef": {
+        "app_id" : "imagegentext2image_api",
+        "init_parameters" : {
+        },
+        "model_name" : "imagegen_text2image" 
+    },
 
     "ap-fGhKl3mfkdlpqrshuwwabc": {
         "app_id" : "falaifluxdevimage2image_api",
@@ -598,3 +607,6 @@ NSFW_CONTENT_DETECT_ERROR_MSG = "Request cancelled due to detection of NSFW cont
 
 IMAGE_FETCH_ERROR = "Image URL Error"
 IMAGE_FETCH_ERROR_MSG = "Given image type is not supported. Please try with JPG or PNG."
+
+IMAGEGEN_ERROR = "Google Imagegen Error"
+IMAGEGEN_ERROR_MSG = "Request cancelled due to detection of NSFW content or Prompt issues. Google Imagegen does not support the generation of Children. Please improve prompt accordingly."
