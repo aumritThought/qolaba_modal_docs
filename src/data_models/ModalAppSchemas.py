@@ -15,7 +15,7 @@ from src.utils.Constants import (
     MAX_COLOR, MIN_COLOR,
     MAX_FPS, MIN_FPS,
     HW_MULTIPLE,
-    MIN_SUPPORTED_AUDIO_FILE_ELEVENLABS, MAX_SUPPORTED_AUDIO_FILE_ELEVENLABS, gender_word,
+    MIN_SUPPORTED_AUDIO_FILE_ELEVENLABS, MAX_SUPPORTED_AUDIO_FILE_ELEVENLABS, gender_word, recraft_v3_style_cond,
     elevenlabs_accent_list, elevenlabs_age_list, elevenlabs_gender_list, dalle_supported_quality, sdxl_preset_list, did_expression_list)
 from src.utils.Constants import sdxl_model_string, controlnet_models
 from elevenlabs import voices, Voice, set_api_key
@@ -70,11 +70,24 @@ class TaskResponse(BaseModel):
 #     negative_prompt: Optional[str] = " "
 #     lora_scale : float = Query(default = 0.5, gt = 0, le = 1)
     
+class MusicGenParameters(BaseModel):
+    prompt : str
+
+class IdeoGramText2ImageParameters(BaseModel):
+    height: int = Query(default=1024, ge = MIN_HEIGHT, le = MAX_HEIGHT)
+    width: int = Query(default=1024, ge=MIN_HEIGHT, le = MAX_HEIGHT)
+    batch:  int = Query(ge = MIN_BATCH, le = MAX_BATCH)
+    prompt: str
+    negative_prompt: Optional[str] = " "
+    aspect_ratio : Optional[str] = "1:1"
+    style_type : Literal["AUTO", "GENERAL", "REALISTIC", "DESIGN", "RENDER_3D", "ANIME"] = "AUTO"
+    magic_prompt_option : Literal["AUTO", "ON", "OFF"] = "AUTO"
+
 class FluxText2ImageParameters(BaseModel):
     height: int = Query(default=1024, ge = MIN_HEIGHT, le = MAX_HEIGHT)
     width: int = Query(default=1024, ge=MIN_HEIGHT, le = MAX_HEIGHT)
-    num_inference_steps: int = Query(ge = MIN_INFERENCE_STEPS, le = MAX_INFERENCE_STEPS) 
-    guidance_scale:  float = Query(ge = 2, le = 5)
+    # num_inference_steps: int = Query(ge = MIN_INFERENCE_STEPS, le = MAX_INFERENCE_STEPS) 
+    # guidance_scale:  float = Query(ge = 2, le = 5)
     batch:  int = Query(ge = MIN_BATCH, le = MAX_BATCH)
     prompt: str
     interval : float = Query(default=2, ge = 1, le = 4)
@@ -83,14 +96,16 @@ class FluxText2ImageParameters(BaseModel):
     file_url : Optional[str] = None
     output_quality : Optional[int] = 100
 
-    @model_validator(mode='before')
-    def validate_params(self):
-        self["guidance_scale"] = 2 + ((self["guidance_scale"] - 4)/ 8) * 3
-        return self
-    
+class RecraftV3Text2ImageParameters(BaseModel):
+    height: int = Query(default=1024, ge = MIN_HEIGHT, le = MAX_HEIGHT)
+    width: int = Query(default=1024, ge=MIN_HEIGHT, le = MAX_HEIGHT)
+    batch:  int = Query(ge = MIN_BATCH, le = MAX_BATCH)
+    prompt: str
+    style : Optional[recraft_v3_style_cond] = "any" #type:ignore
+
 class FluxImage2ImageParameters(BaseModel):
-    num_inference_steps: int = Query(ge = MIN_INFERENCE_STEPS, le = MAX_INFERENCE_STEPS) 
-    guidance_scale:  float = Query(ge = 2, le = 5)
+    # num_inference_steps: int = Query(ge = MIN_INFERENCE_STEPS, le = MAX_INFERENCE_STEPS) 
+    # guidance_scale:  float = Query(ge = 2, le = 5)
     batch:  int = Query(ge = MIN_BATCH, le = MAX_BATCH)
     prompt: str
     interval : float = Query(default=2, ge = 1, le = 4)
@@ -100,10 +115,10 @@ class FluxImage2ImageParameters(BaseModel):
     output_quality : Optional[int] = 100
     strength : float = Query(default = 0.7, gt = MIN_STRENGTH, le = MAX_STRENGTH)
 
-    @model_validator(mode='before')
-    def validate_params(self):
-        self["guidance_scale"] = 2 + ((self["guidance_scale"] - 4)/ 8) * 3
-        return self
+    # @model_validator(mode='before')
+    # def validate_params(self):
+    #     self["guidance_scale"] = 2 + ((self["guidance_scale"] - 4)/ 8) * 3
+    #     return self
     
 class SDXLText2ImageParameters(BaseModel):
     height: int = Query(ge = MIN_HEIGHT, le = MAX_HEIGHT)

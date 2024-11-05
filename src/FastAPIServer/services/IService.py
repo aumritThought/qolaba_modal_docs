@@ -4,7 +4,9 @@ from src.utils.Constants import (
     STABILITY_API, 
     SDXL_INPAINT_URL,
     DID_TALK_API,  
-    SDXL_ENGINE_ID, 
+    SDXL_ENGINE_ID,
+    MUSIC_GEN_API, 
+    IDEOGRAM_GENERATE_URL,
     SDX3_URL)
 
 
@@ -30,6 +32,13 @@ class IService(ABC):
         self.did_api_key = os.environ["DID_KEY"]
         self.did_url = DID_TALK_API
 
+        #MusicGen 
+        self.music_gen_api_key = os.environ["MUSIC_GEN_API_KEY"]
+        self.music_gen_url = MUSIC_GEN_API
+
+        #IdeoGram
+        self.ideogram_url = IDEOGRAM_GENERATE_URL
+        self.ideogram_api_key = os.environ["IDEOGRAM_API_KEY"]
 
     @abstractmethod
     def remote(self, data):
