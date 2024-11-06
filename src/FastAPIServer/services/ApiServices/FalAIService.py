@@ -14,8 +14,8 @@ class FalAIFluxProText2Image(IService):
         input = {
             "prompt": parameters.prompt,
             "image_size": {
-                    "width": parameters.height,
-                    "height": parameters.width
+                    "width": parameters.width,
+                    "height": parameters.height
             },
             "safety_tolerance" : "2",
             "sync_mode": True,
@@ -60,8 +60,8 @@ class FalAIFluxDevText2Image(IService):
         input = {
             "prompt": parameters.prompt,
             "image_size": {
-                    "width": parameters.height,
-                    "height": parameters.width
+                    "width": parameters.width,
+                    "height": parameters.height
             },
             "safety_tolerance" : "2",
             "sync_mode": True,
@@ -105,8 +105,8 @@ class FalAIFluxschnellText2Image(IService):
         input = {
             "prompt": parameters.prompt,
             "image_size": {
-                    "width": parameters.height,
-                    "height": parameters.width
+                    "width": parameters.width,
+                    "height": parameters.height
             },
             "num_inference_steps": 12,
             "num_images": 1,
@@ -192,8 +192,8 @@ class FalAIRefactorV3Text2Image(IService):
         input = {
             "prompt": parameters.prompt,
             "image_size": {
-                    "width": parameters.height,
-                    "height": parameters.width
+                    "width": parameters.width,
+                    "height": parameters.height
             },
             "style" : parameters.style
         }
@@ -232,8 +232,8 @@ class FalAISD35LargeText2Image(IService):
             "prompt": parameters.prompt,
             "negative_prompt": parameters.negative_prompt,
             "image_size": {
-                "width": parameters.height,
-                "height": parameters.width
+                "width": parameters.width,
+                "height": parameters.height
             },
             "num_inference_steps": parameters.num_inference_steps,
             "guidance_scale": parameters.guidance_scale,
@@ -281,8 +281,8 @@ class FalAISD35LargeTurboText2Image(IService):
             "prompt": parameters.prompt,
             "negative_prompt": parameters.negative_prompt,
             "image_size": {
-                "width": parameters.height,
-                "height": parameters.width
+                "width": parameters.width,
+                "height": parameters.height
             },
             "num_inference_steps": 10,
             "guidance_scale": 3,
@@ -330,8 +330,8 @@ class FalAISD35MediumText2Image(IService):
             "prompt": parameters.prompt,
             "negative_prompt": parameters.negative_prompt,
             "image_size": {
-                "width": parameters.height,
-                "height": parameters.width
+                "width": parameters.width,
+                "height": parameters.height
             },
             "num_inference_steps": parameters.num_inference_steps,
             "guidance_scale": parameters.guidance_scale,
