@@ -33,7 +33,7 @@ class ImageGenText2Image(IService):
     def remote(self, parameters: dict) -> dict:
         parameters : IdeoGramText2ImageParameters = IdeoGramText2ImageParameters(**parameters)
 
-        parameters.aspect_ratio = convert_to_aspect_ratio(parameters.height, parameters.width)
+        parameters.aspect_ratio = convert_to_aspect_ratio(parameters.width, parameters.height)
         if(not (parameters.aspect_ratio in IMAGEGEN_ASPECT_RATIOS)):
             raise Exception("Invalid Height and width dimension")
         
