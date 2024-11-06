@@ -1,5 +1,5 @@
 from src.data_models.ModalAppSchemas import FluxText2ImageParameters, FluxImage2ImageParameters, RecraftV3Text2ImageParameters, SDXLText2ImageParameters
-from src.utils.Globals import timing_decorator, prepare_response
+from src.utils.Globals import timing_decorator, prepare_response, make_request
 from src.FastAPIServer.services.IService import IService
 from src.utils.Constants import OUTPUT_IMAGE_EXTENSION, IMAGE_GENERATION_ERROR, NSFW_CONTENT_DETECT_ERROR_MSG
 import concurrent.futures 
@@ -14,8 +14,8 @@ class FalAIFluxProText2Image(IService):
         input = {
             "prompt": parameters.prompt,
             "image_size": {
-                    "width": parameters.height,
-                    "height": parameters.width
+                    "width": parameters.width,
+                    "height": parameters.height
             },
             "safety_tolerance" : "2",
             "sync_mode": True,
@@ -60,8 +60,8 @@ class FalAIFluxDevText2Image(IService):
         input = {
             "prompt": parameters.prompt,
             "image_size": {
-                    "width": parameters.height,
-                    "height": parameters.width
+                    "width": parameters.width,
+                    "height": parameters.height
             },
             "safety_tolerance" : "2",
             "sync_mode": True,
@@ -97,6 +97,48 @@ class FalAIFluxDevText2Image(IService):
 
         return prepare_response(results, Has_NSFW_Content, 0, 0, OUTPUT_IMAGE_EXTENSION)
     
+class FalAIFluxschnellText2Image(IService):
+    def __init__(self) -> None:
+        super().__init__()
+
+    def make_api_request(self, parameters : FluxText2ImageParameters) -> str:
+        input = {
+            "prompt": parameters.prompt,
+            "image_size": {
+                    "width": parameters.width,
+                    "height": parameters.height
+            },
+            "num_inference_steps": 12,
+            "num_images": 1,
+            "enable_safety_checker": True
+        }
+        result = fal_client.subscribe(
+            "fal-ai/flux/schnell",
+            arguments=input,
+            with_logs=False,
+        )  
+        if(sum(result["has_nsfw_concepts"])==1):
+            raise Exception(IMAGE_GENERATION_ERROR, NSFW_CONTENT_DETECT_ERROR_MSG)
+
+        response = make_request(result["images"][0]["url"], "GET")
+
+        return response.content
+
+    @timing_decorator
+    def remote(self, parameters: dict) -> dict:
+        parameters : FluxText2ImageParameters = FluxText2ImageParameters(**parameters)
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
+            futures = []
+            for i in range(parameters.batch):
+                future = executor.submit(self.make_api_request, parameters)
+                futures.append(future)
+            
+            results = [future.result() for future in futures]
+
+        Has_NSFW_Content = [False] * parameters.batch
+
+        return prepare_response(results, Has_NSFW_Content, 0, 0, OUTPUT_IMAGE_EXTENSION)
 
 class FalAIFluxDevImage2Image(IService):
     def __init__(self) -> None:
@@ -150,8 +192,8 @@ class FalAIRefactorV3Text2Image(IService):
         input = {
             "prompt": parameters.prompt,
             "image_size": {
-                    "width": parameters.height,
-                    "height": parameters.width
+                    "width": parameters.width,
+                    "height": parameters.height
             },
             "style" : parameters.style
         }
@@ -159,15 +201,11 @@ class FalAIRefactorV3Text2Image(IService):
             "fal-ai/recraft-v3",
             arguments=input,
             with_logs=False,
-        )  
-        if(sum(result["has_nsfw_concepts"])==1):
-            raise Exception(IMAGE_GENERATION_ERROR, NSFW_CONTENT_DETECT_ERROR_MSG)
+        ) 
 
-        header, encoded = str(result["images"][0]["url"]).split(",", 1)
-    
-        data = base64.b64decode(encoded)
-        
-        return data
+        response = make_request(result["images"][0]["url"], "GET")
+
+        return response.content
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
@@ -194,8 +232,8 @@ class FalAISD35LargeText2Image(IService):
             "prompt": parameters.prompt,
             "negative_prompt": parameters.negative_prompt,
             "image_size": {
-                "width": parameters.height,
-                "height": parameters.width
+                "width": parameters.width,
+                "height": parameters.height
             },
             "num_inference_steps": parameters.num_inference_steps,
             "guidance_scale": parameters.guidance_scale,
@@ -243,8 +281,8 @@ class FalAISD35LargeTurboText2Image(IService):
             "prompt": parameters.prompt,
             "negative_prompt": parameters.negative_prompt,
             "image_size": {
-                "width": parameters.height,
-                "height": parameters.width
+                "width": parameters.width,
+                "height": parameters.height
             },
             "num_inference_steps": 10,
             "guidance_scale": 3,
@@ -292,8 +330,8 @@ class FalAISD35MediumText2Image(IService):
             "prompt": parameters.prompt,
             "negative_prompt": parameters.negative_prompt,
             "image_size": {
-                "width": parameters.height,
-                "height": parameters.width
+                "width": parameters.width,
+                "height": parameters.height
             },
             "num_inference_steps": parameters.num_inference_steps,
             "guidance_scale": parameters.guidance_scale,

@@ -36,7 +36,7 @@ class IdeoGramText2Image(IService):
     def remote(self, parameters: dict) -> dict:
         parameters : IdeoGramText2ImageParameters = IdeoGramText2ImageParameters(**parameters)
 
-        aspect_ratio = convert_to_aspect_ratio(parameters.height, parameters.width)
+        aspect_ratio = convert_to_aspect_ratio(parameters.width, parameters.height)
         if(not (aspect_ratio in IDEOGRAM_ASPECT_RATIO)):
             raise Exception("Invalid Height and width dimension")
         
