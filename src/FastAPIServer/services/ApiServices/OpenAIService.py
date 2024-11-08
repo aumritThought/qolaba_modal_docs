@@ -3,11 +3,11 @@ from src.utils.Globals import timing_decorator, make_request, prepare_response
 from openai import OpenAI
 from src.utils.Constants import DALLE_SUPPORTED_HW
 from src.FastAPIServer.services.IService import IService
-from src.utils.Constants import OUTPUT_IMAGE_EXTENSION, TTS_CHAR_COST, IMAGE_GENERATION_ERROR, NSFW_CONTENT_DETECT_ERROR_MSG
+from src.utils.Constants import OUTPUT_IMAGE_EXTENSION, TTS_CHAR_COST, IMAGE_GENERATION_ERROR, NSFW_CONTENT_DETECT_ERROR_MSG, COPYRIGHT_DETECTION_FUNCTION_CALLING_SCHEMA
 import concurrent.futures 
 from typing import Iterator
 import json, base64
-
+from openai.types.chat.chat_completion import ChatCompletion
 
 class DalleText2Image(IService):
     def __init__(self) -> None:
@@ -73,4 +73,40 @@ class OpenAITexttoSpeech(IService):
             yield json.dumps(data.model_dump())
         data = TTSOutput(output= None, cost=len(parameters.prompt)*TTS_CHAR_COST)
         yield json.dumps(data.model_dump())
+    
+
+class OpenAIImageCheck(IService):
+    def __init__(self) -> None:
+        super().__init__()
+        self.client = OpenAI(api_key = self.openai_api_key)
+        self.function_calling_schema = COPYRIGHT_DETECTION_FUNCTION_CALLING_SCHEMA
+
+    def remote(self, image_url: str) -> bool:
+        messages = [
+            {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "Please analyze below image. Analyze image in case of Real people or logos. For any other cases or fictional characters, you could return False."},
+                {
+                "type": "image_url",
+                "image_url": {
+                    "url": image_url,
+                    "detail": "low"
+                },
+                },
+            ],
+            }
+        ]
+        response : ChatCompletion = self.client.chat.completions.create(
+                    messages=messages,
+                    model="gpt-4o-mini",
+                    stream=False,
+                    temperature=0,
+                    tool_choice="required",
+                    tools=[self.function_calling_schema],
+                    parallel_tool_calls = False,
+                    max_tokens=500,
+                )
+
+        return json.loads(response.choices[0].message.tool_calls[0].function.arguments)["contains_protected_content"]
     
