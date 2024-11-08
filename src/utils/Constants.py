@@ -593,6 +593,45 @@ app_dict = {
     }
 }
 
+COPYRIGHT_DETECTION_FUNCTION_CALLING_SCHEMA = {
+    "type": "function",
+    "function": {
+        "name": "analyze_image_content",
+        "description": """
+Analyzes if an image contains any famous real people, or brand logos. 
+
+Return true if the image contains any of: 
+1) Famous real humans (e.g., actors, athletes, politicians, musicians, social media influencers like Taylor Swift, Brad Pitt, Cristiano Ronaldo etc.), 
+2) Famous brand logos (e.g., Nike swoosh, McDonald's golden arches, Apple logo, Adidas stripes, Coca-Cola text, etc.). 
+
+You must return false in any other category apart from above two.
+Return false if the image contains: 
+1) Any kind of cartoons or fictional characters (e.g., Batman, Ironman, Superman, Mario, etc.) that are not real people. You must provide false for any kind of non-real person or character.
+2) Regular people or crowds, 
+3) Generic objects or scenes, 
+4) Nature or landscapes, 
+5) Generic text or symbols, 
+6) Common animals or pets, 
+7) Regular buildings or architecture, 
+8) Generic clothing without visible brand logos, 
+""",
+    "parameters": {
+    "type": "object",
+    "properties": {
+        "contains_protected_content": {
+            "type": "boolean",
+            "description": "Returns true if any celebrities or famous logos are detected in the image. You must return false for generic content, regular people, non-real characters (like cartoons or fictional superheroes), or non-protected materials."
+        },
+        "reason" : {
+            "type" : "string",
+            "description" : "provide the reason in case of Image contains some real people or logos."
+        }
+    },
+    "required": ["contains_protected_content"]
+    }
+}
+}
+
 BUCKET_NAME = os.environ["BUCKET_NAME"]
 STAGING_API = f"https://storage.googleapis.com/{BUCKET_NAME}/"
 
