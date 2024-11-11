@@ -235,7 +235,6 @@ class AudioParameters(BaseModel):
     style: float = Query(default=0.0,ge=0, le=1)
     use_speaker_boost : Optional[bool] = True 
 
-
 class VoiceData(BaseModel):
     category: Optional[List[str]]=["premade"]
     description : Optional[str] = "Voice description"
