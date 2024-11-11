@@ -2,8 +2,6 @@ from pydantic import BaseModel, Field, field_validator, model_validator, constr
 from fastapi import Query
 from typing import  Optional, Any, List, Literal
 from src.utils.Constants import (
-    ELEVENLABS_ERROR, 
-    VOICE_ID_ERROR_MSG,
     MIN_HEIGHT, MAX_HEIGHT, 
     MAX_INFERENCE_STEPS, 
     MIN_INFERENCE_STEPS, 
@@ -18,8 +16,6 @@ from src.utils.Constants import (
     MIN_SUPPORTED_AUDIO_FILE_ELEVENLABS, MAX_SUPPORTED_AUDIO_FILE_ELEVENLABS, gender_word, recraft_v3_style_cond,
     elevenlabs_accent_list, elevenlabs_age_list, elevenlabs_gender_list, dalle_supported_quality, sdxl_preset_list, did_expression_list)
 from src.utils.Constants import sdxl_model_string, controlnet_models
-from elevenlabs import voices, Voice, set_api_key
-import os
 
 
 class StubNames(BaseModel):
@@ -233,21 +229,11 @@ class DesignParameters(BaseModel):
 
 class AudioParameters(BaseModel):
     voice_id : Optional[str] = "21m00Tcm4TlvDq8ikWAM"
+    public_id : Optional[str] = None
     stability: float = Query(default=0.5,ge=0, le=1)
     similarity_boost: float = Query(default=0.75,ge=0, le=1)
     style: float = Query(default=0.0,ge=0, le=1)
     use_speaker_boost : Optional[bool] = True 
-
-    # @field_validator("voice_id")
-    # def validate_voice_id(cls, v):
-    #     set_api_key(os.environ["ELEVENLABS_API_KEY"])
-    #     voices_data : List[Voice] = voices()
-    #     voice_dict=[]
-    #     for i in voices_data:
-    #         voice_dict.append(i.voice_id)
-    #     if v not in voice_dict:
-    #         raise Exception(ELEVENLABS_ERROR, VOICE_ID_ERROR_MSG)
-    #     return v
 
 class VoiceData(BaseModel):
     category: Optional[List[str]]=["premade"]
