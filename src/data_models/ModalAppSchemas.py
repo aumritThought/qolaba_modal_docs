@@ -17,7 +17,6 @@ from src.utils.Constants import (
     elevenlabs_accent_list, elevenlabs_age_list, elevenlabs_gender_list, dalle_supported_quality, sdxl_preset_list, did_expression_list)
 from src.utils.Constants import sdxl_model_string, controlnet_models
 
-
 class StubNames(BaseModel):
     sdxl_text_to_image: str = "SDXL_Text_To_Image"
     sdxl_image_to_image : str = "SDXL_Image_To_Image"
@@ -74,11 +73,13 @@ class IdeoGramText2ImageParameters(BaseModel):
     height: int = Query(default=1024, ge = MIN_HEIGHT, le = MAX_HEIGHT)
     width: int = Query(default=1024, ge=MIN_HEIGHT, le = MAX_HEIGHT)
     batch:  int = Query(ge = MIN_BATCH, le = MAX_BATCH)
-    prompt: str
+    prompt: Optional[str] = " "
     negative_prompt: Optional[str] = " "
     aspect_ratio : Optional[str] = "1:1"
     style_type : Literal["AUTO", "GENERAL", "REALISTIC", "DESIGN", "RENDER_3D", "ANIME"] = "AUTO"
     magic_prompt_option : Literal["AUTO", "ON", "OFF"] = "AUTO"
+    file_url : Optional[str | Any] = None
+    mask_url : Optional[str | Any] = None
 
 class FluxText2ImageParameters(BaseModel):
     height: int = Query(default=1024, ge = MIN_HEIGHT, le = MAX_HEIGHT)

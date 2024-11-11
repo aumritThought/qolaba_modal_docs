@@ -113,6 +113,7 @@ MUSIC_GEN_API = "https://api.musicfy.lol/v1/generate-music"
 
 #Ideogram url
 IDEOGRAM_GENERATE_URL = "https://api.ideogram.ai/generate"
+IDEOGRAM_EDIT_URL = "https://api.ideogram.ai/edit"
 IDEOGRAM_ASPECT_RATIO = {
    "9:16" : "ASPECT_9_16",
    "16:9" : "ASPECT_16_9",
@@ -523,7 +524,7 @@ app_dict = {
         "model_name" : "sketch_controlnet__image2image" 
     },
     "ap-7XmHk4LtVgFJq2cQoE3yB8": {
-        "app_id" : "sdxlinpainting_api", #"clipdropcleanupimage2image_api",
+        "app_id" : "ideograminpainting_api", #"clipdropcleanupimage2image_api",
         "init_parameters" : {
         },
         "model_name" : "clipdrop_cleanup_image2image" 

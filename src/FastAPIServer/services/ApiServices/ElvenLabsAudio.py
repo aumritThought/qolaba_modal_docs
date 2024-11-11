@@ -44,15 +44,15 @@ class ElvenLabsAudio(IService):
         voices = self.client.voices.get_all().voices
         for voice in voices:
             available_voice_ids.append(voice.voice_id)
-        print("stated processing", parameters.audio_parameters.voice_id)
+
         with voice_genration_lock:
-            print("inside processing", parameters.audio_parameters.voice_id)
-            if(not(parameters.audio_parameters.voice_id in available_voice_ids)):
-                for voice in self.client.voices.get_all().voices:
-                    if(voice.category == "professional"):
-                        self.client.voices.delete(voice.voice_id)
-                        self.client.voices.add_sharing_voice(public_user_id=parameters.audio_parameters.public_id, voice_id=parameters.audio_parameters.voice_id, new_name=self.generate_random_string())
-                        break
+            if(not(parameters.audio_parameters.public_id == None or parameters.audio_parameters.public_id == "")):
+                if(not(parameters.audio_parameters.voice_id in available_voice_ids)):
+                    for voice in self.client.voices.get_all().voices:
+                        if(voice.category == "professional"):
+                            self.client.voices.delete(voice.voice_id)
+                            self.client.voices.add_sharing_voice(public_user_id=parameters.audio_parameters.public_id, voice_id=parameters.audio_parameters.voice_id, new_name=self.generate_random_string())
+                            break
 
             voice = Voice(
                 voice_id = parameters.audio_parameters.voice_id,
@@ -67,7 +67,7 @@ class ElvenLabsAudio(IService):
             audio = self.client.generate(
                 text = parameters.prompt, voice = voice, model = "eleven_multilingual_v2"
             )
-            print("complete processing", parameters.audio_parameters.voice_id)
+
         audio = b"".join(audio)
         audio_length = self.get_audio_length(BytesIO(audio))
 
