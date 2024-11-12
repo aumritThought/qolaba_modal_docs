@@ -531,7 +531,7 @@ app_dict = {
     },
 
     "ap-L4vHj7YbXeT2qKoU1fW3G7": {
-        "app_id" : "sdxlreplacebackground_api",
+        "app_id" : "ideogramreplacebackground_api",
         "init_parameters" : {
         },
         "model_name" : "Replace_background_image2image" 

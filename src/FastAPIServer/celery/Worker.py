@@ -70,7 +70,7 @@ def create_task(parameters: dict) -> dict:
     app = service_registry.get_service(parameters.app_id)
 
     if(parameters.app_id in service_registry.api_services):
-        if(parameters.app_id == "sdxlreplacebackground_api"):
+        if(parameters.app_id == "ideogramreplacebackground_api"):
             output_data = TaskResponse(**app(container.bg_remover()).remote(parameters.parameters))
         else:
             output_data = TaskResponse(**app().remote(parameters.parameters))
