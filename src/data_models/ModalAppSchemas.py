@@ -378,6 +378,7 @@ class APIInput(BaseModel):
     celery: Optional[bool] = False
     inference_type : Optional[Literal["a10g", "a100", "h100"]] = "a10g"
     upscale : Optional[bool] = False
+    check_copyright_content : Optional[bool] = True
 
 class TaskStatus(BaseModel):
     task_id: Optional[str] = None

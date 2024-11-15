@@ -8,6 +8,8 @@ from src.utils.Constants import (
     MUSIC_GEN_API, 
     IDEOGRAM_GENERATE_URL,
     IDEOGRAM_EDIT_URL,
+    LEONARDO_IMAGE_GEN_URL,
+    LEONARDO_IMAGE_STATUS_URL,
     SDX3_URL)
 
 
@@ -41,6 +43,11 @@ class IService(ABC):
         self.ideogram_url = IDEOGRAM_GENERATE_URL
         self.ideogram_api_key = os.environ["IDEOGRAM_API_KEY"]
         self.ideogram_edit_url = IDEOGRAM_EDIT_URL
+
+        #Leonardo
+        self.leonardo_image_generation_url = LEONARDO_IMAGE_GEN_URL
+        self.leonardo_image_status_url = LEONARDO_IMAGE_STATUS_URL
+        self.leonardo_api_key = os.environ["LEONARDO_API_KEY"]
 
     @abstractmethod
     def remote(self, data):
