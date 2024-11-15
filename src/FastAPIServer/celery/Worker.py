@@ -111,10 +111,10 @@ def create_task(parameters: dict) -> dict:
             for future in concurrent.futures.as_completed(low_res_futures):
                 index, url = future.result()
                 low_res_urls[index] = url
-            
-            for future in concurrent.futures.as_completed(copyrighted_content_futures):
-                bool_data, index = future.result()
-                has_copyright_content[index] = bool_data
+            if(parameters.check_copyright_content == True):
+                for future in concurrent.futures.as_completed(copyrighted_content_futures):
+                    bool_data, index = future.result()
+                    has_copyright_content[index] = bool_data
         
         urls = [url for url, bool_val in zip(urls, has_copyright_content) if not bool_val]
         low_res_urls = [url for url, bool_val in zip(low_res_urls, has_copyright_content) if not bool_val]

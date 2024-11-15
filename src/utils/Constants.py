@@ -129,7 +129,9 @@ IDEOGRAM_ASPECT_RATIO = {
 #Imagegen aspect ratios
 IMAGEGEN_ASPECT_RATIOS = ["9:16", "16:9", "4:3", "3:4", "1:1"]
 
-
+#Leonardo Image generation Url
+LEONARDO_IMAGE_GEN_URL = 'https://cloud.leonardo.ai/api/rest/v1/generations'
+LEONARDO_IMAGE_STATUS_URL = "https://cloud.leonardo.ai/api/rest/v1/generations/"
 #Recraft V3 style list
 RECRAFT_V3_STYLES = [
     "any",
@@ -406,6 +408,12 @@ app_dict = {
         "init_parameters" : {
         },
         "model_name" : "imagegen_text2image" 
+    },
+    "ap-x7q8hj9kltmNoPqRzabc": {
+        "app_id" : "leonardotext2image_api",
+        "init_parameters" : {
+        },
+        "model_name" : "leonardo_text2image" 
     },
 
     "ap-fGhKl3mfkdlpqrshuwwabc": {
