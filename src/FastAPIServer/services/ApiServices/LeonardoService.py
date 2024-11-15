@@ -15,8 +15,8 @@ class LeonardoText2Image(IService):
             "contrast": 3.5,
             "prompt": parameters.prompt,
             "num_images": parameters.batch,
-            "width": parameters.height,
-            "height": parameters.width,
+            "width": parameters.width,
+            "height": parameters.height,
             "alchemy": False,
             "styleUUID": "556c1ee5-ec38-42e8-955a-1e82dad0ffa1",
             "enhancePrompt": False
