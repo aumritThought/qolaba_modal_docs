@@ -117,15 +117,13 @@ class IdeogramReplaceBackground(IService):
         self.remover = remover        
 
     def generate_image(self, parameters : IdeoGramText2ImageParameters) -> Imagetype:
-        import time
-        st = time.time()
         filtered_image = io.BytesIO()
         parameters.file_url.save(filtered_image, "JPEG")
 
         mask_filtered_image = io.BytesIO()
 
         parameters.mask_url.save(mask_filtered_image, "JPEG")
-        print(time.time()-st)
+
         headers = {
             "Api-Key": self.ideogram_api_key
         }
@@ -145,7 +143,7 @@ class IdeogramReplaceBackground(IService):
         response = make_request(self.ideogram_edit_url, method="POST", json_data=payload, headers=headers, files=files)
 
         response = make_request(response.json()["data"][0]["url"], "GET")
-        print(time.time()-st)
+
         return response.content
 
     @timing_decorator

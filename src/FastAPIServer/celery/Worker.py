@@ -71,7 +71,9 @@ def create_task(parameters: dict) -> dict:
 
     if(parameters.app_id in service_registry.api_services):
         if(parameters.app_id == "ideogramreplacebackground_api"):
-            output_data = TaskResponse(**app(container.bg_remover()).remote(parameters.parameters))
+            remover=container.bg_remover()
+            print(time.time()-st)
+            output_data = TaskResponse(**app(remover).remote(parameters.parameters))
         else:
             output_data = TaskResponse(**app().remote(parameters.parameters))
 
