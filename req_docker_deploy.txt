@@ -1,7 +1,7 @@
 transparent-background
 uvicorn 
 Pillow  
-elevenlabs==0.2.27
+elevenlabs
 celery[redis] 
 redis   
 python-multipart 

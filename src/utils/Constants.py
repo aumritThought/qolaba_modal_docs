@@ -113,6 +113,7 @@ MUSIC_GEN_API = "https://api.musicfy.lol/v1/generate-music"
 
 #Ideogram url
 IDEOGRAM_GENERATE_URL = "https://api.ideogram.ai/generate"
+IDEOGRAM_EDIT_URL = "https://api.ideogram.ai/edit"
 IDEOGRAM_ASPECT_RATIO = {
    "9:16" : "ASPECT_9_16",
    "16:9" : "ASPECT_16_9",
@@ -128,7 +129,9 @@ IDEOGRAM_ASPECT_RATIO = {
 #Imagegen aspect ratios
 IMAGEGEN_ASPECT_RATIOS = ["9:16", "16:9", "4:3", "3:4", "1:1"]
 
-
+#Leonardo Image generation Url
+LEONARDO_IMAGE_GEN_URL = 'https://cloud.leonardo.ai/api/rest/v1/generations'
+LEONARDO_IMAGE_STATUS_URL = "https://cloud.leonardo.ai/api/rest/v1/generations/"
 #Recraft V3 style list
 RECRAFT_V3_STYLES = [
     "any",
@@ -406,6 +409,12 @@ app_dict = {
         },
         "model_name" : "imagegen_text2image" 
     },
+    "ap-x7q8hj9kltmNoPqRzabc": {
+        "app_id" : "leonardotext2image_api",
+        "init_parameters" : {
+        },
+        "model_name" : "leonardo_text2image" 
+    },
 
     "ap-fGhKl3mfkdlpqrshuwwabc": {
         "app_id" : "falaifluxdevimage2image_api",
@@ -523,14 +532,14 @@ app_dict = {
         "model_name" : "sketch_controlnet__image2image" 
     },
     "ap-7XmHk4LtVgFJq2cQoE3yB8": {
-        "app_id" : "sdxlinpainting_api", #"clipdropcleanupimage2image_api",
+        "app_id" : "ideograminpainting_api", #"clipdropcleanupimage2image_api",
         "init_parameters" : {
         },
         "model_name" : "clipdrop_cleanup_image2image" 
     },
 
     "ap-L4vHj7YbXeT2qKoU1fW3G7": {
-        "app_id" : "sdxlreplacebackground_api",
+        "app_id" : "ideogramreplacebackground_api",
         "init_parameters" : {
         },
         "model_name" : "Replace_background_image2image" 
@@ -591,6 +600,45 @@ app_dict = {
         },
         "model_name" : "OOTDiffusion_image2image" 
     }
+}
+
+COPYRIGHT_DETECTION_FUNCTION_CALLING_SCHEMA = {
+    "type": "function",
+    "function": {
+        "name": "analyze_image_content",
+        "description": """
+Analyzes if an image contains any famous real people, or brand logos. 
+
+Return true if the image contains any of: 
+1) Famous real humans (e.g., actors, athletes, politicians, musicians, social media influencers like Taylor Swift, Brad Pitt, Cristiano Ronaldo etc.), 
+2) Famous brand logos (e.g., Nike swoosh, McDonald's golden arches, Apple logo, Adidas stripes, Coca-Cola text, etc.). 
+
+You must return false in any other category apart from above two.
+Return false if the image contains: 
+1) Any kind of cartoons or fictional characters (e.g., Batman, Ironman, Superman, Mario, etc.) that are not real people. You must provide false for any kind of non-real person or character.
+2) Regular people or crowds, 
+3) Generic objects or scenes, 
+4) Nature or landscapes, 
+5) Generic text or symbols, 
+6) Common animals or pets, 
+7) Regular buildings or architecture, 
+8) Generic clothing without visible brand logos, 
+""",
+    "parameters": {
+    "type": "object",
+    "properties": {
+        "contains_protected_content": {
+            "type": "boolean",
+            "description": "Returns true if any celebrities or famous logos are detected in the image. You must return false for generic content, regular people, non-real characters (like cartoons or fictional superheroes), or non-protected materials."
+        },
+        "reason" : {
+            "type" : "string",
+            "description" : "provide the reason in case of Image contains some real people or logos."
+        }
+    },
+    "required": ["contains_protected_content"]
+    }
+}
 }
 
 BUCKET_NAME = os.environ["BUCKET_NAME"]

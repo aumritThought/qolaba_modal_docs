@@ -1,5 +1,5 @@
-import os, tempfile
-from elevenlabs import VoiceClone, generate, Voice, VoiceSettings, generate, set_api_key, VoiceDesign
+import tempfile, random, string, threading
+from elevenlabs import Voice, VoiceSettings, play
 from pydub import AudioSegment
 from src.data_models.ModalAppSchemas import ElevenLabsParameters
 from pydub import AudioSegment
@@ -7,11 +7,21 @@ from io import BytesIO
 from src.utils.Globals import timing_decorator, upload_data_gcp, make_request, prepare_response
 from src.FastAPIServer.services.IService import IService
 from src.utils.Constants import OUTPUT_AUDIO_EXTENSION, ELEVENLABS_ERROR, CLONE_AUDIO_LEN_ERROR_MSG, CLONE_AUDIO_OPEN_ERROR_MSG
+from elevenlabs import ElevenLabs
+
+voice_genration_lock = threading.Lock()
 
 class ElvenLabsAudio(IService):
     def __init__(self) -> None:
         super().__init__()
-        set_api_key(self.elevenlabs_api_key)
+        self.client = ElevenLabs(
+            api_key=self.elevenlabs_api_key
+        )
+
+    def generate_random_string(self, length=6):
+        characters = string.ascii_letters + string.digits
+        random_string = ''.join(random.choice(characters) for _ in range(length))
+        return random_string
 
     def get_audio_length(self, file_name: str) -> int:
         audio = AudioSegment.from_file(file_name)
@@ -30,21 +40,35 @@ class ElvenLabsAudio(IService):
 
 
     def generate_audio(self, parameters: ElevenLabsParameters) -> dict:
+        available_voice_ids = []
+        voices = self.client.voices.get_all().voices
+        for voice in voices:
+            available_voice_ids.append(voice.voice_id)
 
-        voice = Voice(
-            voice_id = parameters.audio_parameters.voice_id,
-            settings=VoiceSettings(
-                stability = parameters.audio_parameters.stability,
-                similarity_boost = parameters.audio_parameters.similarity_boost,
-                style = parameters.audio_parameters.style,
-                use_speaker_boost = parameters.audio_parameters.use_speaker_boost,
-            ),
-        )
+        with voice_genration_lock:
+            if(not(parameters.audio_parameters.public_id == None or parameters.audio_parameters.public_id == "")):
+                if(not(parameters.audio_parameters.voice_id in available_voice_ids)):
+                    for voice in self.client.voices.get_all().voices:
+                        if(voice.category == "professional"):
+                            self.client.voices.delete(voice.voice_id)
+                            self.client.voices.add_sharing_voice(public_user_id=parameters.audio_parameters.public_id, voice_id=parameters.audio_parameters.voice_id, new_name=self.generate_random_string())
+                            break
 
-        audio = generate(
-            text = parameters.prompt, voice = voice, model = "eleven_multilingual_v2"
-        )
+            voice = Voice(
+                voice_id = parameters.audio_parameters.voice_id,
+                settings=VoiceSettings(
+                    stability = parameters.audio_parameters.stability,
+                    similarity_boost = parameters.audio_parameters.similarity_boost,
+                    style = parameters.audio_parameters.style,
+                    use_speaker_boost = parameters.audio_parameters.use_speaker_boost,
+                ),
+            )
+            
+            audio = self.client.generate(
+                text = parameters.prompt, voice = voice, model = "eleven_multilingual_v2"
+            )
 
+        audio = b"".join(audio)
         audio_length = self.get_audio_length(BytesIO(audio))
 
         url = upload_data_gcp(audio, OUTPUT_AUDIO_EXTENSION)
@@ -52,68 +76,12 @@ class ElvenLabsAudio(IService):
         return prepare_response({"Audio url": url, "Audio length": audio_length}, [False], 0, 0)
 
 
-    def voice_clone(self, parameters: ElevenLabsParameters) -> dict:
-
-        list_of_saved_audios = []
-
-        for url in parameters.clone_parameters.list_of_files:
-            file_name = self.get_audio_file(url)
-            
-            audio_length = self.get_audio_length(file_name)
-
-            if audio_length > 600 or audio_length < 60:
-                raise Exception(
-                    ELEVENLABS_ERROR, CLONE_AUDIO_LEN_ERROR_MSG
-                )
-
-            list_of_saved_audios.append(file_name)
-
-        if len(list_of_saved_audios) == 0:
-            raise Exception(ELEVENLABS_ERROR, CLONE_AUDIO_OPEN_ERROR_MSG)
-
-        clone_settings = VoiceClone(
-            name = parameters.clone_parameters.name,
-            description = parameters.clone_parameters.description,
-            files = list_of_saved_audios
-        )
-
-        voice = Voice.from_clone(clone_settings)
-
-        for file in list_of_saved_audios:
-            try:
-                os.remove(file)
-            except:
-                pass
-
-        return {
-            "result": {"voice_id": voice.voice_id, "category": "cloned"},
-            "Has_NSFW_Content": [False],
-        }
-
-    def voice_design(self, parameters: ElevenLabsParameters) -> dict:
-
-        design = VoiceDesign(
-            name=parameters.design_parameters.name,
-            text="x" * 100,  # some random string is given as it is required
-            voice_description=parameters.design_parameters.description,
-            gender=parameters.design_parameters.gender,
-            age=parameters.design_parameters.age,
-            accent=parameters.design_parameters.accent,
-            accent_strength=parameters.design_parameters.accent_strength,
-        )
-        voice = Voice.from_design(design)
-
-        return {
-            "result": {"voice_id": voice.voice_id, "category": "generated"},
-            "Has_NSFW_Content": [False],
-        }
-
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
         parameters : ElevenLabsParameters = ElevenLabsParameters(**parameters)
         if parameters.clone == True:
-            return self.voice_clone(parameters)
+            raise NotImplementedError()
         elif parameters.voice_design == True:
-            return self.voice_design(parameters)
+            raise NotImplementedError()
         else:
             return self.generate_audio(parameters)

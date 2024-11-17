@@ -48,6 +48,10 @@ def upload_low_res_image(index, image_data, extension):
     url = upload_data_gcp(low_rs_image, extension)
     return index, url
 
+def identify_copy_righted_materials(image_url : str, index : int) -> tuple[bool, int]:
+    image_check_object = container.image_checker()
+    return image_check_object.remote(image_url), index
+
 @worker_process_init.connect
 def on_worker_init(**kwargs):
     initialize_shared_object()
@@ -66,8 +70,9 @@ def create_task(parameters: dict) -> dict:
     app = service_registry.get_service(parameters.app_id)
 
     if(parameters.app_id in service_registry.api_services):
-        if(parameters.app_id == "sdxlreplacebackground_api"):
-            output_data = TaskResponse(**app(container.bg_remover()).remote(parameters.parameters))
+        if(parameters.app_id == "ideogramreplacebackground_api"):
+            remover=container.bg_remover()
+            output_data = TaskResponse(**app(remover).remote(parameters.parameters))
         else:
             output_data = TaskResponse(**app().remote(parameters.parameters))
 
@@ -86,28 +91,37 @@ def create_task(parameters: dict) -> dict:
     if output_data.extension is not None:
         urls = [None] * len(output_data.result)
         low_res_urls = [None] * len(output_data.result)
+        has_copyright_content = [False]*len(output_data.result)
 
         with concurrent.futures.ThreadPoolExecutor() as executor:
             full_res_futures = [executor.submit(upload_image, i, img, output_data.extension, parameters.upscale) 
                                 for i, img in enumerate(output_data.result)]
-
-            if output_data.extension == OUTPUT_IMAGE_EXTENSION:
-                low_res_futures = [executor.submit(upload_low_res_image, i, img, output_data.extension) 
-                                for i, img in enumerate(output_data.result)]
-            else:
-                low_res_futures = []
-
+            
             for future in concurrent.futures.as_completed(full_res_futures):
                 index, url = future.result()
                 urls[index] = url
 
+            if output_data.extension == OUTPUT_IMAGE_EXTENSION:
+                low_res_futures = [executor.submit(upload_low_res_image, i, img, output_data.extension) 
+                                for i, img in enumerate(output_data.result)]
+                copyrighted_content_futures = [executor.submit(identify_copy_righted_materials, urls[index], index) for index in range(len(urls))]
+            else:
+                low_res_futures = []
+                copyrighted_content_futures = []
+
             for future in concurrent.futures.as_completed(low_res_futures):
                 index, url = future.result()
                 low_res_urls[index] = url
-
+            if(parameters.check_copyright_content == True):
+                for future in concurrent.futures.as_completed(copyrighted_content_futures):
+                    bool_data, index = future.result()
+                    has_copyright_content[index] = bool_data
+        
+        urls = [url for url, bool_val in zip(urls, has_copyright_content) if not bool_val]
+        low_res_urls = [url for url, bool_val in zip(low_res_urls, has_copyright_content) if not bool_val]
         output_data.result = urls
         output_data.low_res_urls = low_res_urls
-
+        output_data.Has_copyrighted_Content = has_copyright_content
         if(output_data == None or output_data == {} or output_data == ""):
             raise Exception("Received an empty response from model")
 
@@ -121,7 +135,7 @@ def create_task(parameters: dict) -> dict:
     task_response = APITaskResponse(
          status="SUCCESS",
          input = parameters.model_dump(),
-         output = {"result" : output_data.result, "Has_NSFW_Content" : output_data.Has_NSFW_Content, "low_res_urls" : output_data.low_res_urls},
+         output = {"result" : output_data.result, "Has_NSFW_Content" : output_data.Has_NSFW_Content, "low_res_urls" : output_data.low_res_urls, "Has_copyrighted_Content" : output_data.Has_copyrighted_Content},
          time_required = output_data.time.model_dump()
     )
 

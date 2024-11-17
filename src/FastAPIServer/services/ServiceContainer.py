@@ -1,9 +1,9 @@
 from dependency_injector import containers, providers
 
 # Do not remove this line. It imports the classes from this file into memory because of that, it is easy to identify that they are subscriber of Iservice class
-from src.FastAPIServer.services.ApiServices import IdeogramService, VertexAIService, FalAIService, MusicGene, DIDVideoService, ElvenLabsAudio, OpenAIService, SDXLService, ClaudeAIService, ReplicateService
+from src.FastAPIServer.services.ApiServices import LeonardoService, IdeogramService, VertexAIService, FalAIService, MusicGene, DIDVideoService, ElvenLabsAudio, OpenAIService, SDXLService, ClaudeAIService, ReplicateService
 ####
-
+from src.FastAPIServer.services.ApiServices.OpenAIService import OpenAIImageCheck
 from src.FastAPIServer.services.IService import IService
 from src.utils.Globals import get_clean_name
 from fastapi import HTTPException
@@ -18,7 +18,7 @@ from transparent_background import Remover
 
 class ServiceContainer(containers.DeclarativeContainer):
     bg_remover = providers.Singleton(Remover, device="cpu")
-
+    image_checker = providers.Singleton(OpenAIImageCheck)
 
 @synchronizer.create_blocking
 async def list_apps() -> list[str]:

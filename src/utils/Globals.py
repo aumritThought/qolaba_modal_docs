@@ -115,7 +115,7 @@ def make_request(url: str, method: str, json_data: dict = None, headers: dict = 
         response = requests.post(url, data=json_data, headers=headers, files = files, json = json)
 
     if(response.status_code != 200):
-        if("content_moderation" in response.text):
+        if("content_moderation" in response.text or "content moderation" in response.text):
             raise Exception(IMAGE_GENERATION_ERROR, NSFW_CONTENT_DETECT_ERROR_MSG)
         
         raise Exception(str(response.text))
