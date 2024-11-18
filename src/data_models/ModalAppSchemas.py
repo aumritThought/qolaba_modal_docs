@@ -248,7 +248,7 @@ class VoiceData(BaseModel):
         return list(v)
 
 class ElevenLabsParameters(BaseModel):
-    prompt: str = Query(default="Hi, we are in Qolaba", max_length=2500, min_length=1) 
+    prompt: str = Query(default="Hi, we are in Qolaba", max_length=69216, min_length=1) 
     clone: Optional[bool]= False
     clone_parameters : Optional[CloneParameters] = Field(default_factory=CloneParameters)
     voice_design: Optional[bool] = False 
