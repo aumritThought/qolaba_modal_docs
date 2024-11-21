@@ -99,7 +99,7 @@ class OpenAIImageCheck(IService):
         ]
         response : ChatCompletion = self.client.chat.completions.create(
                     messages=messages,
-                    model="gpt-4o-mini",
+                    model="gpt-4o",
                     stream=False,
                     temperature=0,
                     tool_choice="required",
