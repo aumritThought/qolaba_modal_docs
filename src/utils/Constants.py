@@ -607,9 +607,9 @@ COPYRIGHT_DETECTION_FUNCTION_CALLING_SCHEMA = {
     "function": {
         "name": "analyze_image_content",
         "description": """
-Analyzes if an image contains any famous real people, or brand logos. 
+Analyzes if an image contains any famous real people, or popular brand logos. 
 
-Return true if the image contains any of: 
+Return true if the image contains: 
 1) Famous real humans (e.g., actors, athletes, politicians, musicians, social media influencers like Taylor Swift, Brad Pitt, Cristiano Ronaldo etc.), 
 2) Famous brand logos (e.g., Nike swoosh, McDonald's golden arches, Apple logo, Adidas stripes, Coca-Cola text, etc.). 
 
@@ -619,10 +619,11 @@ Return false if the image contains:
 2) Regular people or crowds, 
 3) Generic objects or scenes, 
 4) Nature or landscapes, 
-5) Generic text or symbols, 
+5) Generic text, logos or symbols, 
 6) Common animals or pets, 
 7) Regular buildings or architecture, 
 8) Generic clothing without visible brand logos, 
+9) Any type of unknown logos (If image contains logo which is not popular, you must return false.)
 """,
     "parameters": {
     "type": "object",
