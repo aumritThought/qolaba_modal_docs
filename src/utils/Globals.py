@@ -14,7 +14,7 @@ from google.cloud import storage
 from google.oauth2 import service_account
 import numpy as np
 from modal import Cls
-
+from PIL import ImageFilter
 
 #Safety Checker Utils
 class SafetyChecker:
@@ -211,14 +211,15 @@ def resize_image(img: Imagetype) -> Imagetype:
 
 
 
-def get_image_from_url(url: str) -> Imagetype:
+def get_image_from_url(url: str, resize_image : bool = False) -> Imagetype:
     try:
         response : Response = make_request(url, method = "GET") 
         image_data = io.BytesIO(response.content)
         
 
         image = Image.open(image_data).convert("RGB")
-        image = resize_image(image)
+        if(resize_image == True):
+            image = resize_image(image)
         return image
     except Exception as error:
         print(f"Url of image : {url}")
@@ -233,6 +234,9 @@ def invert_bw_image_color(img: Imagetype) -> Imagetype:
     inverted_mask = Image.fromarray(inverted_mask_array)
     
     return inverted_mask
+
+def simple_boundary_blur(pil_image : Imagetype, blur_radius=25) -> Imagetype:
+    return pil_image.filter(ImageFilter.GaussianBlur(blur_radius))
 
 
 def get_seed_generator(seed: int) -> torch.Generator:
