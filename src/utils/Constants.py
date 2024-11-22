@@ -383,7 +383,7 @@ app_dict = {
         "app_id" : "falairefactorv3text2image_api",
         "init_parameters" : {
         },
-        "model_name" : "refactorv3_text2image" 
+        "model_name" : "recraftv3_text2image" 
     },
     "ap-mNopQ8rstuvwXYZabcde": {
         "app_id" : "falaisd35largetext2image_api",
