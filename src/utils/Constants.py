@@ -532,14 +532,14 @@ app_dict = {
         "model_name" : "sketch_controlnet__image2image" 
     },
     "ap-7XmHk4LtVgFJq2cQoE3yB8": {
-        "app_id" : "ideograminpainting_api", #"clipdropcleanupimage2image_api",
+        "app_id" : "falaiflux3inpainting_api", #"clipdropcleanupimage2image_api",
         "init_parameters" : {
         },
         "model_name" : "clipdrop_cleanup_image2image" 
     },
 
     "ap-L4vHj7YbXeT2qKoU1fW3G7": {
-        "app_id" : "ideogramreplacebackground_api",
+        "app_id" : "falaiflux3replacebackground_api",
         "init_parameters" : {
         },
         "model_name" : "Replace_background_image2image" 
