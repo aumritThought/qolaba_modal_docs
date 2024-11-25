@@ -607,30 +607,29 @@ COPYRIGHT_DETECTION_FUNCTION_CALLING_SCHEMA = {
     "function": {
         "name": "analyze_image_content",
         "description": """
-Analyzes if an image contains any famous real people, or popular brand logos. 
+Analyzes if an image contains any famous real people, NSFW content or popular brand logos. 
 
 Return true if the image contains: 
-1) Famous real humans (e.g., actors, athletes, politicians, musicians, social media influencers like Taylor Swift, Brad Pitt, Cristiano Ronaldo etc.), 
-2) Famous brand logos (e.g., Nike swoosh, McDonald's golden arches, Apple logo, Adidas stripes, Coca-Cola text, etc.). 
+1) Famous real humans (e.g., actors, athletes, politicians, musicians, social media influencers like Taylor Swift, Brad Pitt, Ronaldo etc.), 
+2) Famous brand logos (e.g., Nike swoosh, McDonald's golden arches, Apple, Adidas stripes, Coca-Cola text, etc.). 
+3) Any kind of NSFW content. such as visible private parts, activities like kissing, or pornographic material.
 
-You must return false in any other category apart from above two.
+You must return false in any other category apart from above three.
 Return false if the image contains: 
-1) Any kind of cartoons or fictional characters (e.g., Batman, Ironman, Superman, Mario, etc.) that are not real people. You must provide false for any kind of non-real person or character.
-2) Regular people or crowds, 
-3) Generic objects or scenes, 
-4) Nature or landscapes, 
-5) Generic text, logos or symbols, 
-6) Common animals or pets, 
-7) Regular buildings or architecture, 
-8) Generic clothing without visible brand logos, 
-9) Any type of unknown logos (If image contains logo which is not popular, you must return false.)
+1) Any kind of cartoons or fictional characters (e.g., Batman, Ironman, Superman, Mario, etc.) You must provide false for any kind of non-real person or character.
+2) Regular people, objects, scenes or crowds, 
+3) Nature, animals or landscapes, 
+4) Generic text, logos or symbols, 
+5) Regular buildings or architecture, 
+6) Generic clothing without visible brand logos, 
+7) Any type of unknown or unpopular logos
 """,
     "parameters": {
     "type": "object",
     "properties": {
         "contains_protected_content": {
             "type": "boolean",
-            "description": "Returns true if any celebrities or famous logos are detected in the image. You must return false for generic content, regular people, non-real characters (like cartoons or fictional superheroes), or non-protected materials."
+            "description": "Returns true if any celebrities, famous logos, or NSFW content are detected in the image.  You must return false for minor NSFW content, as well as for generic content, regular people, non-real characters (like cartoons or fictional superheroes), or non-protected materials."
         },
         "reason" : {
             "type" : "string",
