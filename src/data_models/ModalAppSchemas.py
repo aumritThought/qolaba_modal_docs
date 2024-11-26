@@ -1,20 +1,7 @@
 from pydantic import BaseModel, Field, field_validator, model_validator, constr
 from fastapi import Query
 from typing import  Optional, Any, List, Literal
-from src.utils.Constants import (
-    MIN_HEIGHT, MAX_HEIGHT, 
-    MAX_INFERENCE_STEPS, 
-    MIN_INFERENCE_STEPS, 
-    MAX_BATCH, MIN_BATCH, 
-    MAX_GUIDANCE_SCALE, 
-    MIN_GUIDANCE_SCALE, 
-    MAX_STRENGTH,
-    MIN_STRENGTH,
-    MAX_COLOR, MIN_COLOR,
-    MAX_FPS, MIN_FPS,
-    HW_MULTIPLE,
-    MIN_SUPPORTED_AUDIO_FILE_ELEVENLABS, MAX_SUPPORTED_AUDIO_FILE_ELEVENLABS, gender_word, recraft_v3_style_cond,
-    elevenlabs_accent_list, elevenlabs_age_list, elevenlabs_gender_list, dalle_supported_quality, sdxl_preset_list, did_expression_list)
+from src.utils.Constants import *
 from src.utils.Constants import sdxl_model_string, controlnet_models
 
 class StubNames(BaseModel):
@@ -133,6 +120,12 @@ class SDXLText2ImageParameters(BaseModel):
         self.height = self.height - (self.height % HW_MULTIPLE)
         self.width = self.width - (self.width % HW_MULTIPLE)
         return self
+
+class HairStyleParameters(BaseModel):
+    file_url : str | Any
+    hair_style: Optional[available_hairstyles] = "ManBun" #type:ignore
+    color: Optional[available_haircolors] = "brown" #type:ignore
+    batch: int = Query( ge = MIN_BATCH, le = 4)
 
 
 class SDXLImage2ImageParameters(BaseModel):
