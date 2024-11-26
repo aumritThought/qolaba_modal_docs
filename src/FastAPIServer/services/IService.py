@@ -10,6 +10,8 @@ from src.utils.Constants import (
     IDEOGRAM_EDIT_URL,
     LEONARDO_IMAGE_GEN_URL,
     LEONARDO_IMAGE_STATUS_URL,
+    AILAB_HAIRSTYLE_URL,
+    AILAB_STATUS_URL,
     SDX3_URL)
 
 
@@ -48,6 +50,11 @@ class IService(ABC):
         self.leonardo_image_generation_url = LEONARDO_IMAGE_GEN_URL
         self.leonardo_image_status_url = LEONARDO_IMAGE_STATUS_URL
         self.leonardo_api_key = os.environ["LEONARDO_API_KEY"]
+
+        #AILAB
+        self.hairstyle_url = AILAB_HAIRSTYLE_URL
+        self.hairstyle_status_url = AILAB_STATUS_URL
+        self.hairstyle_api_key = os.environ["AILAB_API_KEY"]
 
     @abstractmethod
     def remote(self, data):

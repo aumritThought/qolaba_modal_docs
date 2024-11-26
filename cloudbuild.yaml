@@ -60,6 +60,7 @@ steps:
         gcloud secrets versions access $$_SECRET_ALIAS --secret="FAL_KEY" > /workspace/FAL_KEY.txt
         gcloud secrets versions access $$_SECRET_ALIAS --secret="IDEOGRAM_API_KEY" > /workspace/IDEOGRAM_API_KEY.txt
         gcloud secrets versions access $$_SECRET_ALIAS --secret="LEONARDO_API_KEY" > /workspace/LEONARDO_API_KEY.txt
+        gcloud secrets versions access $$_SECRET_ALIAS --secret="AILAB_API_KEY" > /workspace/AILAB_API_KEY.txt
 
   - name: 'gcr.io/cloud-builders/docker'
     entrypoint: 'bash'
@@ -97,6 +98,7 @@ steps:
           --build-arg FAL_KEY="$(cat /workspace/FAL_KEY.txt)" \
           --build-arg IDEOGRAM_API_KEY="$(cat /workspace/IDEOGRAM_API_KEY.txt)" \
           --build-arg LEONARDO_API_KEY="$(cat /workspace/LEONARDO_API_KEY.txt)" \
+          --build-arg AILAB_API_KEY="$(cat /workspace/AILAB_API_KEY.txt)" \
           .
   
   - name: gcr.io/cloud-builders/docker

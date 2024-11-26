@@ -56,6 +56,89 @@ sdxl_model_list = {
 
 sdxl_model_string = "|".join(sdxl_model_list.keys())
 
+AILAB_HAIRSTYLE_URL = "https://www.ailabapi.com/api/portrait/effects/hairstyle-editor-pro"
+AILAB_STATUS_URL = "https://www.ailabapi.com/api/common/query-async-task-result?task_id="
+AVAILABLE_HAIRSTYLES = [
+    "BuzzCut",
+    "UnderCut",
+    "Pompadour",
+    "SlickBack",
+    "CurlyShag",
+    "WavyShag",
+    "FauxHawk",
+    "Spiky",
+    "CombOver",
+    "HighTightFade",
+    "ManBun",
+    "Afro",
+    "LowFade",
+    "UndercutLongHair",
+    "TwoBlockHaircut",
+    "TexturedFringe",
+    "BluntBowlCut",
+    "LongWavyCurtainBangs",
+    "MessyTousled",
+    "CornrowBraids",
+    "LongHairTiedUp",
+    "Middle-parted",
+    "ShortPixieWithShavedSides",
+    "ShortNeatBob",
+    "DoubleBun",
+    "Updo",
+    "Spiked",
+    "bowlCut",
+    "Chignon",
+    "PixieCut",
+    "SlickedBack",
+    "LongCurly",
+    "CurlyBob",
+    "StackedCurlsInShortBob",
+    "SidePartCombOverHairstyleWithHighFade",
+    "WavyFrenchBobVibesfrom1920",
+    "BobCut",
+    "ShortTwintails",
+    "ShortCurlyPixie",
+    "LongStraight",
+    "LongWavy",
+    "FishtailBraid",
+    "TwinBraids",
+    "Ponytail",
+    "Dreadlocks",
+    "Cornrows",
+    "ShoulderLengthHair",
+    "LooseCurlyAfro",
+    "LongTwintails",
+    "LongHimeCut",
+    "BoxBraids"
+]
+
+available_hairstyles = constr(pattern = '|'.join(AVAILABLE_HAIRSTYLES))
+
+AVAILABLE_HAIRCOLORS = [
+    "blonde",
+    "platinumBlonde",
+    "brown",
+    "lightBrown",
+    "blue",
+    "lightBlue",
+    "purple",
+    "lightPurple",
+    "pink",
+    "black",
+    "white",
+    "grey",
+    "silver",
+    "red",
+    "orange",
+    "green",
+    "gradient",
+    "multicolored",
+    "darkBlue",
+    "burgundy",
+    "darkGreen"
+]
+
+available_haircolors = constr(pattern = '|'.join(AVAILABLE_HAIRCOLORS))
 
 
 SDXL_REFINER_MODEL = "stabilityai/stable-diffusion-xl-refiner-1.0"
@@ -414,6 +497,13 @@ app_dict = {
         "init_parameters" : {
         },
         "model_name" : "leonardo_text2image" 
+    },
+    
+    "ap-jK8lQwzR2tNfshYvB4mxd": {
+        "app_id" : "ailabhairstyle_api",
+        "init_parameters" : {
+        },
+        "model_name" : "hairstyle_image2image" 
     },
 
     "ap-fGhKl3mfkdlpqrshuwwabc": {

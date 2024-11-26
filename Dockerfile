@@ -54,6 +54,7 @@ ARG MUSIC_GEN_API_KEY
 ARG FAL_KEY
 ARG IDEOGRAM_API_KEY
 ARG LEONARDO_API_KEY
+ARG AILAB_API_KEY
 
 # Set environment variables
 ENV API_KEY=${API_KEY}
@@ -85,6 +86,8 @@ ENV MUSIC_GEN_API_KEY=${MUSIC_GEN_API_KEY}
 ENV FAL_KEY=${FAL_KEY}
 ENV IDEOGRAM_API_KEY=${IDEOGRAM_API_KEY}
 ENV LEONARDO_API_KEY=${LEONARDO_API_KEY}
+ENV AILAB_API_KEY=${AILAB_API_KEY}
+
 # Rest of your Dockerfile instructions
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
