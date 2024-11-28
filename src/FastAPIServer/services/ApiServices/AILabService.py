@@ -50,7 +50,7 @@ class AILabHairStyle(IService):
     def remote(self, parameters: dict) -> dict:
         parameters : HairStyleParameters = HairStyleParameters(**parameters)
 
-        parameters.file_url = get_image_from_url(parameters.file_url, resize_image=True)
+        parameters.file_url = get_image_from_url(parameters.file_url, rs_image=True)
 
         results = self.make_api_request(parameters)
 
