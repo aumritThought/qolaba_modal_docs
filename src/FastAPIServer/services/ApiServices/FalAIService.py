@@ -402,7 +402,7 @@ class FalAIFlux3Inpainting(IService):
     def remote(self, parameters: dict) -> dict:
         parameters : IdeoGramText2ImageParameters = IdeoGramText2ImageParameters(**parameters)
         original_image = get_image_from_url(
-            parameters.file_url, resize_image=False
+            parameters.file_url, rs_image=False
         )
 
         parameters.mask_url = get_image_from_url(parameters.mask_url)
@@ -458,7 +458,7 @@ class FalAIFlux3ReplaceBackground(IService):
     def remote(self, parameters: dict) -> dict:
         parameters : IdeoGramText2ImageParameters = IdeoGramText2ImageParameters(**parameters)
         original_image = get_image_from_url(
-            parameters.file_url, resize_image=False
+            parameters.file_url, rs_image=False
         )
         parameters.mask_url = self.remover.process(original_image, type="rgba")
 

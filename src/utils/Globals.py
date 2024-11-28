@@ -211,14 +211,14 @@ def resize_image(img: Imagetype) -> Imagetype:
 
 
 
-def get_image_from_url(url: str, resize_image : bool = True) -> Imagetype:
+def get_image_from_url(url: str, rs_image : bool = True) -> Imagetype:
     try:
         response : Response = make_request(url, method = "GET") 
         image_data = io.BytesIO(response.content)
         
 
         image = Image.open(image_data).convert("RGB")
-        if(resize_image == True):
+        if(rs_image == True):
             image = resize_image(image)
         return image
     except Exception as error:
