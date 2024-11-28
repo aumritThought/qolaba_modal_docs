@@ -211,7 +211,7 @@ def resize_image(img: Imagetype) -> Imagetype:
 
 
 
-def get_image_from_url(url: str, resize_image : bool = False) -> Imagetype:
+def get_image_from_url(url: str, resize_image : bool = True) -> Imagetype:
     try:
         response : Response = make_request(url, method = "GET") 
         image_data = io.BytesIO(response.content)
