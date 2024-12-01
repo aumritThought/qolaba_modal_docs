@@ -1,18 +1,22 @@
 from dotenv import load_dotenv
 load_dotenv()
+from pillow_heif import register_heif_opener
+register_heif_opener()
+
 from fastapi import FastAPI, UploadFile, Body
 from fastapi import Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from src.data_models.ModalAppSchemas import APIInput, APITaskResponse, TaskStatus, OpenAITTSParameters
 from src.FastAPIServer.celery.Worker import task_gen, get_task_status, initialize_shared_object
 from src.utils.Globals import check_token, upload_to_gcp
-from src.utils.Constants import app_dict, INTERNAL_ERROR
+from src.utils.Constants import app_dict, INTERNAL_ERROR, OUTPUT_IMAGE_EXTENSION
 from src.utils.Exceptions import handle_Request_exceptions, handle_exceptions
-import uvicorn, os
+import uvicorn, os, io
 from fastapi.exceptions import RequestValidationError
 from transparent_background import Remover
 from src.FastAPIServer.services.ApiServices.OpenAIService import OpenAITexttoSpeech
 from fastapi.responses import StreamingResponse
+from PIL import Image
 
 app = FastAPI()
 app.exception_handler(RequestValidationError)(handle_Request_exceptions)
@@ -80,7 +84,11 @@ def get_status(parameters : TaskStatus,
 @handle_exceptions
 def upload_file(file: UploadFile, file_type : str = Body(..., embed=True), api_key: HTTPAuthorizationCredentials = Depends(auth_scheme)):
     check_token(api_key)
-    url = upload_to_gcp(file.file.read(), file_type)
+    if(file_type == OUTPUT_IMAGE_EXTENSION):
+        image = Image.open(io.BytesIO(file.file.read()))
+        url = upload_to_gcp(image, file_type)
+    else:
+        url = upload_to_gcp(file.file.read(), file_type)
     task_Response = APITaskResponse(
                 output= {"url": url},
                 status="SUCCESS"
