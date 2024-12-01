@@ -15,6 +15,8 @@ from google.oauth2 import service_account
 import numpy as np
 from modal import Cls
 from PIL import ImageFilter
+from pillow_heif import register_heif_opener
+register_heif_opener()
 
 #Safety Checker Utils
 class SafetyChecker:
