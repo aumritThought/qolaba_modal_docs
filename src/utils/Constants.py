@@ -506,6 +506,55 @@ app_dict = {
         "model_name" : "hairstyle_image2image" 
     },
 
+    "ap-pM3nVwxL9kBcjtHqF5yZa": {
+        "app_id" : "falaikling15text2video_api",
+        "init_parameters" : {
+        },
+        "model_name" : "Kling1.5_text2video" 
+    },
+
+    "ap-p7nMcLvX9yKjWqHgA5tZd": {
+        "app_id" : "falaikling15image2video_api",
+        "init_parameters" : {
+        },
+        "model_name" : "Kling1.5_image2video" 
+    },
+
+    "ap-9kPnRwbzxhvDyWFm2CLLkM": {
+        "app_id" : "runwayimage2video_api",
+        "init_parameters" : {
+        },
+        "model_name" : "Runway_image2video" 
+    },
+
+    "ap-4nSmKlcqwtjBpNHr8YIIhZ": {
+        "app_id" : "lumatext2video_api",
+        "init_parameters" : {
+        },
+        "model_name" : "Luma_text2video" 
+    },
+
+    "ap-2vXnRdfghyiLzABc5MNNwK": {
+        "app_id" : "lumaimage2video_api",
+        "init_parameters" : {
+        },
+        "model_name" : "Luma_image2video" 
+    },
+
+    "ap-3bTkNvcwqsiHmDEt6RUUgX": {
+        "app_id" : "falaiminimaxtext2video_api",
+        "init_parameters" : {
+        },
+        "model_name" : "minimax_text2video" 
+    },
+
+    "ap-5hQmJxyzptiGyVBn3WSSfL": {
+        "app_id" : "falaiminimaximage2video_api",
+        "init_parameters" : {
+        },
+        "model_name" : "minimax_image2video" 
+    },
+
     "ap-fGhKl3mfkdlpqrshuwwabc": {
         "app_id" : "falaifluxdevimage2image_api",
         "init_parameters" : {

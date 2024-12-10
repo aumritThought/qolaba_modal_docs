@@ -154,3 +154,5 @@ mistralai
 mediapipe
 anthropic
 replicate
+runwayml
+lumaai
