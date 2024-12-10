@@ -56,6 +56,36 @@ class TaskResponse(BaseModel):
 class MusicGenParameters(BaseModel):
     prompt : str
 
+class PromptImage(BaseModel):
+    uri : str
+    position : Literal["first", "last"] = "first"
+
+class LumaLabsText2VideoParameters(BaseModel):
+    aspect_ratio: Literal["1:1", "16:9", "9:16", "4:3", "3:4", "21:9", "9:21"] = "1:1"
+    prompt : str
+    loop : Optional[bool] = False
+    file_url : Optional[list[PromptImage]] = None
+    batch:  int = Query(ge = MIN_BATCH, le = MAX_BATCH)
+
+class RunwayImage2VideoParameters(BaseModel):
+    prompt: str
+    file_url : Optional[list[PromptImage]] = None
+    batch:  int = Query(ge = MIN_BATCH, le = MAX_BATCH)
+    duration : Literal[5, 10] = 5
+    aspect_ratio : Literal["1280:768","768:1280"] = "1280:768"
+
+class Kling15Text2Video(BaseModel):
+    prompt: str
+    file_url : Optional[str] = None
+    batch:  int = Query(ge = MIN_BATCH, le = MAX_BATCH)
+    duration : Literal[5, 10] = 5
+    aspect_ratio : Literal["16:9", "9:16", "1:1"] = "16:9"
+
+class MinimaxText2Video(BaseModel):
+    prompt: str
+    file_url : Optional[str] = None
+    batch:  int = Query(ge = MIN_BATCH, le = MAX_BATCH)
+
 class IdeoGramText2ImageParameters(BaseModel):
     height: int = Query(default=1024, ge = MIN_HEIGHT, le = MAX_HEIGHT)
     width: int = Query(default=1024, ge=MIN_HEIGHT, le = MAX_HEIGHT)

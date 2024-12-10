@@ -56,6 +56,12 @@ class IService(ABC):
         self.hairstyle_status_url = AILAB_STATUS_URL
         self.hairstyle_api_key = os.environ["AILAB_API_KEY"]
 
+        #Runway
+        self.runway_api_key = os.environ["RUNWAY_API_KEY"]
+
+        #Luma
+        self.lumalabs_api_key = os.environ["LUMAAI_API_KEY"]
+
     @abstractmethod
     def remote(self, data):
         pass
