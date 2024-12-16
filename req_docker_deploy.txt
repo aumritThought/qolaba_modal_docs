@@ -22,3 +22,4 @@ replicate
 fal-client
 google-cloud-aiplatform
 vertexai
+python-dotenv
