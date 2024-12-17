@@ -520,7 +520,7 @@ app_dict = {
     },
 
     "ap-3bTkNvcwqsiHmDEt6RUUgX": {
-        "app_id" : "falaihunyuanVideo_api",
+        "app_id" : "falaihunyuanvideo_api",
         "init_parameters" : {
         },
         "model_name" : "Hunyuan_video" 
