@@ -16,6 +16,7 @@ stub_dictionary : dict[str, StubConfiguration] = {
     stub_names.frnd_face_consistent : StubConfiguration(gpu = "a10g", memory = 11000, container_idle_timeout = 60, num_containers=1),
     stub_names.stable_cascade_text_to_image : StubConfiguration(gpu = "a10g", memory = 11000, container_idle_timeout = 60, num_containers=1),
     stub_names.oot_diffusion : StubConfiguration(gpu = "a10g", memory = 11000, container_idle_timeout = 60, num_containers=1),
+    stub_names.hair_fast : StubConfiguration(gpu = "a10g", memory = 11000, container_idle_timeout = 60, num_containers=1),
 }
 
 

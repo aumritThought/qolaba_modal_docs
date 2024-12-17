@@ -18,6 +18,7 @@ class StubNames(BaseModel):
     frnd_face_consistent : str = "IPAdapter_FRND_face_consistent"
     stable_cascade_text_to_image : str = "Stable_Cascade"
     oot_diffusion : str = "OOTDiffusion"
+    hair_fast : str = "HairFast"
 
 class StubConfiguration(BaseModel):
     memory : int
@@ -38,6 +39,11 @@ class TaskResponse(BaseModel):
     time : TimeData
     extension : str | None
 
+class HairFastParameters(BaseModel):
+    face_url : str
+    shape_url : str
+    color_url : str
+    align_images: bool = True
 
 # class SDXLParameters(BaseModel):
 #     model : str = Field(pattern = sdxl_model_string)  
@@ -76,14 +82,14 @@ class RunwayImage2VideoParameters(BaseModel):
 
 class Kling15Text2Video(BaseModel):
     prompt: str
-    file_url : Optional[str] = None
+    file_url : Optional[list[PromptImage]] = None
     batch:  int = Query(ge = MIN_BATCH, le = MAX_BATCH)
     duration : Literal[5, 10] = 5
     aspect_ratio : Literal["16:9", "9:16", "1:1"] = "16:9"
 
 class MinimaxText2Video(BaseModel):
     prompt: str
-    file_url : Optional[str] = None
+    file_url : Optional[list[PromptImage]] = None
     batch:  int = Query(ge = MIN_BATCH, le = MAX_BATCH)
 
 class IdeoGramText2ImageParameters(BaseModel):

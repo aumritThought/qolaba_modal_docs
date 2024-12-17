@@ -41,7 +41,7 @@ def download_safety_checker():
 
 #Modal image Utils
 def get_base_image() -> MIM:
-    return MIM.debian_slim(python_version = PYTHON_VERSION).run_commands(BASE_IMAGE_COMMANDS).pip_install_from_requirements(REQUIREMENT_FILE_PATH).run_function(download_safety_checker, gpu = "t4", secrets = [Secret.from_name(SECRET_NAME)])
+    return MIM.from_registry(tag="runpod/pytorch:2.4.0-py3.11-cuda12.4.1-devel-ubuntu22.04", add_python = "3.11").run_commands(BASE_IMAGE_COMMANDS).pip_install_from_requirements(REQUIREMENT_FILE_PATH).run_function(download_safety_checker, gpu = "t4", secrets = [Secret.from_name(SECRET_NAME)])
     
 
 #Modal app utils
