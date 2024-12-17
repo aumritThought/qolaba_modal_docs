@@ -1,4 +1,4 @@
-from src.data_models.ModalAppSchemas import FluxText2ImageParameters, IdeoGramText2ImageParameters, Kling15Text2Video, MinimaxText2Video, FluxImage2ImageParameters, RecraftV3Text2ImageParameters, SDXLText2ImageParameters
+from src.data_models.ModalAppSchemas import FluxText2ImageParameters, IdeoGramText2ImageParameters, Kling15Video, MinimaxVideo, HunyuanVideo, FluxImage2ImageParameters, RecraftV3Text2ImageParameters, SDXLText2ImageParameters
 from src.utils.Globals import timing_decorator, prepare_response, make_request
 from src.FastAPIServer.services.IService import IService
 from src.utils.Constants import OUTPUT_IMAGE_EXTENSION, IMAGE_GENERATION_ERROR, NSFW_CONTENT_DETECT_ERROR_MSG, OUTPUT_VIDEO_EXTENSION
@@ -486,21 +486,34 @@ class FalAIFlux3ReplaceBackground(IService):
 
 
 
-class FalAIKling15Text2Video(IService):
+class FalAIKling15Video(IService):
     def __init__(self) -> None:
         super().__init__()
 
-    def generate_image(self, parameters : Kling15Text2Video) -> str:
-        input = {
-            "prompt": parameters.prompt,
-            "duration": parameters.duration,
-            "aspect_ratio": parameters.aspect_ratio
-        }
-        result = fal_client.subscribe(
-            "fal-ai/kling-video/v1.5/pro/text-to-video",
-            arguments=input,
-            with_logs=False,
-        ) 
+    def generate_video(self, parameters : Kling15Video) -> str:
+        if(len(parameters.file_url)==0):
+            input = {
+                "prompt": parameters.prompt,
+                "duration": parameters.duration,
+                "aspect_ratio": parameters.aspect_ratio
+            }
+            result = fal_client.subscribe(
+                "fal-ai/kling-video/v1.5/pro/text-to-video",
+                arguments=input,
+                with_logs=False,
+            ) 
+        else:
+            input = {
+                "prompt": parameters.prompt,
+                "duration": parameters.duration,
+                "aspect_ratio": parameters.aspect_ratio,
+                "image_url" : parameters.file_url[0].uri
+            }
+            result = fal_client.subscribe(
+                "fal-ai/kling-video/v1.5/pro/image-to-video",
+                arguments=input,
+                with_logs=False,
+            ) 
 
         response = make_request(result["video"]["url"], "GET")
 
@@ -508,13 +521,13 @@ class FalAIKling15Text2Video(IService):
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
-        parameters : Kling15Text2Video = Kling15Text2Video(**parameters)
+        parameters : Kling15Video = Kling15Video(**parameters)
         
 
         with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
             futures = []
             for i in range(parameters.batch):
-                future = executor.submit(self.generate_image, parameters)
+                future = executor.submit(self.generate_video, parameters)
                 futures.append(future)
             
             results = [future.result() for future in futures]
@@ -524,19 +537,66 @@ class FalAIKling15Text2Video(IService):
         return prepare_response(results, Has_NSFW_Content, 0, 0, OUTPUT_VIDEO_EXTENSION)
 
 
-class FalAIKling15Image2Video(IService):
+class FalAIMiniMaxVideo(IService):
     def __init__(self) -> None:
         super().__init__()
 
-    def generate_image(self, parameters : Kling15Text2Video) -> str:
+    def generate_video(self, parameters : MinimaxVideo) -> str:
+        if(len(parameters.file_url) == 0):
+            input = {
+                "prompt": parameters.prompt,
+                "prompt_optimizer": True
+            }
+            result = fal_client.subscribe(
+                "fal-ai/minimax/video-01-live",
+                arguments=input,
+                with_logs=False,
+            ) 
+        else:
+            input = {
+                "prompt": parameters.prompt,
+                "prompt_optimizer": True,
+                "image_url": parameters.file_url[0].uri
+            }
+            result = fal_client.subscribe(
+                "fal-ai/minimax/video-01-live/image-to-video",
+                arguments=input,
+                with_logs=False,
+            ) 
+
+        response = make_request(result["video"]["url"], "GET")
+
+        return response.content
+
+    @timing_decorator
+    def remote(self, parameters: dict) -> dict:
+        parameters : MinimaxVideo = MinimaxVideo(**parameters)
+        
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
+            futures = []
+            for i in range(parameters.batch):
+                future = executor.submit(self.generate_video, parameters)
+                futures.append(future)
+            
+            results = [future.result() for future in futures]
+
+        Has_NSFW_Content = [False] * parameters.batch
+
+        return prepare_response(results, Has_NSFW_Content, 0, 0, OUTPUT_VIDEO_EXTENSION)
+  
+
+class FalAIhunyuanVideo(IService):
+    def __init__(self) -> None:
+        super().__init__()
+
+    def generate_video(self, parameters : HunyuanVideo) -> str:
         input = {
             "prompt": parameters.prompt,
-            "duration": parameters.duration,
             "aspect_ratio": parameters.aspect_ratio,
-            "image_url" : parameters.file_url[0].uri
         }
         result = fal_client.subscribe(
-            "fal-ai/kling-video/v1.5/pro/image-to-video",
+            "fal-ai/hunyuan-video",
             arguments=input,
             with_logs=False,
         ) 
@@ -547,87 +607,13 @@ class FalAIKling15Image2Video(IService):
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
-        parameters : Kling15Text2Video = Kling15Text2Video(**parameters)
+        parameters : HunyuanVideo = HunyuanVideo(**parameters)
         
 
         with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
             futures = []
             for i in range(parameters.batch):
-                future = executor.submit(self.generate_image, parameters)
-                futures.append(future)
-            
-            results = [future.result() for future in futures]
-
-        Has_NSFW_Content = [False] * parameters.batch
-
-        return prepare_response(results, Has_NSFW_Content, 0, 0, OUTPUT_VIDEO_EXTENSION)
-
-
-class FalAIMiniMaxText2Video(IService):
-    def __init__(self) -> None:
-        super().__init__()
-
-    def generate_image(self, parameters : MinimaxText2Video) -> str:
-        input = {
-            "prompt": parameters.prompt,
-            "prompt_optimizer": True
-        }
-        result = fal_client.subscribe(
-            "fal-ai/minimax-video",
-            arguments=input,
-            with_logs=False,
-        ) 
-
-        response = make_request(result["video"]["url"], "GET")
-
-        return response.content
-
-    @timing_decorator
-    def remote(self, parameters: dict) -> dict:
-        parameters : MinimaxText2Video = MinimaxText2Video(**parameters)
-        
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
-            futures = []
-            for i in range(parameters.batch):
-                future = executor.submit(self.generate_image, parameters)
-                futures.append(future)
-            
-            results = [future.result() for future in futures]
-
-        Has_NSFW_Content = [False] * parameters.batch
-
-        return prepare_response(results, Has_NSFW_Content, 0, 0, OUTPUT_VIDEO_EXTENSION)
-    
-class FalAIMiniMaxImage2Video(IService):
-    def __init__(self) -> None:
-        super().__init__()
-
-    def generate_image(self, parameters : MinimaxText2Video) -> str:
-        input = {
-            "prompt": parameters.prompt,
-            "prompt_optimizer": True,
-            "image_url": parameters.file_url[0].uri
-        }
-        result = fal_client.subscribe(
-            "fal-ai/minimax-video/image-to-video",
-            arguments=input,
-            with_logs=False,
-        ) 
-
-        response = make_request(result["video"]["url"], "GET")
-
-        return response.content
-
-    @timing_decorator
-    def remote(self, parameters: dict) -> dict:
-        parameters : MinimaxText2Video = MinimaxText2Video(**parameters)
-        
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
-            futures = []
-            for i in range(parameters.batch):
-                future = executor.submit(self.generate_image, parameters)
+                future = executor.submit(self.generate_video, parameters)
                 futures.append(future)
             
             results = [future.result() for future in futures]
