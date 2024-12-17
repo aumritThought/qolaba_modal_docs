@@ -82,14 +82,14 @@ class RunwayImage2VideoParameters(BaseModel):
 
 class Kling15Text2Video(BaseModel):
     prompt: str
-    file_url : Optional[str] = None
+    file_url : Optional[list[PromptImage]] = None
     batch:  int = Query(ge = MIN_BATCH, le = MAX_BATCH)
     duration : Literal[5, 10] = 5
     aspect_ratio : Literal["16:9", "9:16", "1:1"] = "16:9"
 
 class MinimaxText2Video(BaseModel):
     prompt: str
-    file_url : Optional[str] = None
+    file_url : Optional[list[PromptImage]] = None
     batch:  int = Query(ge = MIN_BATCH, le = MAX_BATCH)
 
 class IdeoGramText2ImageParameters(BaseModel):

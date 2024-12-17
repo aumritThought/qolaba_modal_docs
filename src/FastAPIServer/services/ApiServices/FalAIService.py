@@ -533,7 +533,7 @@ class FalAIKling15Image2Video(IService):
             "prompt": parameters.prompt,
             "duration": parameters.duration,
             "aspect_ratio": parameters.aspect_ratio,
-            "image_url" : parameters.file_url
+            "image_url" : parameters.file_url[0].uri
         }
         result = fal_client.subscribe(
             "fal-ai/kling-video/v1.5/pro/image-to-video",
@@ -607,7 +607,7 @@ class FalAIMiniMaxImage2Video(IService):
         input = {
             "prompt": parameters.prompt,
             "prompt_optimizer": True,
-            "image_url": parameters.file_url
+            "image_url": parameters.file_url[0].uri
         }
         result = fal_client.subscribe(
             "fal-ai/minimax-video/image-to-video",
