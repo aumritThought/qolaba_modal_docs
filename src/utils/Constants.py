@@ -11,12 +11,12 @@ VOLUME_PATH = "/SDXL_models"
 PYTHON_VERSION = "3.11.8"
 
 BASE_IMAGE_COMMANDS = [
-    "apt-get update && apt-get install ffmpeg libsm6 libxext6 git curl wget pkg-config libssl-dev openssl git-lfs -y",
+    "apt-get update && apt-get install ffmpeg libsm6 libxext6 git curl wget pkg-config libssl-dev openssl git-lfs clang -y",
     "git lfs install",
-    "pip install torch torchvision torchaudio"
+    "pip3 install torch torchvision torchaudio"
 ]
 
-REQUIREMENT_FILE_PATH = "requirements.txt"
+REQUIREMENT_FILE_PATH = "req_docker_deploy.txt"
 SECRET_NAME = "environment_configuration"
 
 SDXL_ANIME_MODEL = "/SDXL_models/Animagine.safetensors"
@@ -388,6 +388,12 @@ app_dict = {
             "model" : SDXL_TURBO
         },
         "model_name" : "sdxl_turbo_text2image" 
+    },
+    "ap-K7xLpNmRtW9vYhA5z0FQFkG": {
+        "app_id" : "HairFast_modal",
+        "init_parameters" : {
+        },
+        "model_name" : "HairFast_text2image" 
     },
     "ap-PZYd1Bb5QH57Rw4BF0dPA4": {
         "app_id" : "SDXL_Text_To_Image_modal",

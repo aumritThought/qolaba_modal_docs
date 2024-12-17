@@ -18,6 +18,7 @@ class StubNames(BaseModel):
     frnd_face_consistent : str = "IPAdapter_FRND_face_consistent"
     stable_cascade_text_to_image : str = "Stable_Cascade"
     oot_diffusion : str = "OOTDiffusion"
+    hair_fast : str = "HairFast"
 
 class StubConfiguration(BaseModel):
     memory : int
@@ -38,6 +39,11 @@ class TaskResponse(BaseModel):
     time : TimeData
     extension : str | None
 
+class HairFastParameters(BaseModel):
+    face_url : str
+    shape_url : str
+    color_url : str
+    align_images: bool = True
 
 # class SDXLParameters(BaseModel):
 #     model : str = Field(pattern = sdxl_model_string)  
