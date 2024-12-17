@@ -491,6 +491,8 @@ class FalAIKling15Video(IService):
         super().__init__()
 
     def generate_video(self, parameters : Kling15Video) -> str:
+        if(parameters.file_url == None):
+            parameters.file_url = []
         if(len(parameters.file_url)==0):
             input = {
                 "prompt": parameters.prompt,
@@ -542,6 +544,8 @@ class FalAIMiniMaxVideo(IService):
         super().__init__()
 
     def generate_video(self, parameters : MinimaxVideo) -> str:
+        if(parameters.file_url == None):
+            parameters.file_url = []
         if(len(parameters.file_url) == 0):
             input = {
                 "prompt": parameters.prompt,

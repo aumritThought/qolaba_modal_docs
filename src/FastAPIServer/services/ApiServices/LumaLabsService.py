@@ -12,6 +12,8 @@ class LumaVideo(IService):
         self.client = LumaAI(auth_token=self.lumalabs_api_key)
 
     def generate_image(self, parameters : LumaLabsVideoParameters) -> str:
+        if(parameters.file_url == None):
+            parameters.file_url = []
         if(len(parameters.file_url)==0):
             generation = self.client.generations.create(
                 prompt=parameters.prompt,
