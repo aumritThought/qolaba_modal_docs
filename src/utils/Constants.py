@@ -865,3 +865,7 @@ IMAGE_FETCH_ERROR_MSG = "Given image type is not supported. Please try with JPG 
 
 IMAGEGEN_ERROR = "Google Imagegen Error"
 IMAGEGEN_ERROR_MSG = "Request cancelled due to detection of NSFW content or Prompt issues. Google Imagegen does not support the generation of Children. Please improve prompt accordingly."
+
+RUNWAY_ERROR = "Runway Error"
+RUNWAY_ERROR_MSG = "At least one image is required to generate your video"
+RUNWAY_POSITION_ERROR_MSG = "Please use different positions for two images: One image at the beginning, another at the end"
