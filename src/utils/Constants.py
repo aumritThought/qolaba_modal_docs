@@ -197,6 +197,7 @@ MUSIC_GEN_API = "https://api.musicfy.lol/v1/generate-music"
 #Ideogram url
 IDEOGRAM_GENERATE_URL = "https://api.ideogram.ai/generate"
 IDEOGRAM_EDIT_URL = "https://api.ideogram.ai/edit"
+IDEOGRAM_REMIX_URL = "https://api.ideogram.ai/remix"
 IDEOGRAM_ASPECT_RATIO = {
    "9:16" : "ASPECT_9_16",
    "16:9" : "ASPECT_16_9",
@@ -616,6 +617,42 @@ app_dict = {
         "init_parameters" : {
         },
         "model_name" : "fluxdev_image2image" 
+    },
+    "ap-hTjXy7qplkzvnmwqrsdabc": {
+        "app_id" : "ideogramremix_api",
+        "init_parameters" : {
+        },
+        "model_name" : "ideogram_remix_image2image" 
+    },
+    "ap-gFhLq9zvbnmopxkytswabc": {
+        "app_id" : "falaifluxproredux_api",
+        "init_parameters" : {
+        },
+        "model_name" : "flux_redux_image2image" 
+    },
+    "ap-mNqZx4rtyjvbcfghwklpde": {
+        "app_id" : "falaifluxprocanny_api",
+        "init_parameters" : {
+        },
+        "model_name" : "flux_canny_image2image" 
+    },
+    "ap-gWfZx8rjvtyqopmnbcdehij": {
+        "app_id" : "falaifluxprodepth_api",
+        "init_parameters" : {
+        },
+        "model_name" : "flux_depth_image2image" 
+    },
+    "ap-jKlMn8zxcvbnmasdfghijkm": {
+        "app_id" : "omnigenv1_api",
+        "init_parameters" : {
+        },
+        "model_name" : "omnigen_image2image" 
+    },
+    "ap-hJkLm8nqwertyuiopasdfg": {
+        "app_id" : "falaifluxpulid_api",
+        "init_parameters" : {
+        },
+        "model_name" : "pulid_image2image" 
     },
     "ap-Jf2aKs8dPqXzRb1Yv6hN7L": {
         "app_id" : "SDXL_Image_To_Image_modal",
