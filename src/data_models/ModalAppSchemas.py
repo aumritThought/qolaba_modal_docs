@@ -145,7 +145,6 @@ class RecraftV3Text2ImageParameters(BaseModel):
 
 class FluxImage2ImageParameters(BaseModel):
     num_inference_steps: int = Query(default=30, ge = MIN_INFERENCE_STEPS, le = MAX_INFERENCE_STEPS) 
-    guidance_scale:  float = Query(default=5, ge = 2, le = 5)
     batch:  int = Query(ge = MIN_BATCH, le = MAX_BATCH)
     prompt: str
     interval : float = Query(default=2, ge = 1, le = 4)
@@ -164,7 +163,6 @@ class FluxImage2ImageParameters(BaseModel):
     
 class OmnigenParameters(BaseModel):
     num_inference_steps: int = Query(default=50, ge = MIN_INFERENCE_STEPS, le = MAX_INFERENCE_STEPS) 
-    guidance_scale:  float = Query(default=2.5, ge = 2, le = 5)
     batch:  int = Query(ge = MIN_BATCH, le = MAX_BATCH)
     prompt: str
     interval : float = Query(default=2, ge = 1, le = 4)
