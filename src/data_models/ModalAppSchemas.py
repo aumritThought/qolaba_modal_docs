@@ -19,6 +19,7 @@ class StubNames(BaseModel):
     stable_cascade_text_to_image : str = "Stable_Cascade"
     oot_diffusion : str = "OOTDiffusion"
     hair_fast : str = "HairFast"
+    flux_refiner : str = "flux_refiner"
 
 class StubConfiguration(BaseModel):
     memory : int

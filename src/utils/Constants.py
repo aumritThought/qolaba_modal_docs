@@ -820,6 +820,12 @@ app_dict = {
         },
         "model_name" : "upscaling_image2image" 
     },
+    "ap-GJQWk3Tb8VxRz5nLp7HNyq": {
+        "app_id" : "flux_refiner_modal",
+        "init_parameters" : {
+        },
+        "model_name" : "refiner_image2image" 
+    },
     "ap-6x49kD4Tj8ymuASjzQFZCQ": {
         "app_id" : "promptparrot_api",
         "init_parameters" : {
@@ -896,6 +902,7 @@ FACE_DETECT_ERROR_MSG = "Unable to detect faces. Please provide a clear image."
 
 IMAGE_GENERATION_ERROR = "Image Generation Error"
 NSFW_CONTENT_DETECT_ERROR_MSG = "Request cancelled due to detection of NSFW content. Please ensure your prompt is appropriate." 
+REFINER_ERROR_MSG = "Request cancelled due to large image or Internal error"
 
 IMAGE_FETCH_ERROR = "Image URL Error"
 IMAGE_FETCH_ERROR_MSG = "Given image type is not supported. Please try with JPG or PNG."
