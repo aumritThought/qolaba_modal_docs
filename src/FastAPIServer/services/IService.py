@@ -8,6 +8,7 @@ from src.utils.Constants import (
     MUSIC_GEN_API, 
     IDEOGRAM_GENERATE_URL,
     IDEOGRAM_EDIT_URL,
+    IDEOGRAM_REMIX_URL,
     LEONARDO_IMAGE_GEN_URL,
     LEONARDO_IMAGE_STATUS_URL,
     AILAB_HAIRSTYLE_URL,
@@ -45,6 +46,7 @@ class IService(ABC):
         self.ideogram_url = IDEOGRAM_GENERATE_URL
         self.ideogram_api_key = os.environ["IDEOGRAM_API_KEY"]
         self.ideogram_edit_url = IDEOGRAM_EDIT_URL
+        self.ideogram_remix_url = IDEOGRAM_REMIX_URL
 
         #Leonardo
         self.leonardo_image_generation_url = LEONARDO_IMAGE_GEN_URL

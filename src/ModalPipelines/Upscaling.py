@@ -15,7 +15,7 @@ app = App(stub_name)
 
 vol = Volume.from_name(VOLUME_NAME)
 
-image = get_base_image()
+image = get_base_image().run_commands("pip install imaginAIry")
 
 app.image = image
 

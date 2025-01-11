@@ -1,4 +1,4 @@
-from src.data_models.ModalAppSchemas import FluxText2ImageParameters, IdeoGramText2ImageParameters, Kling15Video, MinimaxVideo, HunyuanVideo, FluxImage2ImageParameters, RecraftV3Text2ImageParameters, SDXLText2ImageParameters
+from src.data_models.ModalAppSchemas import FluxText2ImageParameters, UpscaleParameters, IdeoGramText2ImageParameters, OmnigenParameters, Kling15Video, MinimaxVideo, HunyuanVideo, FluxImage2ImageParameters, RecraftV3Text2ImageParameters, SDXLText2ImageParameters
 from src.utils.Globals import timing_decorator, prepare_response, make_request
 from src.FastAPIServer.services.IService import IService
 from src.utils.Constants import OUTPUT_IMAGE_EXTENSION, IMAGE_GENERATION_ERROR, NSFW_CONTENT_DETECT_ERROR_MSG, OUTPUT_VIDEO_EXTENSION
@@ -625,3 +625,273 @@ class FalAIhunyuanVideo(IService):
         Has_NSFW_Content = [False] * parameters.batch
 
         return prepare_response(results, Has_NSFW_Content, 0, 0, OUTPUT_VIDEO_EXTENSION)
+    
+
+class FalAIFluxProRedux(IService):
+    def __init__(self) -> None:
+        super().__init__()
+
+    def make_api_request(self, parameters : FluxImage2ImageParameters) -> str:
+        input = {
+            "image_url" : parameters.file_url,
+            "num_inference_steps": parameters.num_inference_steps,
+            "guidance_scale": parameters.guidance_scale,
+            "num_images": 1,
+            "safety_tolerance": "2",
+            "output_format": "jpeg",
+            "image_prompt_strength": parameters.strength,
+            "prompt": parameters.prompt
+        }
+        result = fal_client.subscribe(
+            "fal-ai/flux-pro/v1.1-ultra/redux",
+            arguments=input,
+            with_logs=False,
+        )  
+        if(sum(result["has_nsfw_concepts"])==1):
+            raise Exception(IMAGE_GENERATION_ERROR, NSFW_CONTENT_DETECT_ERROR_MSG)
+
+        response = make_request(result["images"][0]["url"], "GET")
+        return response.content
+
+    @timing_decorator
+    def remote(self, parameters: dict) -> dict:
+        parameters : FluxImage2ImageParameters = FluxImage2ImageParameters(**parameters)
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
+            futures = []
+            for i in range(parameters.batch):
+                future = executor.submit(self.make_api_request, parameters)
+                futures.append(future)
+            
+            results = [future.result() for future in futures]
+
+        Has_NSFW_Content = [False] * parameters.batch
+
+        return prepare_response(results, Has_NSFW_Content, 0, 0, OUTPUT_IMAGE_EXTENSION)
+    
+
+class FalAIFluxProCanny(IService):
+    def __init__(self) -> None:
+        super().__init__()
+
+    def make_api_request(self, parameters : FluxImage2ImageParameters) -> str:
+        input = {
+            "control_image_url" : parameters.file_url,
+            "num_inference_steps": parameters.num_inference_steps,
+            "guidance_scale": parameters.guidance_scale,
+            "num_images": 1,
+            "safety_tolerance": "2",
+            "output_format": "jpeg",
+            "prompt": parameters.prompt
+        }
+
+        result = fal_client.subscribe(
+            "fal-ai/flux-pro/v1/canny",
+            arguments=input,
+            with_logs=False,
+        )  
+        if(sum(result["has_nsfw_concepts"])==1):
+            raise Exception(IMAGE_GENERATION_ERROR, NSFW_CONTENT_DETECT_ERROR_MSG)
+
+        response = make_request(result["images"][0]["url"], "GET")
+        return response.content
+
+    @timing_decorator
+    def remote(self, parameters: dict) -> dict:
+        parameters : FluxImage2ImageParameters = FluxImage2ImageParameters(**parameters)
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
+            futures = []
+            for i in range(parameters.batch):
+                future = executor.submit(self.make_api_request, parameters)
+                futures.append(future)
+            
+            results = [future.result() for future in futures]
+
+        Has_NSFW_Content = [False] * parameters.batch
+
+        return prepare_response(results, Has_NSFW_Content, 0, 0, OUTPUT_IMAGE_EXTENSION)
+    
+
+class FalAIFluxProDepth(IService):
+    def __init__(self) -> None:
+        super().__init__()
+
+    def make_api_request(self, parameters : FluxImage2ImageParameters) -> str:
+        input = {
+            "control_image_url" : parameters.file_url,
+            "num_inference_steps": parameters.num_inference_steps,
+            "guidance_scale": parameters.guidance_scale,
+            "num_images": 1,
+            "safety_tolerance": "2",
+            "output_format": "jpeg",
+            "prompt": parameters.prompt
+        }
+
+        result = fal_client.subscribe(
+            "fal-ai/flux-pro/v1/depth",
+            arguments=input,
+            with_logs=False,
+        )  
+        if(sum(result["has_nsfw_concepts"])==1):
+            raise Exception(IMAGE_GENERATION_ERROR, NSFW_CONTENT_DETECT_ERROR_MSG)
+
+        response = make_request(result["images"][0]["url"], "GET")
+        return response.content
+
+    @timing_decorator
+    def remote(self, parameters: dict) -> dict:
+        parameters : FluxImage2ImageParameters = FluxImage2ImageParameters(**parameters)
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
+            futures = []
+            for i in range(parameters.batch):
+                future = executor.submit(self.make_api_request, parameters)
+                futures.append(future)
+            
+            results = [future.result() for future in futures]
+
+        Has_NSFW_Content = [False] * parameters.batch
+
+        return prepare_response(results, Has_NSFW_Content, 0, 0, OUTPUT_IMAGE_EXTENSION)
+    
+class OmnigenV1(IService):
+    def __init__(self) -> None:
+        super().__init__()
+
+    def make_api_request(self, parameters : OmnigenParameters) -> str:
+        input = {
+            "prompt":parameters.prompt,
+            "image_size": {
+                "width": parameters.width,
+                "height": parameters.height
+            },
+            "num_inference_steps": parameters.num_inference_steps,
+            "guidance_scale": parameters.guidance_scale,
+            "img_guidance_scale": 1.6,
+            "num_images": 1,
+            "enable_safety_checker": True,
+            "output_format": "jpeg",
+            "input_image_urls": parameters.file_url
+        }
+
+        result = fal_client.subscribe(
+            "fal-ai/omnigen-v1",
+            arguments=input,
+            with_logs=False,
+        )  
+        if(sum(result["has_nsfw_concepts"])==1):
+            raise Exception(IMAGE_GENERATION_ERROR, NSFW_CONTENT_DETECT_ERROR_MSG)
+
+        response = make_request(result["images"][0]["url"], "GET")
+        return response.content
+
+    @timing_decorator
+    def remote(self, parameters: dict) -> dict:
+        parameters : OmnigenParameters = OmnigenParameters(**parameters)
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
+            futures = []
+            for i in range(parameters.batch):
+                future = executor.submit(self.make_api_request, parameters)
+                futures.append(future)
+            
+            results = [future.result() for future in futures]
+
+        Has_NSFW_Content = [False] * parameters.batch
+
+        return prepare_response(results, Has_NSFW_Content, 0, 0, OUTPUT_IMAGE_EXTENSION)
+    
+
+class FalAIFluxPulID(IService):
+    def __init__(self) -> None:
+        super().__init__()
+
+    def make_api_request(self, parameters : FluxImage2ImageParameters) -> str:
+        input = {
+            "reference_image_url" : parameters.file_url,
+            "image_size": {
+                "width": parameters.width,
+                "height": parameters.height
+            },
+            "num_inference_steps": 20,
+            "guidance_scale": parameters.guidance_scale,
+            "num_images": 1,
+            "safety_tolerance": "2",
+            "output_format": "jpeg",
+            "prompt": parameters.prompt,
+            "negative_prompt": parameters.negative_prompt,
+            "enable_safety_checker": True,
+            "id_weight": 1,
+        }
+
+        result = fal_client.subscribe(
+            "fal-ai/flux-pulid",
+            arguments=input,
+            with_logs=False,
+        )  
+        if(sum(result["has_nsfw_concepts"])==1):
+            raise Exception(IMAGE_GENERATION_ERROR, NSFW_CONTENT_DETECT_ERROR_MSG)
+
+        response = make_request(result["images"][0]["url"], "GET")
+        return response.content
+
+    @timing_decorator
+    def remote(self, parameters: dict) -> dict:
+        parameters : FluxImage2ImageParameters = FluxImage2ImageParameters(**parameters)
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
+            futures = []
+            for i in range(parameters.batch):
+                future = executor.submit(self.make_api_request, parameters)
+                futures.append(future)
+            
+            results = [future.result() for future in futures]
+
+        Has_NSFW_Content = [False] * parameters.batch
+
+        return prepare_response(results, Has_NSFW_Content, 0, 0, OUTPUT_IMAGE_EXTENSION)
+    
+class FalAIUpscaler(IService):
+    def __init__(self) -> None:
+        super().__init__()
+
+    def make_api_request(self, parameters : UpscaleParameters) -> str:
+        input = {
+            "model_type": "SDXL",
+            "image_url": parameters.file_url,
+            "scale": parameters.scale,
+            "creativity": 0.5,
+            "detail": 1,
+            "shape_preservation": 0.25,
+            "prompt_suffix": " high quality, highly detailed, high resolution, sharp",
+            "negative_prompt": "blurry, low resolution, bad, ugly, low quality, pixelated, interpolated, compression artifacts, noisey, grainy",
+            "seed": 42,
+            "guidance_scale": 7.5,
+            "num_inference_steps": 20,
+            "enable_safety_checks": True,
+            "additional_lora_scale": 1,
+            "override_size_limits" : True
+        }
+
+        result = fal_client.subscribe(
+            "fal-ai/creative-upscaler",
+            arguments=input,
+            with_logs=False,
+        )  
+
+        if(sum(result["has_nsfw_concepts"])==1):
+            raise Exception(IMAGE_GENERATION_ERROR, NSFW_CONTENT_DETECT_ERROR_MSG)
+
+        response = make_request(result["images"][0]["url"], "GET")
+        return response.content
+
+    @timing_decorator
+    def remote(self, parameters: dict) -> dict:
+        parameters : UpscaleParameters = UpscaleParameters(**parameters)
+            
+        results = self.make_api_request(parameters)
+
+        Has_NSFW_Content = [False]
+
+        return prepare_response(results, Has_NSFW_Content, 0, 0, OUTPUT_IMAGE_EXTENSION)

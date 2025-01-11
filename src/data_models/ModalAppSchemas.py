@@ -19,6 +19,7 @@ class StubNames(BaseModel):
     stable_cascade_text_to_image : str = "Stable_Cascade"
     oot_diffusion : str = "OOTDiffusion"
     hair_fast : str = "HairFast"
+    flux_refiner : str = "flux_refiner"
 
 class StubConfiguration(BaseModel):
     memory : int
@@ -109,6 +110,19 @@ class IdeoGramText2ImageParameters(BaseModel):
     file_url : Optional[str | Any] = None
     mask_url : Optional[str | Any] = None
 
+class IdeoGramRemixParameters(BaseModel):
+    height: int = Query(default=1024, ge = MIN_HEIGHT, le = MAX_HEIGHT)
+    width: int = Query(default=1024, ge=MIN_HEIGHT, le = MAX_HEIGHT)
+    batch:  int = Query(ge = MIN_BATCH, le = MAX_BATCH)
+    prompt: Optional[str] = " "
+    aspect_ratio : Optional[str] = "1:1"
+    magic_prompt_option : Literal["AUTO", "ON", "OFF"] = "AUTO"
+    file_url : Optional[str | Any] = None
+    color_palette : Literal["EMBER", "FRESH", "JUNGLE", "MAGIC", "MELON", "MOSAIC", "PASTEL", "ULTRAMARINE"] = "FRESH"
+    strength : float = Query(default = 0.7, gt = MIN_STRENGTH, le = MAX_STRENGTH)
+    negative_prompt: Optional[str] = " "
+    style_type : Literal["AUTO", "GENERAL", "REALISTIC", "DESIGN", "RENDER_3D", "ANIME"] = "AUTO"
+
 class FluxText2ImageParameters(BaseModel):
     height: int = Query(default=1024, ge = MIN_HEIGHT, le = MAX_HEIGHT)
     width: int = Query(default=1024, ge=MIN_HEIGHT, le = MAX_HEIGHT)
@@ -130,8 +144,8 @@ class RecraftV3Text2ImageParameters(BaseModel):
     style : Optional[recraft_v3_style_cond] = "any" #type:ignore
 
 class FluxImage2ImageParameters(BaseModel):
-    # num_inference_steps: int = Query(ge = MIN_INFERENCE_STEPS, le = MAX_INFERENCE_STEPS) 
-    # guidance_scale:  float = Query(ge = 2, le = 5)
+    num_inference_steps: int = Query(default=30, ge = MIN_INFERENCE_STEPS, le = MAX_INFERENCE_STEPS) 
+    guidance_scale:  float = Query(default=5, ge = 2, le = 5)
     batch:  int = Query(ge = MIN_BATCH, le = MAX_BATCH)
     prompt: str
     interval : float = Query(default=2, ge = 1, le = 4)
@@ -140,12 +154,28 @@ class FluxImage2ImageParameters(BaseModel):
     file_url : Optional[str] = None
     output_quality : Optional[int] = 100
     strength : float = Query(default = 0.7, gt = MIN_STRENGTH, le = MAX_STRENGTH)
-
+    height: int = Query(default=1024, ge = MIN_HEIGHT, le = MAX_HEIGHT)
+    width: int = Query(default=1024, ge=MIN_HEIGHT, le = MAX_HEIGHT)
+    negative_prompt: Optional[str] = " "
     # @model_validator(mode='before')
     # def validate_params(self):
     #     self["guidance_scale"] = 2 + ((self["guidance_scale"] - 4)/ 8) * 3
     #     return self
     
+class OmnigenParameters(BaseModel):
+    num_inference_steps: int = Query(default=50, ge = MIN_INFERENCE_STEPS, le = MAX_INFERENCE_STEPS) 
+    guidance_scale:  float = Query(default=2.5, ge = 2, le = 5)
+    batch:  int = Query(ge = MIN_BATCH, le = MAX_BATCH)
+    prompt: str
+    interval : float = Query(default=2, ge = 1, le = 4)
+    safety_tolerance : float = Query(default=2, ge = 1, le = 5)
+    aspect_ratio : Optional[str] = "1:1"
+    file_url : Optional[list[str]] = None
+    output_quality : Optional[int] = 100
+    strength : float = Query(default = 0.7, gt = MIN_STRENGTH, le = MAX_STRENGTH)
+    height: int = Query(default=1024, ge = MIN_HEIGHT, le = MAX_HEIGHT)
+    width: int = Query(default=1024, ge=MIN_HEIGHT, le = MAX_HEIGHT)
+
 class SDXLText2ImageParameters(BaseModel):
     height: int = Query(ge = MIN_HEIGHT, le = MAX_HEIGHT)
     width: int = Query(ge=MIN_HEIGHT, le = MAX_HEIGHT)
@@ -185,6 +215,7 @@ class UpscaleParameters(BaseModel):
     file_url : str | Any
     scale : Literal[2, 4, 8]
     check_nsfw : Optional[bool] = True
+    strength : float = Query(default = 0.5, gt = MIN_STRENGTH, le = MAX_STRENGTH)
 
 class VariationParameters(SDXLControlNetParameters):
     prompt: Optional[str] = None
