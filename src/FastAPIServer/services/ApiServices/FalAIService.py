@@ -635,7 +635,7 @@ class FalAIFluxProRedux(IService):
         input = {
             "image_url" : parameters.file_url,
             "num_inference_steps": parameters.num_inference_steps,
-            "guidance_scale": parameters.guidance_scale,
+            "guidance_scale": 5,
             "num_images": 1,
             "safety_tolerance": "2",
             "output_format": "jpeg",
@@ -678,7 +678,7 @@ class FalAIFluxProCanny(IService):
         input = {
             "control_image_url" : parameters.file_url,
             "num_inference_steps": parameters.num_inference_steps,
-            "guidance_scale": parameters.guidance_scale,
+            "guidance_scale": 5,
             "num_images": 1,
             "safety_tolerance": "2",
             "output_format": "jpeg",
@@ -721,7 +721,7 @@ class FalAIFluxProDepth(IService):
         input = {
             "control_image_url" : parameters.file_url,
             "num_inference_steps": parameters.num_inference_steps,
-            "guidance_scale": parameters.guidance_scale,
+            "guidance_scale": 5,
             "num_images": 1,
             "safety_tolerance": "2",
             "output_format": "jpeg",
@@ -767,7 +767,7 @@ class OmnigenV1(IService):
                 "height": parameters.height
             },
             "num_inference_steps": parameters.num_inference_steps,
-            "guidance_scale": parameters.guidance_scale,
+            "guidance_scale": 2.5,
             "img_guidance_scale": 1.6,
             "num_images": 1,
             "enable_safety_checker": True,
@@ -815,7 +815,7 @@ class FalAIFluxPulID(IService):
                 "height": parameters.height
             },
             "num_inference_steps": 20,
-            "guidance_scale": parameters.guidance_scale,
+            "guidance_scale": 5,
             "num_images": 1,
             "safety_tolerance": "2",
             "output_format": "jpeg",
