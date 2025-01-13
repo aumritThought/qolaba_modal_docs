@@ -640,7 +640,11 @@ class FalAIFluxProRedux(IService):
             "safety_tolerance": "2",
             "output_format": "jpeg",
             "image_prompt_strength": parameters.strength,
-            "prompt": parameters.prompt
+            "prompt": parameters.prompt,
+            "image_size": {
+                "width": parameters.height,
+                "height": parameters.width
+            },
         }
         result = fal_client.subscribe(
             "fal-ai/flux-pro/v1.1-ultra/redux",
