@@ -168,7 +168,7 @@ class OmnigenParameters(BaseModel):
     interval : float = Query(default=2, ge = 1, le = 4)
     safety_tolerance : float = Query(default=2, ge = 1, le = 5)
     aspect_ratio : Optional[str] = "1:1"
-    file_url : Optional[list[str]] = None
+    file_url : Optional[list[str] | str] = None
     output_quality : Optional[int] = 100
     strength : float = Query(default = 0.7, gt = MIN_STRENGTH, le = MAX_STRENGTH)
     height: int = Query(default=1024, ge = MIN_HEIGHT, le = MAX_HEIGHT)

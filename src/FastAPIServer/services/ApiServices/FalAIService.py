@@ -647,7 +647,7 @@ class FalAIFluxProRedux(IService):
             },
         }
         result = fal_client.subscribe(
-            "fal-ai/flux-pro/v1.1-ultra/redux",
+            "fal-ai/flux-pro/v1.1/redux",
             arguments=input,
             with_logs=False,
         )  
@@ -764,6 +764,8 @@ class OmnigenV1(IService):
         super().__init__()
 
     def make_api_request(self, parameters : OmnigenParameters) -> str:
+        if(type(parameters.file_url) == str):
+            parameters.file_url = [parameters.file_url]
         input = {
             "prompt":parameters.prompt,
             "image_size": {
