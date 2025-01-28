@@ -33,14 +33,12 @@ def generate_content(
     parameters: dict,
     api_key: HTTPAuthorizationCredentials = Depends(auth_scheme),
 ):
-    print("Printing params")
-    print(parameters)
-    print("---------")
+    check_token(api_key)
     api_parameters = APIInput(**parameters)
     api_parameters.parameters = parameters
     api_parameters.init_parameters = app_dict[api_parameters.app_id]["init_parameters"]
     api_parameters.app_id = app_dict[api_parameters.app_id]["app_id"]
-    check_token(api_key)
+    
     return task_gen(api_parameters)
 
 @app.get("/list_of_Apps", response_model=APITaskResponse)
