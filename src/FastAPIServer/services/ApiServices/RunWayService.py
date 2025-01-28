@@ -15,18 +15,18 @@ class RunwayImage2Video(IService):
     def download_and_convert_to_base64(self, url : str) -> str:
         image = get_image_from_url(url)
 
-        width, height = image.size
-        aspect_ratio = width / height
+        # width, height = image.size
+        # aspect_ratio = width / height
         
-        if aspect_ratio > 2:
-            new_width = height * 2
-            left = (width - new_width) // 2
-            image = image.crop((left, 0, left + new_width, height))
+        # if aspect_ratio > 2:
+        #     new_width = height * 2
+        #     left = (width - new_width) // 2
+        #     image = image.crop((left, 0, left + new_width, height))
             
-        elif aspect_ratio < 0.5:
-            new_height = width * 2
-            top = (height - new_height) // 2
-            image = image.crop((0, top, width, top + new_height))
+        # elif aspect_ratio < 0.5:
+        #     new_height = width * 2
+        #     top = (height - new_height) // 2
+        #     image = image.crop((0, top, width, top + new_height))
 
 
         base64_image = io.BytesIO()
