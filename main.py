@@ -33,6 +33,7 @@ def generate_content(
     parameters: dict,
     api_key: HTTPAuthorizationCredentials = Depends(auth_scheme),
 ):
+    print(parameters)
     api_parameters = APIInput(**parameters)
     api_parameters.parameters = parameters
     api_parameters.init_parameters = app_dict[api_parameters.app_id]["init_parameters"]
