@@ -315,8 +315,8 @@ def process_video_url(video_url: str) -> List[Dict]:
     temp_dir = tempfile.mkdtemp()
     
     try:
-        temp_video_path = "/home/dhruv/modal-fastapi-sls-server/Extra/video.mp4"
-        temp_audio_path = "/home/dhruv/modal-fastapi-sls-server/Extra/video.mp3"
+        temp_video_path = os.path.join(temp_dir, "temp_video.mp4")
+        temp_audio_path = os.path.join(temp_dir, "temp_audio.mp3")
 
         response = requests.get(video_url, stream=True)
         response.raise_for_status()
@@ -383,11 +383,11 @@ def process_video_url(video_url: str) -> List[Dict]:
 
     finally:
         pass
-        # if os.path.exists(temp_video_path):
-        #     os.remove(temp_video_path)
-        # if os.path.exists(temp_audio_path):
-        #     os.remove(temp_audio_path)
-        # os.rmdir(temp_dir)
+        if os.path.exists(temp_video_path):
+            os.remove(temp_video_path)
+        if os.path.exists(temp_audio_path):
+            os.remove(temp_audio_path)
+        os.rmdir(temp_dir)
 
     return final_subtitles
 
