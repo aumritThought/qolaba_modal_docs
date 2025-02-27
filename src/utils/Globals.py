@@ -1,4 +1,4 @@
-from src.data_models.ModalAppSchemas import TaskResponse, TimeData, UpscaleParameters
+from src.data_models.ModalAppSchemas import TaskResponse, TimeData, UpscaleParameters, ChunkSummary, Subtopics
 from modal import Image as MIM
 from modal import Secret
 from PIL import Image
@@ -6,7 +6,7 @@ from PIL.Image import Image as Imagetype
 from diffusers import DiffusionPipeline
 from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
 from transformers import CLIPImageProcessor
-import torch, time, os, requests, re, io, datetime, uuid, imageio, math
+import torch, time, os, requests, re, io, datetime, uuid, imageio, math, json, subprocess, tempfile
 from src.utils.Constants import BASE_IMAGE_COMMANDS, IMAGE_FETCH_ERROR, STAGING_API, IMAGE_FETCH_ERROR_MSG, IMAGE_GENERATION_ERROR, NSFW_CONTENT_DETECT_ERROR_MSG, PYTHON_VERSION, REQUIREMENT_FILE_PATH, MEAN_HEIGHT, SDXL_REFINER_MODEL_PATH, google_credentials_info, OUTPUT_IMAGE_EXTENSION, SECRET_NAME, content_type, MAX_UPLOAD_RETRY
 from fastapi.security import HTTPAuthorizationCredentials
 from requests import Response
@@ -16,6 +16,16 @@ import numpy as np
 from modal import Cls
 from PIL import ImageFilter
 from pillow_heif import register_heif_opener
+from typing import List, Dict, Tuple
+from pydantic import BaseModel
+from openai import OpenAI
+from deepgram import (
+    DeepgramClient,
+    PrerecordedOptions,
+    FileSource
+)
+
+
 register_heif_opener()
 
 #Safety Checker Utils
@@ -297,3 +307,191 @@ def convert_to_aspect_ratio(width : int, height : int) -> str:
     simplified_height = height // gcd
         
     return f"{simplified_width}:{simplified_height}"
+
+
+
+
+def process_video_url(video_url: str) -> List[Dict]:
+    temp_dir = tempfile.mkdtemp()
+    
+    try:
+        temp_video_path = "/home/dhruv/modal-fastapi-sls-server/Extra/video.mp4"
+        temp_audio_path = "/home/dhruv/modal-fastapi-sls-server/Extra/video.mp3"
+
+        response = requests.get(video_url, stream=True)
+        response.raise_for_status()
+        
+        with open(temp_video_path, 'wb') as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                if chunk:
+                    f.write(chunk)
+
+        command = [
+            "ffmpeg", 
+            "-i", temp_video_path,  
+            "-q:a", "0",      
+            "-map", "a",       
+            temp_audio_path, 
+            "-y"          
+        ]
+            
+        subprocess.run(command, check=True)
+
+        deepgram = DeepgramClient(os.environ["DEEPGRAP_API_KEY"])
+
+        with open(temp_audio_path, "rb") as file:
+            buffer_data = file.read()
+
+        payload: FileSource = {
+                "buffer": buffer_data,
+        }
+
+        options = PrerecordedOptions(
+            model="nova-2",
+            detect_language=True,
+        )
+
+        response = deepgram.listen.rest.v("1").transcribe_file(payload, options)
+
+        data = response.to_dict()
+
+        final_subtitles = []
+        words = data['results']['channels'][0]['alternatives'][0]['words']
+
+        current_subtitle = []
+        current_start = None
+        current_end = None
+
+        for word in words:
+            if current_start is None:
+                current_start = word['start']
+
+            current_subtitle.append(word['word'])
+            current_end = word['end']
+
+            # If the word ends with punctuation or subtitle is getting too long, create a new subtitle
+            if word['word'][-1] in '.!?' or len(' '.join(current_subtitle)) > 40:
+                timstamp = {
+                    "start": current_start,
+                    "end": current_end,
+                    "subtitle": " ".join(current_subtitle)
+                }
+                current_start = None
+                current_subtitle = []
+                final_subtitles.append(timstamp)
+
+
+    finally:
+        pass
+        # if os.path.exists(temp_video_path):
+        #     os.remove(temp_video_path)
+        # if os.path.exists(temp_audio_path):
+        #     os.remove(temp_audio_path)
+        # os.rmdir(temp_dir)
+
+    return final_subtitles
+
+def divide_transcript(transcript, chunk_duration=60):
+    chunks = []
+    current_start_time = 0
+    current_chunk_text = []
+
+    for entry in transcript:
+        start_time = entry['start']
+        end_time = entry['end']
+
+        if start_time < current_start_time + chunk_duration:
+            current_chunk_text.append(entry["subtitle"])
+            prv_end = end_time
+        else:
+            chunks.append({
+                "start" :  current_start_time,
+                "subtitle" : " ".join(current_chunk_text),
+                "end_time" : prv_end,
+            })
+
+            current_chunk_text = [entry["subtitle"]]
+            current_start_time = start_time
+
+    if current_chunk_text:
+        chunks.append({
+                "start" :  current_start_time,
+                "subtitle" : " ".join(current_chunk_text),
+                "end_time" : end_time,
+            })
+
+    return chunks
+
+
+
+def extract_summary_and_topic(previous_summary: str, chunk: List[Dict], previous_topic : str) -> ChunkSummary:
+    client = OpenAI(api_key = os.environ["OPENAI_API_KEY"])
+
+    chunk_text = chunk["subtitle"]
+
+    response = client.beta.chat.completions.parse(
+        model="gpt-4o-2024-08-06",
+        messages=[
+            {"role": "system", "content": "You are an assistant tasked with summarizing video transcript chunks and identifying the main topic. Use the provided previous summary, previous topic and the current chunk to generate an updated summary within 50 words and updated topic. YOU MUST make sure that new summary has balance of previous summary and current chunk. Otherwise, content appearred in start will fade away over time."},
+            {"role": "user", "content": f"Here is the summary of the video so far: {previous_summary}\n\nHere is the previous topic of the video so far: {previous_topic}\n\nHere is the transcript of the current chunk: {chunk_text}\n\nPlease provide an updated summary that incorporates the new information from the current chunk. Also, identify the main topic of the video based on the updated summary."},
+        ],
+        response_format=ChunkSummary,
+    )
+
+    return response.choices[0].message.parsed
+
+def process_transcript(chunks) -> Tuple[str, str]:
+
+    overall_summary = "This video discusses various topics."
+    overall_topic = "General Overview"
+
+    for i, chunk in enumerate(chunks):
+        result = extract_summary_and_topic(overall_summary, chunk, overall_topic)
+        overall_summary = result.summary
+        overall_topic = result.topic
+
+
+    return overall_summary, overall_topic
+
+
+
+def extract_subtopics_with_timestamps(transcript: List[Dict]) -> Subtopics:
+    client = OpenAI(api_key = os.environ["OPENAI_API_KEY"])
+
+    full_transcript_text = "\n\n".join([f"{str(entry)}" for entry in transcript])
+
+    response = client.beta.chat.completions.parse(
+        model="gpt-4o-2024-08-06",
+        messages=[
+            {"role": "system", "content": """
+             Role: YouTube Chapter Generator
+
+            Task: Generate accurate and well-placed chapters for YouTube videos based on the provided video transcript, topic, and length.
+
+            Context:
+
+            You are an AI-powered YouTube Chapter Generator designed to create optimal chapter placements for YouTube videos. Your goal is to analyze the provided video transcript, topic, and length to identify key points and transitions, and then generate a list of well-placed chapters with their corresponding timestamps.
+
+            General Prompt:
+
+            As a YouTube Chapter Generator, I need you to create chapters for my YouTube video.
+             
+            Please analyze the transcript carefully, considering the video topic and length, to identify the most appropriate placement for each chapter. Here are some guidelines to follow:
+
+            -> Listen for natural pauses or transitions in the speaker's voice to identify when a new topic or section begins.
+            -> Pay close attention to the content being discussed and try to identify when the speaker moves from one main point to another.
+            -> If the speaker explicitly mentions a new topic or section, use that as a cue to place a timestamp.
+            -> Consider the overall flow of the video and aim to place timestamps at intervals that make sense for the viewer, such as every 1-2 minutes for longer videos or at major topic shifts.
+            -> If the video includes visual cues or text overlays indicating a new section, use those as a guide for placing timestamps.
+            Please provide the chapters as a list, with each chapter title accompanied by its corresponding timestamp in the seconds only.
+            -> YOU MUST make sure that you do not miss even single chapter so that viewers could enjoy the content based on their requirements. 
+            -> While making chapters, YOU MUST make sure that chapters are not too small. Each chapter should be at least 100-120s long.
+            Give your best.
+             
+            """},
+            {"role": "user", "content": f"Here is the video transcript: {full_transcript_text}\n\nMake sure that entire video is covered"},
+        ],
+        response_format=Subtopics,
+    )
+
+    return response.choices[0].message.parsed

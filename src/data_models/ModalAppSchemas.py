@@ -447,3 +447,19 @@ class TaskStatus(BaseModel):
     task_id: Optional[str] = None
     ref_id: Optional[str] = ""
 
+
+
+class ChunkSummary(BaseModel):
+    summary: str
+    topic: str
+
+class Timestamp(BaseModel):
+    start : float
+    end : float
+
+class SubtopicTimestamps(BaseModel):
+    start: float
+    chapter : str
+
+class Subtopics(BaseModel):
+    topics : list[SubtopicTimestamps]
