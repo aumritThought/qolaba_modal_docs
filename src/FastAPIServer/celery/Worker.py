@@ -91,7 +91,7 @@ def create_task(parameters: dict) -> dict:
     if output_data.extension is not None:
         urls = [None] * len(output_data.result)
         low_res_urls = [None] * len(output_data.result)
-        # has_copyright_content = [False]*len(output_data.result)
+        has_copyright_content = [False]*len(output_data.result)
 
         with concurrent.futures.ThreadPoolExecutor() as executor:
             full_res_futures = [executor.submit(upload_image, i, img, output_data.extension, parameters.upscale) 
@@ -104,21 +104,21 @@ def create_task(parameters: dict) -> dict:
             if output_data.extension == OUTPUT_IMAGE_EXTENSION:
                 low_res_futures = [executor.submit(upload_low_res_image, i, img, output_data.extension) 
                                 for i, img in enumerate(output_data.result)]
-                # copyrighted_content_futures = [executor.submit(identify_copy_righted_materials, urls[index], index) for index in range(len(urls))]
+                copyrighted_content_futures = [executor.submit(identify_copy_righted_materials, urls[index], index) for index in range(len(urls))]
             else:
                 low_res_futures = []
-            # copyrighted_content_futures = []
+            copyrighted_content_futures = []
 
             for future in concurrent.futures.as_completed(low_res_futures):
                 index, url = future.result()
                 low_res_urls[index] = url
-            # if(parameters.check_copyright_content == True):
-            #     for future in concurrent.futures.as_completed(copyrighted_content_futures):
-            #         bool_data, index = future.result()
-            #         has_copyright_content[index] = bool_data
+            if(parameters.check_copyright_content == True):
+                for future in concurrent.futures.as_completed(copyrighted_content_futures):
+                    bool_data, index = future.result()
+                    has_copyright_content[index] = bool_data
         
-        # urls = [url for url, bool_val in zip(urls, has_copyright_content) if not bool_val]
-        # low_res_urls = [url for url, bool_val in zip(low_res_urls, has_copyright_content) if not bool_val]
+        urls = [url for url, bool_val in zip(urls, has_copyright_content) if not bool_val]
+        low_res_urls = [url for url, bool_val in zip(low_res_urls, has_copyright_content) if not bool_val]
         output_data.result = urls
         output_data.low_res_urls = low_res_urls
 

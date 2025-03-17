@@ -74,8 +74,8 @@ class FalAIFluxDevText2Image(IService):
             arguments=input,
             with_logs=False,
         )  
-        if(sum(result["has_nsfw_concepts"])==1):
-            raise Exception(IMAGE_GENERATION_ERROR, NSFW_CONTENT_DETECT_ERROR_MSG)
+        # if(sum(result["has_nsfw_concepts"])==1):
+        #     raise Exception(IMAGE_GENERATION_ERROR, NSFW_CONTENT_DETECT_ERROR_MSG)
 
         header, encoded = str(result["images"][0]["url"]).split(",", 1)
     

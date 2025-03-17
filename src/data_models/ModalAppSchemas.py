@@ -463,3 +463,11 @@ class SubtopicTimestamps(BaseModel):
 
 class Subtopics(BaseModel):
     topics : list[SubtopicTimestamps]
+
+class TranslationContent(BaseModel):
+    start : float
+    end : float
+    translated_content : str
+
+class ListofTranslation(BaseModel):
+    translation_list : list[TranslationContent]

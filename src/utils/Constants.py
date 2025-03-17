@@ -851,33 +851,31 @@ COPYRIGHT_DETECTION_FUNCTION_CALLING_SCHEMA = {
     "function": {
         "name": "analyze_image_content",
         "description": """
-Analyzes if an image contains any famous real people, NSFW content or popular brand logos. 
+            Analyze if an image contains any NSFW content.
 
-Return true if the image contains: 
-1) Famous real humans (e.g., actors, athletes, politicians, musicians, social media influencers like Taylor Swift, Brad Pitt, Ronaldo etc.), 
-2) Famous brand logos (e.g., Nike swoosh, McDonald's golden arches, Apple, Adidas stripes, Coca-Cola text, etc.). 
-3) Any kind of NSFW content. such as visible private parts, activities like kissing, or pornographic material.
+            Return true if the image contains any kind of NSFW content, including but not limited to:
 
-You must return false in any other category apart from above three.
-Return false if the image contains: 
-1) Any kind of cartoons or fictional characters (e.g., Batman, Ironman, Superman, Mario, etc.) You must provide false for any kind of non-real person or character.
-2) Regular people, objects, scenes or crowds, 
-3) Nature, animals or landscapes, 
-4) Generic text, logos or symbols, 
-5) Regular buildings or architecture, 
-6) Generic clothing without visible brand logos, 
-7) Any type of unknown or unpopular logos
-""",
+            Visible private parts,
+            Pornographic material,
+            Explicit sexual activities,
+            Nudity,
+            Suggestive or provocative imagery,
+            Activities like kissing or intimate physical contact with sexual undertones.
+
+            Return false for any other category apart from NSFW content.
+            
+            You must return false for any content that does not fall into the NSFW category.
+        """,
     "parameters": {
     "type": "object",
     "properties": {
         "contains_protected_content": {
             "type": "boolean",
-            "description": "Returns true if any celebrities, famous logos, or NSFW content are detected in the image.  You must return false for minor NSFW content, as well as for generic content, regular people, non-real characters (like cartoons or fictional superheroes), or non-protected materials."
+            "description": "Returns true if any NSFW content is detected in the image. You must return false for other cases"
         },
         "reason" : {
             "type" : "string",
-            "description" : "provide the reason in case of Image contains some real people or logos."
+            "description" : "provide the reason"
         }
     },
     "required": ["contains_protected_content"]

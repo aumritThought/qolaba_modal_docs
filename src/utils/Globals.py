@@ -1,4 +1,4 @@
-from src.data_models.ModalAppSchemas import TaskResponse, TimeData, UpscaleParameters, ChunkSummary, Subtopics
+from src.data_models.ModalAppSchemas import TaskResponse, TimeData, UpscaleParameters, ChunkSummary, Subtopics, ListofTranslation
 from modal import Image as MIM
 from modal import Secret
 from PIL import Image
@@ -495,3 +495,55 @@ def extract_subtopics_with_timestamps(transcript: List[Dict]) -> Subtopics:
     )
 
     return response.choices[0].message.parsed
+
+
+def generate_translation(transcript : list[dict], language : str, step : int = 50) -> list[str]:
+    client = OpenAI(api_key = os.environ["OPENAI_API_KEY"])
+    translated_transcript = []
+    last_translatons = []
+
+    count = 0
+    while(count < len(transcript)):
+        if(count + step >= len(transcript)):
+            transcript_chunk = transcript[count :]
+        else:
+            transcript_chunk = transcript[count : count + step]
+
+        transcript_chunk = [str(chunk) for chunk in transcript_chunk]
+
+        transcript_chunk = "\n\n".join(transcript_chunk)
+
+        print(transcript_chunk)
+        
+        previous_translations = "\n\n".join(last_translatons)
+        response = client.beta.chat.completions.parse(
+            model="gpt-4o-2024-08-06",
+            messages=[
+                {"role": "system", "content": """
+                    Translation Generator
+                    Task: Generate accurate and well-placed translations for content based on the provided text, language requirements, and context.
+                    Context:
+                    You are an AI-powered Translation Generator designed to create optimal translations for various types of content. Your goal is to analyze the provided text, target language, and context to produce natural, culturally appropriate translations that maintain the original meaning and tone.
+
+                    General Prompt:
+                    As a Translation Generator, I need you to translate content for me.
+
+                    Please analyze the source text carefully, considering the target language and cultural context, to create the most appropriate translation. Here are some guidelines to follow:
+
+                    -> Maintain the natural flow and rhythm of the target language rather than translating word-for-word. -> Pay close attention to idioms, cultural references, and figurative language that may need adaptation rather than direct translation. -> If certain terms should remain untranslated (like brand names or technical terms), preserve them in the original language. -> Consider the overall tone and register of the content and aim to match it in the translation, whether formal, casual, technical, or creative. -> If the content includes specialized terminology or industry-specific language, ensure accurate translation using the appropriate terms in the target language.
+
+                    Please provide the translation as a complete text, maintaining the original formatting where appropriate (paragraphs, bullet points, etc.). -> YOU MUST make sure that you do not miss even a single sentence or section so that readers receive the complete content. -> While translating, YOU MUST make sure that the meaning is preserved accurately while sounding natural in the target language.
+
+                    Give your best.
+                """},
+                {"role": "user", "content": f"""Here is the content: {transcript_chunk}\n\nConvert the content into the {language}. Chunk Previous translation is  as follow:
+                {previous_translations}
+                """},
+            ],
+            response_format=ListofTranslation,
+        )
+        translated_transcript.extend(response.choices[0].message.parsed.model_dump()["translation_list"])
+        last_translatons = response.choices[0].message.parsed.model_dump()["translation_list"]
+        last_translatons = [str(chunk) for chunk in last_translatons]
+        count = count + step
+    return translated_transcript
