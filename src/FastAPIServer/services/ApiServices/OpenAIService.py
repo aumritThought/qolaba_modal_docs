@@ -1,4 +1,4 @@
-from src.data_models.ModalAppSchemas import DalleParameters, OpenAITTSParameters, TTSOutput
+from src.data_models.ModalAppSchemas import DalleParameters, OpenAITTSParameters, TTSOutput, NSFWSchema
 from src.utils.Globals import timing_decorator, make_request, prepare_response
 from openai import OpenAI
 from src.utils.Constants import DALLE_SUPPORTED_HW
@@ -7,7 +7,12 @@ from src.utils.Constants import OUTPUT_IMAGE_EXTENSION, TTS_CHAR_COST, IMAGE_GEN
 import concurrent.futures 
 from typing import Iterator
 import json, base64
-from openai.types.chat.chat_completion import ChatCompletion
+import google.auth
+import google.auth.transport.requests
+from google import genai
+from src.utils.Constants import google_credentials_info
+from src.utils.Globals import get_image_from_url
+from src.data_models.ModalAppSchemas import NSFWSchema
 
 class DalleText2Image(IService):
     def __init__(self) -> None:
@@ -78,35 +83,33 @@ class OpenAITexttoSpeech(IService):
 class OpenAIImageCheck(IService):
     def __init__(self) -> None:
         super().__init__()
-        self.client = OpenAI(api_key = self.openai_api_key)
         self.function_calling_schema = COPYRIGHT_DETECTION_FUNCTION_CALLING_SCHEMA
+        credentials, project_id = google.auth.load_credentials_from_dict(google_credentials_info, scopes=["https://www.googleapis.com/auth/cloud-platform"],)
+        request = google.auth.transport.requests.Request()
+        credentials.refresh(request)
+        self.client = genai.Client(vertexai=True, project="marine-potion-404413", credentials = credentials, location="us-central1")
 
     def remote(self, image_url: str) -> bool:
-        messages = [
-            {
-            "role": "user",
-            "content": [
-                {"type": "text", "text": "Please analyze below image. Analyze image in case of Real people or logos. For any other cases or fictional characters, you could return False."},
-                {
-                "type": "image_url",
-                "image_url": {
-                    "url": image_url,
-                    "detail": "low"
-                },
-                },
-            ],
-            }
-        ]
-        response : ChatCompletion = self.client.chat.completions.create(
-                    messages=messages,
-                    model="gpt-4o",
-                    stream=False,
-                    temperature=0,
-                    tool_choice="required",
-                    tools=[self.function_calling_schema],
-                    parallel_tool_calls = False,
-                    max_tokens=500,
-                )
+        response = self.client.models.generate_content(
+            contents=["""Analyze if an image contains any NSFW content.
 
-        return json.loads(response.choices[0].message.tool_calls[0].function.arguments)["contains_protected_content"]
+            Return true if the image contains any kind of NSFW content, including but not limited to:
+
+            Visible private parts,
+            Pornographic material,
+            Explicit sexual activities,
+            Nudity,
+            Suggestive or provocative imagery,
+            Activities like kissing or intimate physical contact with sexual undertones.
+
+            Return false for any other category apart from NSFW content.
+            
+            You must return false for any content that does not fall into the NSFW category.""", get_image_from_url(image_url)],
+            model="gemini-2.0-flash",
+            config={
+                'response_mime_type': 'application/json',
+                'response_schema': NSFWSchema,
+            },
+        )
+        return response.parsed.NSFW_content
     

@@ -471,3 +471,6 @@ class TranslationContent(BaseModel):
 
 class ListofTranslation(BaseModel):
     translation_list : list[TranslationContent]
+
+class NSFWSchema(BaseModel):
+    NSFW_content : bool 
