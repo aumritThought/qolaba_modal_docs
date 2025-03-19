@@ -26,3 +26,4 @@ python-dotenv
 runwayml
 lumaai
 deepgram-sdk
+google-genai
