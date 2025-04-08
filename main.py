@@ -8,7 +8,7 @@ from fastapi import Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from src.data_models.ModalAppSchemas import APIInput, APITaskResponse, TaskStatus, OpenAITTSParameters
 from src.FastAPIServer.celery.Worker import task_gen, get_task_status, initialize_shared_object
-from src.utils.Globals import check_token, upload_to_gcp, extract_subtopics_with_timestamps, generate_translation, divide_transcript, process_video_url
+from src.utils.Globals import check_token, upload_to_gcp
 from src.utils.Constants import app_dict, INTERNAL_ERROR, OUTPUT_IMAGE_EXTENSION
 from src.utils.Exceptions import handle_Request_exceptions, handle_exceptions
 import uvicorn, os, io
@@ -102,29 +102,6 @@ def upload_file(parameters: OpenAITTSParameters, api_key: HTTPAuthorizationCrede
     check_token(api_key)
     tts = OpenAITexttoSpeech()
     return StreamingResponse(tts.remote(parameters), media_type="application/json")
-
-
-@app.post("/generate_video_stemaps_summary")
-@handle_exceptions
-def generate_video_stamps_summary(vid_url : str):
-    # check_token(api_key)
-    transcript = process_video_url(vid_url)
-    subtopics = extract_subtopics_with_timestamps(transcript)
-    # chunks = divide_transcript(transcript)
-    # summary, _ = process_transcript(chunks)
-    return APITaskResponse(output = subtopics.model_dump())
-
-@app.post("/generate_video_translation")
-@handle_exceptions
-def generate_video_stamps_summary(vid_url : str, language : str):
-    # check_token(api_key)
-    transcript = process_video_url(vid_url)
-
-    # print(len(transcript))
-    translated_transcript = generate_translation(transcript, language)
-    # chunks = divide_transcript(transcript)
-    # summary, _ = process_transcript(chunks)
-    return APITaskResponse(output = translated_transcript)
 
 
 if __name__ == "__main__":

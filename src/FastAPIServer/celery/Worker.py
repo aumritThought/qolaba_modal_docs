@@ -29,6 +29,16 @@ celery.conf.worker_init = worker_init
 
 
 def initialize_shared_object():
+    """
+    Initializes global service container and registry for the Celery worker process.
+    
+    This function creates a shared container object that's accessible across different
+    Celery worker threads. Since Celery processes run on different threads, we need to
+    initialize this container when the Celery process starts to ensure all tasks have
+    access to the same service registry.
+    
+    The container provides access to all registered services that can be used by tasks.
+    """
     global service_registry
     global container 
 
@@ -39,25 +49,87 @@ def initialize_shared_object():
     pass
 
 def upload_image(index, image_data, extension, upscale=False):
+    """
+    Uploads an image to Google Cloud Platform storage.
+    
+    This function tracks the original index of the image in the batch, allowing for
+    parallel processing while maintaining the correct order of results. When running
+    concurrent uploads, the index ensures each URL can be correctly matched to its
+    original image position.
+    
+    Args:
+        index (int): Position index of the image in the original batch
+        image_data (bytes): Raw image data to upload
+        extension (str): File extension for the image (e.g., 'jpg', 'png')
+        upscale (bool, optional): Whether to upscale the image. Defaults to False.
+        
+    Returns:
+        tuple: (index, url) where index is the original position and url is the GCP storage URL
+    """
     url = upload_data_gcp(image_data, extension, upscale)
     return index, url
 
 def upload_low_res_image(index, image_data, extension):
+    """
+    Uploads a compressed low-resolution version of an image to GCP storage.
+    
+    Similar to upload_image, but compresses the image first to create a lower-resolution
+    preview. This is useful for generating thumbnails or preview images that load faster
+    while the full-resolution image is being processed or downloaded.
+    
+    Args:
+        index (int): Position index of the image in the original batch
+        image_data (bytes): Raw image data to compress and upload
+        extension (str): File extension for the image
+        
+    Returns:
+        tuple: (index, url) where index is the original position and url is the GCP storage URL
+    """
     low_rs_image = Image.open(io.BytesIO(image_data))
     low_rs_image = compress_image(low_rs_image)
     url = upload_data_gcp(low_rs_image, extension)
     return index, url
 
 def identify_copy_righted_materials(image_url : str, index : int) -> tuple[bool, int]:
+    """
+    Checks images for NSFW or copyrighted content.
+    
+    Uses the image checker service from the container to determine if an image contains
+    inappropriate or copyrighted material. Images flagged by this function can be filtered
+    out of the final results.
+    
+    Args:
+        image_url (str): URL of the image to check
+        index (int): Position index of the image in the batch
+        
+    Returns:
+        tuple: (is_copyrighted, index) where is_copyrighted is a boolean and index is the original position
+    """
     image_check_object = container.image_checker()
     return image_check_object.remote(image_url), index
 
 @worker_process_init.connect
 def on_worker_init(**kwargs):
+    """
+    Initializes shared objects when a worker process starts.
+    
+    This function is connected to Celery's worker_process_init signal and automatically
+    runs when a new worker process is spawned. It ensures that each worker process has
+    its own properly initialized container and service registry.
+    """
     initialize_shared_object()
 
 
 def get_service_list()-> dict:
+    """
+    Retrieves a list of available services from the service registry.
+    
+    Provides a way to discover what services are currently registered and available
+    for use within the system.
+    
+    Returns:
+        dict: API response containing the list of available services
+    """
     task_response = APITaskResponse(output=service_registry.get_available_services())
     return task_response.model_dump()
 
@@ -65,6 +137,26 @@ def get_service_list()-> dict:
 
 @celery.task(name="AI_task", time_limit = CELERY_RESULT_EXPIRATION_TIME, max_retries = CELERY_MAX_RETRY, soft_time_limit = CELERY_SOFT_LIMIT)
 def create_task(parameters: dict) -> dict:
+    """
+    Main task handler for processing AI requests.
+    
+    This function takes parameters for an AI task, retrieves the appropriate service
+    based on the app_id, executes the task, and processes the results. For image generation
+    tasks, it handles uploading results to GCP in parallel and checks for NSFW content.
+    Images flagged as inappropriate are removed from the final result list.
+    
+    The function supports both API-based services and Modal-based services with different
+    execution paths for each type.
+    
+    Args:
+        parameters (dict): Task parameters including app_id and specific model parameters
+        
+    Returns:
+        dict: API response with task results, timing information, and status
+        
+    Raises:
+        Exception: If the specified app_id is not available or if response is empty
+    """
     st = time.time()
     parameters : APIInput = APIInput(**parameters)
     app = service_registry.get_service(parameters.app_id)
@@ -144,7 +236,22 @@ def create_task(parameters: dict) -> dict:
 
 
 def task_gen(parameters: APIInput) -> dict:
-
+    """
+    Determines whether to execute a task via Celery or directly.
+    
+    This function acts as a router that checks if a task should be processed
+    asynchronously via Celery (returning a task ID for later status checking),
+    or synchronously (returning the complete result immediately).
+    
+    The decision is based on the 'celery' parameter in the input. This provides
+    flexibility in how tasks are executed based on client requirements.
+    
+    Args:
+        parameters (APIInput): Task parameters including a 'celery' flag
+        
+    Returns:
+        dict: Either a task ID and status (async) or complete task results (sync)
+    """
     if parameters.celery == True:
         task: AsyncResult = create_task.delay(parameters.model_dump())
 
@@ -157,6 +264,18 @@ def task_gen(parameters: APIInput) -> dict:
         return create_task(parameters.model_dump())
     
 def get_task_status(id : str) -> AsyncResult:
+    """
+    Retrieves the current status of a Celery task.
+    
+    This function allows clients to check on the progress of asynchronous tasks
+    that were previously submitted through task_gen with celery=True.
+    
+    Args:
+        id (str): The Celery task ID to check
+        
+    Returns:
+        AsyncResult: Celery task result object containing status information
+    """
     task_update = celery.AsyncResult(id)
     return task_update
 

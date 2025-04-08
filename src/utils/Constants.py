@@ -445,7 +445,20 @@ User Query :
 
 
 
-#Parameter dictionary
+"""
+Mapping between external app IDs and internal service configurations.
+
+This dictionary maps client-facing application IDs (e.g., "ap-JOsvgUBfInC2UQnz0FQFkG") 
+to their corresponding internal service configurations. Each entry contains:
+
+- app_id: The internal service identifier used to locate the service in the container
+- init_parameters: Configuration parameters for initializing the service
+- model_name: User-friendly name for the service/model
+
+This mapping allows to find the particular service associated with given unique id 
+starting with "ap-....". The service is stored in container with the name defined 
+in app_id. 
+"""
 app_dict = {
     "ap-JOsvgUBfInC2UQnz0FQFkG": {
         "app_id" : "SDXL_Text_To_Image_modal",
