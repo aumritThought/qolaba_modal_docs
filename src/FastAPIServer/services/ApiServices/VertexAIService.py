@@ -10,6 +10,12 @@ import google.auth.transport.requests
 
 class ImageGenText2Image(IService):
     def __init__(self) -> None:
+        """
+        Initializes the Gemini service with appropriate API endpoints.
+        
+        Sets up the service by inheriting API credentials from the parent IService
+        class and configuring the specific endpoint URLs needed for this operation.
+        """
         super().__init__()
         credentials, project_id = google.auth.load_credentials_from_dict(google_credentials_info, scopes=["https://www.googleapis.com/auth/cloud-platform"],)
         request = google.auth.transport.requests.Request()
@@ -19,6 +25,23 @@ class ImageGenText2Image(IService):
 
 
     def make_api_request(self, parameters : IdeoGramText2ImageParameters) -> str:
+        """
+        Processes an individual image generation request through the SDXL API.
+        
+        This function constructs the appropriate API payload from the parameters,
+        sends the request to the specified API endpoint, and processes the response
+        including NSFW content detection and result formatting.
+        
+        Args:
+            parameters: Configuration parameters specific to the operation type
+            *args: Additional arguments specific to the operation type
+            
+        Returns:
+            list: A list containing the generated image data and NSFW flag
+            
+        Raises:
+            Exception: If the generated content is flagged as NSFW or an API error occurs
+        """
         image = self.generation_model.generate_images(
             prompt=parameters.prompt,
             number_of_images=1,
@@ -31,6 +54,24 @@ class ImageGenText2Image(IService):
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
+        """
+        Entry point for the service that handles batch processing of requests.
+        
+        This method validates the input parameters, prepares any required resources
+        (like input images or masks), and creates multiple parallel generation tasks
+        based on the batch size. The @timing_decorator tracks and adds execution
+        time to the response.
+        
+        Args:
+            parameters (dict): Request parameters for the specific operation
+            
+        Returns:
+            dict: Standardized response containing generated images, NSFW flags,
+                timing information, and file format
+                
+        Raises:
+            Exception: If parameter validation fails or the API returns errors
+        """
         parameters : IdeoGramText2ImageParameters = IdeoGramText2ImageParameters(**parameters)
 
         parameters.aspect_ratio = convert_to_aspect_ratio(parameters.width, parameters.height)

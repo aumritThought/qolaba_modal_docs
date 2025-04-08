@@ -10,6 +10,12 @@ import concurrent.futures
 
 class SDXLText2Image(IService):
     def __init__(self) -> None:
+        """
+        Initializes the SDXL service with appropriate API endpoints.
+        
+        Sets up the service by inheriting API credentials from the parent IService
+        class and configuring the specific endpoint URLs needed for this operation.
+        """
         super().__init__()
         self.api_host = self.stability_api
         self.api_key = self.stability_api_key
@@ -18,6 +24,24 @@ class SDXLText2Image(IService):
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
+        """
+        Entry point for the service that handles batch processing of requests.
+        
+        This method validates the input parameters, prepares any required resources
+        (like input images or masks), and creates multiple parallel generation tasks
+        based on the batch size. The @timing_decorator tracks and adds execution
+        time to the response.
+        
+        Args:
+            parameters (dict): Request parameters for the specific operation
+            
+        Returns:
+            dict: Standardized response containing generated images, NSFW flags,
+                timing information, and file format
+                
+        Raises:
+            Exception: If parameter validation fails or the API returns errors
+        """
         parameters : SDXLAPITextToImageParameters = SDXLAPITextToImageParameters(**parameters)
         headers = {
             "Content-Type": "application/json",
@@ -61,6 +85,12 @@ class SDXLText2Image(IService):
 
 class SDXLImage2Image(IService):
     def __init__(self) -> None:
+        """
+        Initializes the SDXL service with appropriate API endpoints.
+        
+        Sets up the service by inheriting API credentials from the parent IService
+        class and configuring the specific endpoint URLs needed for this operation.
+        """
         super().__init__()
         self.api_host = self.stability_api
         self.api_key = self.stability_api_key
@@ -69,6 +99,24 @@ class SDXLImage2Image(IService):
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
+        """
+        Entry point for the service that handles batch processing of requests.
+        
+        This method validates the input parameters, prepares any required resources
+        (like input images or masks), and creates multiple parallel generation tasks
+        based on the batch size. The @timing_decorator tracks and adds execution
+        time to the response.
+        
+        Args:
+            parameters (dict): Request parameters for the specific operation
+            
+        Returns:
+            dict: Standardized response containing generated images, NSFW flags,
+                timing information, and file format
+                
+        Raises:
+            Exception: If parameter validation fails or the API returns errors
+        """
         parameters : SDXLAPIImageToImageParameters = SDXLAPIImageToImageParameters(**parameters)
         image = get_image_from_url(
             parameters.file_url
@@ -116,11 +164,34 @@ class SDXLImage2Image(IService):
 
 class SDXLInpainting(IService):
     def __init__(self) -> None:
+        """
+        Initializes the SDXL service with appropriate API endpoints.
+        
+        Sets up the service by inheriting API credentials from the parent IService
+        class and configuring the specific endpoint URLs needed for this operation.
+        """
         super().__init__()
         self.api_key = self.stability_api_key
         self.url = self.stability_inpaint_url
 
     def generate_image(self, mask_image : Imagetype, image : Imagetype, prompt : str, negative_prompt : str) -> Imagetype:
+        """
+        Processes an individual image generation request through the SDXL API.
+        
+        This function constructs the appropriate API payload from the parameters,
+        sends the request to the specified API endpoint, and processes the response
+        including NSFW content detection and result formatting.
+        
+        Args:
+            parameters: Configuration parameters specific to the operation type
+            *args: Additional arguments specific to the operation type
+            
+        Returns:
+            list: A list containing the generated image data and NSFW flag
+            
+        Raises:
+            Exception: If the generated content is flagged as NSFW or an API error occurs
+        """
         filtered_image = io.BytesIO()
         image.save(filtered_image, "JPEG")
 
@@ -157,6 +228,24 @@ class SDXLInpainting(IService):
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
+        """
+        Entry point for the service that handles batch processing of requests.
+        
+        This method validates the input parameters, prepares any required resources
+        (like input images or masks), and creates multiple parallel generation tasks
+        based on the batch size. The @timing_decorator tracks and adds execution
+        time to the response.
+        
+        Args:
+            parameters (dict): Request parameters for the specific operation
+            
+        Returns:
+            dict: Standardized response containing generated images, NSFW flags,
+                timing information, and file format
+                
+        Raises:
+            Exception: If parameter validation fails or the API returns errors
+        """
         parameters : SDXLAPIInpainting = SDXLAPIInpainting(**parameters)
         image = get_image_from_url(
             parameters.file_url
@@ -190,12 +279,35 @@ class SDXLInpainting(IService):
 
 class SDXLReplaceBackground(IService):
     def __init__(self, remover : Remover) -> None:
+        """
+        Initializes the SDXL service with appropriate API endpoints.
+        
+        Sets up the service by inheriting API credentials from the parent IService
+        class and configuring the specific endpoint URLs needed for this operation.
+        """
         super().__init__()
         self.api_key = self.stability_api_key
         self.url = self.stability_inpaint_url
         self.remover = remover
     
     def generate_image(self, mask_image : Imagetype, image : Imagetype, prompt : str, negative_prompt : str) -> Imagetype:
+        """
+        Processes an individual image generation request through the SDXL API.
+        
+        This function constructs the appropriate API payload from the parameters,
+        sends the request to the specified API endpoint, and processes the response
+        including NSFW content detection and result formatting.
+        
+        Args:
+            parameters: Configuration parameters specific to the operation type
+            *args: Additional arguments specific to the operation type
+            
+        Returns:
+            list: A list containing the generated image data and NSFW flag
+            
+        Raises:
+            Exception: If the generated content is flagged as NSFW or an API error occurs
+        """
         filtered_image = io.BytesIO()
         image.save(filtered_image, "JPEG")
 
@@ -232,6 +344,24 @@ class SDXLReplaceBackground(IService):
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
+        """
+        Entry point for the service that handles batch processing of requests.
+        
+        This method validates the input parameters, prepares any required resources
+        (like input images or masks), and creates multiple parallel generation tasks
+        based on the batch size. The @timing_decorator tracks and adds execution
+        time to the response.
+        
+        Args:
+            parameters (dict): Request parameters for the specific operation
+            
+        Returns:
+            dict: Standardized response containing generated images, NSFW flags,
+                timing information, and file format
+                
+        Raises:
+            Exception: If parameter validation fails or the API returns errors
+        """
         parameters : SDXLAPIInpainting = SDXLAPIInpainting(**parameters)
         image = get_image_from_url(
             parameters.file_url
@@ -267,12 +397,35 @@ class SDXLReplaceBackground(IService):
     
 class SDXL3Text2Image(IService):
     def __init__(self) -> None:
+        """
+        Initializes the SDXL service with appropriate API endpoints.
+        
+        Sets up the service by inheriting API credentials from the parent IService
+        class and configuring the specific endpoint URLs needed for this operation.
+        """
         super().__init__()
         self.api_key = self.stability_api_key
         self.url = self.sdxl3_url
 
 
     def generate_image(self, parameters : SDXL3APITextToImageParameters, model : str) -> str:
+        """
+        Processes an individual image generation request through the SDXL API.
+        
+        This function constructs the appropriate API payload from the parameters,
+        sends the request to the specified API endpoint, and processes the response
+        including NSFW content detection and result formatting.
+        
+        Args:
+            parameters: Configuration parameters specific to the operation type
+            *args: Additional arguments specific to the operation type
+            
+        Returns:
+            list: A list containing the generated image data and NSFW flag
+            
+        Raises:
+            Exception: If the generated content is flagged as NSFW or an API error occurs
+        """
         headers={
             "authorization": f"Bearer {self.api_key}",
             "accept": "application/json"
@@ -312,6 +465,24 @@ class SDXL3Text2Image(IService):
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
+        """
+        Entry point for the service that handles batch processing of requests.
+        
+        This method validates the input parameters, prepares any required resources
+        (like input images or masks), and creates multiple parallel generation tasks
+        based on the batch size. The @timing_decorator tracks and adds execution
+        time to the response.
+        
+        Args:
+            parameters (dict): Request parameters for the specific operation
+            
+        Returns:
+            dict: Standardized response containing generated images, NSFW flags,
+                timing information, and file format
+                
+        Raises:
+            Exception: If parameter validation fails or the API returns errors
+        """
         parameters : SDXL3APITextToImageParameters = SDXL3APITextToImageParameters(**parameters)
 
         with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
@@ -335,12 +506,35 @@ class SDXL3Text2Image(IService):
 
 class SDXL3Image2Image(IService):
     def __init__(self) -> None:
+        """
+        Initializes the SDXL service with appropriate API endpoints.
+        
+        Sets up the service by inheriting API credentials from the parent IService
+        class and configuring the specific endpoint URLs needed for this operation.
+        """
         super().__init__()
         self.api_key = self.stability_api_key
         self.url = self.sdxl3_url
 
 
     def generate_image(self, parameters : SDXL3APIImageToImageParameters, model : str) -> str:
+        """
+        Processes an individual image generation request through the SDXL API.
+        
+        This function constructs the appropriate API payload from the parameters,
+        sends the request to the specified API endpoint, and processes the response
+        including NSFW content detection and result formatting.
+        
+        Args:
+            parameters: Configuration parameters specific to the operation type
+            *args: Additional arguments specific to the operation type
+            
+        Returns:
+            list: A list containing the generated image data and NSFW flag
+            
+        Raises:
+            Exception: If the generated content is flagged as NSFW or an API error occurs
+        """
         image = get_image_from_url(
             parameters.file_url
         )
@@ -382,6 +576,24 @@ class SDXL3Image2Image(IService):
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
+        """
+        Entry point for the service that handles batch processing of requests.
+        
+        This method validates the input parameters, prepares any required resources
+        (like input images or masks), and creates multiple parallel generation tasks
+        based on the batch size. The @timing_decorator tracks and adds execution
+        time to the response.
+        
+        Args:
+            parameters (dict): Request parameters for the specific operation
+            
+        Returns:
+            dict: Standardized response containing generated images, NSFW flags,
+                timing information, and file format
+                
+        Raises:
+            Exception: If parameter validation fails or the API returns errors
+        """
         parameters : SDXL3APIImageToImageParameters = SDXL3APIImageToImageParameters(**parameters)
 
         with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:

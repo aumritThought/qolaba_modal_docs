@@ -14,8 +14,6 @@ from src.utils.Exceptions import handle_Request_exceptions, handle_exceptions
 import uvicorn, os, io
 from fastapi.exceptions import RequestValidationError
 from transparent_background import Remover
-from src.FastAPIServer.services.ApiServices.OpenAIService import OpenAITexttoSpeech
-from fastapi.responses import StreamingResponse
 from PIL import Image
 
 app = FastAPI()
@@ -95,13 +93,6 @@ def upload_file(file: UploadFile, file_type : str = Body(..., embed=True), api_k
                 status="SUCCESS"
     ).model_dump()
     return task_Response
-
-@app.post("/generate_stream_audio", response_model=APITaskResponse)
-@handle_exceptions
-def upload_file(parameters: OpenAITTSParameters, api_key: HTTPAuthorizationCredentials = Depends(auth_scheme)):
-    check_token(api_key)
-    tts = OpenAITexttoSpeech()
-    return StreamingResponse(tts.remote(parameters), media_type="application/json")
 
 
 if __name__ == "__main__":
