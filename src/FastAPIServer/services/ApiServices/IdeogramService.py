@@ -6,10 +6,29 @@ import concurrent.futures, io, json
 
 class IdeoGramText2Image(IService):
     def __init__(self) -> None:
+        """
+        Initializes the Ideogram service.
+        
+        Sets up the service by inheriting API credentials and endpoints
+        from the parent IService class.
+        """
         super().__init__()
         
     def make_api_request(self, parameters : IdeoGramText2ImageParameters) -> str:
-
+        """
+        Sends a request to the Ideogram API for image generation.
+        
+        This function constructs the appropriate API payload from the parameters,
+        sends the request to the Ideogram API endpoint, and handles the response
+        processing to extract the resulting image.
+        
+        Args:
+            parameters: Configuration parameters for image generation including
+                prompt, style settings, and format options
+            
+        Returns:
+            str: The generated image data as bytes
+        """
         payload = { 
             "image_request": {
                 "prompt": parameters.prompt,
@@ -32,6 +51,24 @@ class IdeoGramText2Image(IService):
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
+        """
+        Entry point for the service that handles batch processing of requests.
+        
+        This method validates and processes the input parameters, converts dimensions
+        to Ideogram's supported aspect ratios, and creates multiple parallel generation
+        tasks based on the batch size. The @timing_decorator tracks and adds execution
+        time to the response.
+        
+        Args:
+            parameters (dict): Request parameters for image generation
+            
+        Returns:
+            dict: Standardized response containing generated images, NSFW flags,
+                timing information, and file format
+                
+        Raises:
+            Exception: If the requested aspect ratio is not supported by Ideogram
+        """
         parameters : IdeoGramText2ImageParameters = IdeoGramText2ImageParameters(**parameters)
 
         aspect_ratio = convert_to_aspect_ratio(parameters.width, parameters.height)
@@ -53,10 +90,29 @@ class IdeoGramText2Image(IService):
     
 class IdeogramRemix(IService):
     def __init__(self) -> None:
+        """
+        Initializes the Ideogram service.
+        
+        Sets up the service by inheriting API credentials and endpoints
+        from the parent IService class.
+        """
         super().__init__()
         
     def make_api_request(self, parameters : IdeoGramRemixParameters) -> str:
-
+        """
+        Sends a request to the Ideogram API for image generation.
+        
+        This function constructs the appropriate API payload from the parameters,
+        sends the request to the Ideogram API endpoint, and handles the response
+        processing to extract the resulting image.
+        
+        Args:
+            parameters: Configuration parameters for image generation including
+                prompt, style settings, and format options
+            
+        Returns:
+            str: The generated image data as bytes
+        """
         payload = { 
             "image_request": json.dumps({
                 "prompt": parameters.prompt,
@@ -92,6 +148,24 @@ class IdeogramRemix(IService):
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
+        """
+        Entry point for the service that handles batch processing of requests.
+        
+        This method validates and processes the input parameters, converts dimensions
+        to Ideogram's supported aspect ratios, and creates multiple parallel generation
+        tasks based on the batch size. The @timing_decorator tracks and adds execution
+        time to the response.
+        
+        Args:
+            parameters (dict): Request parameters for image generation
+            
+        Returns:
+            dict: Standardized response containing generated images, NSFW flags,
+                timing information, and file format
+                
+        Raises:
+            Exception: If the requested aspect ratio is not supported by Ideogram
+        """
         parameters : IdeoGramRemixParameters = IdeoGramRemixParameters(**parameters)
 
         aspect_ratio = convert_to_aspect_ratio(parameters.width, parameters.height)

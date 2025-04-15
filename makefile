@@ -29,3 +29,8 @@ deploy_dev:
 	modal deploy src/ModalPipelines/Upscaling.py --env dev
 	modal deploy src/ModalPipelines/Variation.py --env dev
 	modal deploy src/ModalPipelines/OOTDiffusion.py --env dev
+
+
+test:
+	python -m pytest tests/ -rP -vv
+	python -m pytest --cov=src tests/

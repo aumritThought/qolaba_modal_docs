@@ -13,6 +13,19 @@ class RunwayImage2Video(IService):
         self.client = RunwayML(api_key=self.runway_api_key)
 
     def download_and_convert_to_base64(self, url : str) -> str:
+        """
+        Downloads an image and converts it to base64 format for Runway's API.
+        
+        This function retrieves an image from a URL, processes it to ensure
+        compatibility with Runway's requirements, and converts it to a base64
+        encoded string with the proper data URI format.
+        
+        Args:
+            url (str): URL of the image to download and convert
+            
+        Returns:
+            str: Base64 encoded image data in data URI format
+        """
         image = get_image_from_url(url)
 
         # width, height = image.size
@@ -40,7 +53,25 @@ class RunwayImage2Video(IService):
         return f"data:image/jpg;base64,{base64_string}"
 
     def generate_image(self, parameters : RunwayImage2VideoParameters) -> str:
-
+        """
+        Generates a video from reference images and text prompts.
+        
+        This function processes the input parameters, converts reference images
+        to the required format, and sends a request to RunwayML's image-to-video
+        API. It monitors the generation process until completion, handling the
+        asynchronous nature of video generation.
+        
+        Args:
+            parameters: Configuration parameters including prompt, aspect ratio,
+                duration, and reference images
+            
+        Returns:
+            str: The generated video data as bytes
+            
+        Raises:
+            Exception: If no images are provided, if image positions conflict,
+                or if the generation process fails
+        """
         if(len(parameters.file_url) > 0):
             parameters.file_url[0].uri = self.download_and_convert_to_base64(parameters.file_url[0].uri)
 
@@ -72,6 +103,20 @@ class RunwayImage2Video(IService):
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
+        """
+        Entry point for the service that handles batch processing of requests.
+        
+        This method processes the input parameters, creates multiple parallel
+        generation tasks based on the batch size, and aggregates the results.
+        The @timing_decorator tracks and adds execution time to the response.
+        
+        Args:
+            parameters (dict): Request parameters for video generation
+            
+        Returns:
+            dict: Standardized response containing generated videos, NSFW flags,
+                timing information, and file format
+        """
         parameters : RunwayImage2VideoParameters = RunwayImage2VideoParameters(**parameters)
         
 

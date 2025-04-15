@@ -13,6 +13,19 @@ class FalAIFluxProText2Image(IService):
         super().__init__()
 
     def make_api_request(self, parameters : FluxText2ImageParameters) -> str:
+        """
+        Sends a request to the Fal.AI.
+        
+        This function constructs the appropriate API payload from the parameters,
+        sends the request to the Flux Pro API endpoint, and handles the response
+        processing including base64 decoding of the resulting image.
+
+        Returns:
+            str: The generated image data as bytes
+            
+        Raises:
+            Exception: If the generated content is flagged as NSFW
+        """
         input = {
             "prompt": parameters.prompt,
             "image_size": {
@@ -39,6 +52,20 @@ class FalAIFluxProText2Image(IService):
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
+        """
+        Entry point for the service that handles batch processing of requests.
+        
+        This method processes the input parameters, creates multiple parallel
+        generation tasks based on the batch size, and aggregates the results.
+        The @timing_decorator tracks and adds execution time to the response.
+        
+        Args:
+            parameters (dict): Request parameters for image generation
+            
+        Returns:
+            dict: Standardized response containing generated images, NSFW flags,
+                timing information, and file format
+        """
         parameters : FluxText2ImageParameters = FluxText2ImageParameters(**parameters)
 
         with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
@@ -59,6 +86,19 @@ class FalAIFluxDevText2Image(IService):
         super().__init__()
 
     def make_api_request(self, parameters : FluxText2ImageParameters) -> str:
+        """
+        Sends a request to the Fal.AI.
+        
+        This function constructs the appropriate API payload from the parameters,
+        sends the request to the Flux Pro API endpoint, and handles the response
+        processing including base64 decoding of the resulting image.
+
+        Returns:
+            str: The generated image data as bytes
+            
+        Raises:
+            Exception: If the generated content is flagged as NSFW
+        """
         input = {
             "prompt": parameters.prompt,
             "image_size": {
@@ -86,6 +126,20 @@ class FalAIFluxDevText2Image(IService):
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
+        """
+        Entry point for the service that handles batch processing of requests.
+        
+        This method processes the input parameters, creates multiple parallel
+        generation tasks based on the batch size, and aggregates the results.
+        The @timing_decorator tracks and adds execution time to the response.
+        
+        Args:
+            parameters (dict): Request parameters for image generation
+            
+        Returns:
+            dict: Standardized response containing generated images, NSFW flags,
+                timing information, and file format
+        """
         parameters : FluxText2ImageParameters = FluxText2ImageParameters(**parameters)
 
         with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
@@ -105,6 +159,19 @@ class FalAIFluxschnellText2Image(IService):
         super().__init__()
 
     def make_api_request(self, parameters : FluxText2ImageParameters) -> str:
+        """
+        Sends a request to the Fal.AI.
+        
+        This function constructs the appropriate API payload from the parameters,
+        sends the request to the Flux Pro API endpoint, and handles the response
+        processing including base64 decoding of the resulting image.
+
+        Returns:
+            str: The generated image data as bytes
+            
+        Raises:
+            Exception: If the generated content is flagged as NSFW
+        """
         input = {
             "prompt": parameters.prompt,
             "image_size": {
@@ -129,6 +196,20 @@ class FalAIFluxschnellText2Image(IService):
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
+        """
+        Entry point for the service that handles batch processing of requests.
+        
+        This method processes the input parameters, creates multiple parallel
+        generation tasks based on the batch size, and aggregates the results.
+        The @timing_decorator tracks and adds execution time to the response.
+        
+        Args:
+            parameters (dict): Request parameters for image generation
+            
+        Returns:
+            dict: Standardized response containing generated images, NSFW flags,
+                timing information, and file format
+        """
         parameters : FluxText2ImageParameters = FluxText2ImageParameters(**parameters)
 
         with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
@@ -148,6 +229,19 @@ class FalAIFluxDevImage2Image(IService):
         super().__init__()
 
     def make_api_request(self, parameters : FluxImage2ImageParameters) -> str:
+        """
+        Sends a request to the Fal.AI.
+        
+        This function constructs the appropriate API payload from the parameters,
+        sends the request to the Flux Pro API endpoint, and handles the response
+        processing including base64 decoding of the resulting image.
+
+        Returns:
+            str: The generated image data as bytes
+            
+        Raises:
+            Exception: If the generated content is flagged as NSFW
+        """
         input = {
             "image_url" : parameters.file_url,
             "prompt": parameters.prompt,
@@ -172,6 +266,20 @@ class FalAIFluxDevImage2Image(IService):
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
+        """
+        Entry point for the service that handles batch processing of requests.
+        
+        This method processes the input parameters, creates multiple parallel
+        generation tasks based on the batch size, and aggregates the results.
+        The @timing_decorator tracks and adds execution time to the response.
+        
+        Args:
+            parameters (dict): Request parameters for image generation
+            
+        Returns:
+            dict: Standardized response containing generated images, NSFW flags,
+                timing information, and file format
+        """
         parameters : FluxImage2ImageParameters = FluxImage2ImageParameters(**parameters)
 
         with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
@@ -192,6 +300,19 @@ class FalAIRefactorV3Text2Image(IService):
         super().__init__()
 
     def make_api_request(self, parameters : RecraftV3Text2ImageParameters) -> str:
+        """
+        Sends a request to the Fal.AI.
+        
+        This function constructs the appropriate API payload from the parameters,
+        sends the request to the Flux Pro API endpoint, and handles the response
+        processing including base64 decoding of the resulting image.
+
+        Returns:
+            str: The generated image data as bytes
+            
+        Raises:
+            Exception: If the generated content is flagged as NSFW
+        """
         input = {
             "prompt": parameters.prompt,
             "image_size": {
@@ -212,6 +333,20 @@ class FalAIRefactorV3Text2Image(IService):
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
+        """
+        Entry point for the service that handles batch processing of requests.
+        
+        This method processes the input parameters, creates multiple parallel
+        generation tasks based on the batch size, and aggregates the results.
+        The @timing_decorator tracks and adds execution time to the response.
+        
+        Args:
+            parameters (dict): Request parameters for image generation
+            
+        Returns:
+            dict: Standardized response containing generated images, NSFW flags,
+                timing information, and file format
+        """
         parameters : RecraftV3Text2ImageParameters = RecraftV3Text2ImageParameters(**parameters)
 
         with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
@@ -231,6 +366,19 @@ class FalAISD35LargeText2Image(IService):
         super().__init__()
 
     def make_api_request(self, parameters : SDXLText2ImageParameters) -> str:
+        """
+        Sends a request to the Fal.AI.
+        
+        This function constructs the appropriate API payload from the parameters,
+        sends the request to the Flux Pro API endpoint, and handles the response
+        processing including base64 decoding of the resulting image.
+
+        Returns:
+            str: The generated image data as bytes
+            
+        Raises:
+            Exception: If the generated content is flagged as NSFW
+        """
         input = {
             "prompt": parameters.prompt,
             "negative_prompt": parameters.negative_prompt,
@@ -261,6 +409,20 @@ class FalAISD35LargeText2Image(IService):
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
+        """
+        Entry point for the service that handles batch processing of requests.
+        
+        This method processes the input parameters, creates multiple parallel
+        generation tasks based on the batch size, and aggregates the results.
+        The @timing_decorator tracks and adds execution time to the response.
+        
+        Args:
+            parameters (dict): Request parameters for image generation
+            
+        Returns:
+            dict: Standardized response containing generated images, NSFW flags,
+                timing information, and file format
+        """
         parameters : SDXLText2ImageParameters = SDXLText2ImageParameters(**parameters)
 
         with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
@@ -280,6 +442,19 @@ class FalAISD35LargeTurboText2Image(IService):
         super().__init__()
 
     def make_api_request(self, parameters : SDXLText2ImageParameters) -> str:
+        """
+        Sends a request to the Fal.AI.
+        
+        This function constructs the appropriate API payload from the parameters,
+        sends the request to the Flux Pro API endpoint, and handles the response
+        processing including base64 decoding of the resulting image.
+
+        Returns:
+            str: The generated image data as bytes
+            
+        Raises:
+            Exception: If the generated content is flagged as NSFW
+        """
         input = {
             "prompt": parameters.prompt,
             "negative_prompt": parameters.negative_prompt,
@@ -310,6 +485,20 @@ class FalAISD35LargeTurboText2Image(IService):
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
+        """
+        Entry point for the service that handles batch processing of requests.
+        
+        This method processes the input parameters, creates multiple parallel
+        generation tasks based on the batch size, and aggregates the results.
+        The @timing_decorator tracks and adds execution time to the response.
+        
+        Args:
+            parameters (dict): Request parameters for image generation
+            
+        Returns:
+            dict: Standardized response containing generated images, NSFW flags,
+                timing information, and file format
+        """
         parameters : SDXLText2ImageParameters = SDXLText2ImageParameters(**parameters)
 
         with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
@@ -329,6 +518,19 @@ class FalAISD35MediumText2Image(IService):
         super().__init__()
 
     def make_api_request(self, parameters : SDXLText2ImageParameters) -> str:
+        """
+        Sends a request to the Fal.AI.
+        
+        This function constructs the appropriate API payload from the parameters,
+        sends the request to the Flux Pro API endpoint, and handles the response
+        processing including base64 decoding of the resulting image.
+
+        Returns:
+            str: The generated image data as bytes
+            
+        Raises:
+            Exception: If the generated content is flagged as NSFW
+        """
         input = {
             "prompt": parameters.prompt,
             "negative_prompt": parameters.negative_prompt,
@@ -359,6 +561,20 @@ class FalAISD35MediumText2Image(IService):
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
+        """
+        Entry point for the service that handles batch processing of requests.
+        
+        This method processes the input parameters, creates multiple parallel
+        generation tasks based on the batch size, and aggregates the results.
+        The @timing_decorator tracks and adds execution time to the response.
+        
+        Args:
+            parameters (dict): Request parameters for image generation
+            
+        Returns:
+            dict: Standardized response containing generated images, NSFW flags,
+                timing information, and file format
+        """
         parameters : SDXLText2ImageParameters = SDXLText2ImageParameters(**parameters)
 
         with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
@@ -379,6 +595,19 @@ class FalAIFlux3Inpainting(IService):
         super().__init__()
 
     def generate_image(self, parameters : IdeoGramText2ImageParameters) -> Imagetype:
+        """
+        Sends a request to the Fal.AI.
+        
+        This function constructs the appropriate API payload from the parameters,
+        sends the request to the Flux Pro API endpoint, and handles the response
+        processing including base64 decoding of the resulting image.
+
+        Returns:
+            str: The generated image data as bytes
+            
+        Raises:
+            Exception: If the generated content is flagged as NSFW
+        """
         input = {
             "prompt": parameters.prompt,
             "num_images": 1,
@@ -401,6 +630,20 @@ class FalAIFlux3Inpainting(IService):
         
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
+        """
+        Entry point for the service that handles batch processing of requests.
+        
+        This method processes the input parameters, creates multiple parallel
+        generation tasks based on the batch size, and aggregates the results.
+        The @timing_decorator tracks and adds execution time to the response.
+        
+        Args:
+            parameters (dict): Request parameters for image generation
+            
+        Returns:
+            dict: Standardized response containing generated images, NSFW flags,
+                timing information, and file format
+        """
         parameters : IdeoGramText2ImageParameters = IdeoGramText2ImageParameters(**parameters)
         original_image = get_image_from_url(
             parameters.file_url, rs_image=False
@@ -435,6 +678,19 @@ class FalAIFlux3ReplaceBackground(IService):
         self.remover = remover        
 
     def generate_image(self, parameters : IdeoGramText2ImageParameters) -> Imagetype:
+        """
+        Sends a request to the Fal.AI.
+        
+        This function constructs the appropriate API payload from the parameters,
+        sends the request to the Flux Pro API endpoint, and handles the response
+        processing including base64 decoding of the resulting image.
+
+        Returns:
+            str: The generated image data as bytes
+            
+        Raises:
+            Exception: If the generated content is flagged as NSFW
+        """
         input = {
             "prompt": parameters.prompt,
             "num_images": 1,
@@ -457,6 +713,20 @@ class FalAIFlux3ReplaceBackground(IService):
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
+        """
+        Entry point for the service that handles batch processing of requests.
+        
+        This method processes the input parameters, creates multiple parallel
+        generation tasks based on the batch size, and aggregates the results.
+        The @timing_decorator tracks and adds execution time to the response.
+        
+        Args:
+            parameters (dict): Request parameters for image generation
+            
+        Returns:
+            dict: Standardized response containing generated images, NSFW flags,
+                timing information, and file format
+        """
         parameters : IdeoGramText2ImageParameters = IdeoGramText2ImageParameters(**parameters)
         original_image = get_image_from_url(
             parameters.file_url, rs_image=False
@@ -486,153 +756,24 @@ class FalAIFlux3ReplaceBackground(IService):
         return prepare_response(results, Has_NSFW_Content, 0, 0, OUTPUT_IMAGE_EXTENSION)
 
 
-
-class FalAIKling15Video(IService):
-    def __init__(self) -> None:
-        super().__init__()
-
-    def generate_video(self, parameters : Kling15Video) -> str:
-        if(parameters.file_url == None):
-            parameters.file_url = []
-        if(len(parameters.file_url)==0):
-            input = {
-                "prompt": parameters.prompt,
-                "duration": parameters.duration,
-                "aspect_ratio": parameters.aspect_ratio
-            }
-            result = fal_client.subscribe(
-                "fal-ai/kling-video/v1.5/pro/text-to-video",
-                arguments=input,
-                with_logs=False,
-            ) 
-        else:
-            input = {
-                "prompt": parameters.prompt,
-                "duration": parameters.duration,
-                "aspect_ratio": parameters.aspect_ratio,
-                "image_url" : parameters.file_url[0].uri
-            }
-            result = fal_client.subscribe(
-                "fal-ai/kling-video/v1.5/pro/image-to-video",
-                arguments=input,
-                with_logs=False,
-            ) 
-
-        response = make_request(result["video"]["url"], "GET")
-
-        return response.content
-
-    @timing_decorator
-    def remote(self, parameters: dict) -> dict:
-        parameters : Kling15Video = Kling15Video(**parameters)
-        
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
-            futures = []
-            for i in range(parameters.batch):
-                future = executor.submit(self.generate_video, parameters)
-                futures.append(future)
-            
-            results = [future.result() for future in futures]
-
-        Has_NSFW_Content = [False] * parameters.batch
-
-        return prepare_response(results, Has_NSFW_Content, 0, 0, OUTPUT_VIDEO_EXTENSION)
-
-
-class FalAIMiniMaxVideo(IService):
-    def __init__(self) -> None:
-        super().__init__()
-
-    def generate_video(self, parameters : MinimaxVideo) -> str:
-        if(parameters.file_url == None):
-            parameters.file_url = []
-        if(len(parameters.file_url) == 0):
-            input = {
-                "prompt": parameters.prompt,
-                "prompt_optimizer": True
-            }
-            result = fal_client.subscribe(
-                "fal-ai/minimax/video-01-live",
-                arguments=input,
-                with_logs=False,
-            ) 
-        else:
-            input = {
-                "prompt": parameters.prompt,
-                "prompt_optimizer": True,
-                "image_url": parameters.file_url[0].uri
-            }
-            result = fal_client.subscribe(
-                "fal-ai/minimax/video-01-live/image-to-video",
-                arguments=input,
-                with_logs=False,
-            ) 
-
-        response = make_request(result["video"]["url"], "GET")
-
-        return response.content
-
-    @timing_decorator
-    def remote(self, parameters: dict) -> dict:
-        parameters : MinimaxVideo = MinimaxVideo(**parameters)
-        
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
-            futures = []
-            for i in range(parameters.batch):
-                future = executor.submit(self.generate_video, parameters)
-                futures.append(future)
-            
-            results = [future.result() for future in futures]
-
-        Has_NSFW_Content = [False] * parameters.batch
-
-        return prepare_response(results, Has_NSFW_Content, 0, 0, OUTPUT_VIDEO_EXTENSION)
-  
-
-class FalAIhunyuanVideo(IService):
-    def __init__(self) -> None:
-        super().__init__()
-
-    def generate_video(self, parameters : HunyuanVideo) -> str:
-        input = {
-            "prompt": parameters.prompt,
-            "aspect_ratio": parameters.aspect_ratio,
-        }
-        result = fal_client.subscribe(
-            "fal-ai/hunyuan-video",
-            arguments=input,
-            with_logs=False,
-        ) 
-
-        response = make_request(result["video"]["url"], "GET")
-
-        return response.content
-
-    @timing_decorator
-    def remote(self, parameters: dict) -> dict:
-        parameters : HunyuanVideo = HunyuanVideo(**parameters)
-        
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
-            futures = []
-            for i in range(parameters.batch):
-                future = executor.submit(self.generate_video, parameters)
-                futures.append(future)
-            
-            results = [future.result() for future in futures]
-
-        Has_NSFW_Content = [False] * parameters.batch
-
-        return prepare_response(results, Has_NSFW_Content, 0, 0, OUTPUT_VIDEO_EXTENSION)
-    
-
 class FalAIFluxProRedux(IService):
     def __init__(self) -> None:
         super().__init__()
 
     def make_api_request(self, parameters : FluxImage2ImageParameters) -> str:
+        """
+        Sends a request to the Fal.AI.
+        
+        This function constructs the appropriate API payload from the parameters,
+        sends the request to the Flux Pro API endpoint, and handles the response
+        processing including base64 decoding of the resulting image.
+
+        Returns:
+            str: The generated image data as bytes
+            
+        Raises:
+            Exception: If the generated content is flagged as NSFW
+        """
         input = {
             "image_url" : parameters.file_url,
             "num_inference_steps": parameters.num_inference_steps,
@@ -660,6 +801,20 @@ class FalAIFluxProRedux(IService):
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
+        """
+        Entry point for the service that handles batch processing of requests.
+        
+        This method processes the input parameters, creates multiple parallel
+        generation tasks based on the batch size, and aggregates the results.
+        The @timing_decorator tracks and adds execution time to the response.
+        
+        Args:
+            parameters (dict): Request parameters for image generation
+            
+        Returns:
+            dict: Standardized response containing generated images, NSFW flags,
+                timing information, and file format
+        """
         parameters : FluxImage2ImageParameters = FluxImage2ImageParameters(**parameters)
 
         with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
@@ -680,6 +835,19 @@ class FalAIFluxProCanny(IService):
         super().__init__()
 
     def make_api_request(self, parameters : FluxImage2ImageParameters) -> str:
+        """
+        Sends a request to the Fal.AI.
+        
+        This function constructs the appropriate API payload from the parameters,
+        sends the request to the Flux Pro API endpoint, and handles the response
+        processing including base64 decoding of the resulting image.
+
+        Returns:
+            str: The generated image data as bytes
+            
+        Raises:
+            Exception: If the generated content is flagged as NSFW
+        """
         input = {
             "control_image_url" : parameters.file_url,
             "num_inference_steps": parameters.num_inference_steps,
@@ -703,6 +871,20 @@ class FalAIFluxProCanny(IService):
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
+        """
+        Entry point for the service that handles batch processing of requests.
+        
+        This method processes the input parameters, creates multiple parallel
+        generation tasks based on the batch size, and aggregates the results.
+        The @timing_decorator tracks and adds execution time to the response.
+        
+        Args:
+            parameters (dict): Request parameters for image generation
+            
+        Returns:
+            dict: Standardized response containing generated images, NSFW flags,
+                timing information, and file format
+        """
         parameters : FluxImage2ImageParameters = FluxImage2ImageParameters(**parameters)
 
         with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
@@ -723,6 +905,19 @@ class FalAIFluxProDepth(IService):
         super().__init__()
 
     def make_api_request(self, parameters : FluxImage2ImageParameters) -> str:
+        """
+        Sends a request to the Fal.AI.
+        
+        This function constructs the appropriate API payload from the parameters,
+        sends the request to the Flux Pro API endpoint, and handles the response
+        processing including base64 decoding of the resulting image.
+
+        Returns:
+            str: The generated image data as bytes
+            
+        Raises:
+            Exception: If the generated content is flagged as NSFW
+        """
         input = {
             "control_image_url" : parameters.file_url,
             "num_inference_steps": parameters.num_inference_steps,
@@ -746,6 +941,20 @@ class FalAIFluxProDepth(IService):
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
+        """
+        Entry point for the service that handles batch processing of requests.
+        
+        This method processes the input parameters, creates multiple parallel
+        generation tasks based on the batch size, and aggregates the results.
+        The @timing_decorator tracks and adds execution time to the response.
+        
+        Args:
+            parameters (dict): Request parameters for image generation
+            
+        Returns:
+            dict: Standardized response containing generated images, NSFW flags,
+                timing information, and file format
+        """
         parameters : FluxImage2ImageParameters = FluxImage2ImageParameters(**parameters)
 
         with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
@@ -765,6 +974,19 @@ class OmnigenV1(IService):
         super().__init__()
 
     def make_api_request(self, parameters : OmnigenParameters) -> str:
+        """
+        Sends a request to the Fal.AI.
+        
+        This function constructs the appropriate API payload from the parameters,
+        sends the request to the Flux Pro API endpoint, and handles the response
+        processing including base64 decoding of the resulting image.
+
+        Returns:
+            str: The generated image data as bytes
+            
+        Raises:
+            Exception: If the generated content is flagged as NSFW
+        """
         if(type(parameters.file_url) == str):
             parameters.file_url = [parameters.file_url]
         input = {
@@ -795,6 +1017,20 @@ class OmnigenV1(IService):
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
+        """
+        Entry point for the service that handles batch processing of requests.
+        
+        This method processes the input parameters, creates multiple parallel
+        generation tasks based on the batch size, and aggregates the results.
+        The @timing_decorator tracks and adds execution time to the response.
+        
+        Args:
+            parameters (dict): Request parameters for image generation
+            
+        Returns:
+            dict: Standardized response containing generated images, NSFW flags,
+                timing information, and file format
+        """
         parameters : OmnigenParameters = OmnigenParameters(**parameters)
 
         with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
@@ -815,6 +1051,19 @@ class FalAIFluxPulID(IService):
         super().__init__()
 
     def make_api_request(self, parameters : FluxImage2ImageParameters) -> str:
+        """
+        Sends a request to the Fal.AI.
+        
+        This function constructs the appropriate API payload from the parameters,
+        sends the request to the Flux Pro API endpoint, and handles the response
+        processing including base64 decoding of the resulting image.
+
+        Returns:
+            str: The generated image data as bytes
+            
+        Raises:
+            Exception: If the generated content is flagged as NSFW
+        """
         input = {
             "reference_image_url" : parameters.file_url,
             "image_size": {
@@ -845,6 +1094,20 @@ class FalAIFluxPulID(IService):
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
+        """
+        Entry point for the service that handles batch processing of requests.
+        
+        This method processes the input parameters, creates multiple parallel
+        generation tasks based on the batch size, and aggregates the results.
+        The @timing_decorator tracks and adds execution time to the response.
+        
+        Args:
+            parameters (dict): Request parameters for image generation
+            
+        Returns:
+            dict: Standardized response containing generated images, NSFW flags,
+                timing information, and file format
+        """
         parameters : FluxImage2ImageParameters = FluxImage2ImageParameters(**parameters)
 
         with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
@@ -859,46 +1122,3 @@ class FalAIFluxPulID(IService):
 
         return prepare_response(results, Has_NSFW_Content, 0, 0, OUTPUT_IMAGE_EXTENSION)
     
-class FalAIUpscaler(IService):
-    def __init__(self) -> None:
-        super().__init__()
-
-    def make_api_request(self, parameters : UpscaleParameters) -> str:
-        input = {
-            "model_type": "SDXL",
-            "image_url": parameters.file_url,
-            "scale": parameters.scale,
-            "creativity": 0.5,
-            "detail": 1,
-            "shape_preservation": 0.25,
-            "prompt_suffix": " high quality, highly detailed, high resolution, sharp",
-            "negative_prompt": "blurry, low resolution, bad, ugly, low quality, pixelated, interpolated, compression artifacts, noisey, grainy",
-            "seed": 42,
-            "guidance_scale": 7.5,
-            "num_inference_steps": 20,
-            "enable_safety_checks": True,
-            "additional_lora_scale": 1,
-            "override_size_limits" : True
-        }
-
-        result = fal_client.subscribe(
-            "fal-ai/creative-upscaler",
-            arguments=input,
-            with_logs=False,
-        )  
-
-        if(sum(result["has_nsfw_concepts"])==1):
-            raise Exception(IMAGE_GENERATION_ERROR, NSFW_CONTENT_DETECT_ERROR_MSG)
-
-        response = make_request(result["images"][0]["url"], "GET")
-        return response.content
-
-    @timing_decorator
-    def remote(self, parameters: dict) -> dict:
-        parameters : UpscaleParameters = UpscaleParameters(**parameters)
-            
-        results = self.make_api_request(parameters)
-
-        Has_NSFW_Content = [False]
-
-        return prepare_response(results, Has_NSFW_Content, 0, 0, OUTPUT_IMAGE_EXTENSION)

@@ -27,3 +27,8 @@ runwayml
 lumaai
 deepgram-sdk
 google-genai
+pytest
+pytest-cov
+pytest-asyncio==0.23.5
+pytest-cov==4.1.0
+pytest-mock

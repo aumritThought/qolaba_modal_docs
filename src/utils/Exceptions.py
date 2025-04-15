@@ -9,28 +9,26 @@ import traceback
 from src.data_models.ModalAppSchemas import APITaskResponse
 from src.utils.Constants import INTERNAL_ERROR
 
-async def handle_Request_exceptions(request: Request, exc: Exception):
-    if isinstance(exc, RequestValidationError):
-        custom_error = {
-            "errors": [
-                {
-                    "field": error["loc"][0],
-                    "message": error["msg"],
-                    "type": error["type"],
-                }
-                for error in exc.errors()
-            ]
-        }
-        task_response = APITaskResponse(
-            error="Validation error",
-            error_data=custom_error,
-            status="FAILED"
-        )
-
-        return JSONResponse(content=task_response.model_dump(), status_code=422)
-
-
 def handle_exceptions(func: Callable):
+    """
+    Decorator for catching and formatting exceptions in route handlers.
+    
+    This decorator wraps API endpoint functions to provide consistent error handling
+    and response formatting across the application. It catches both HTTPExceptions
+    (which may be deliberately raised) and unexpected exceptions, converting them
+    into standardized JSONResponse objects with appropriate status codes.
+    
+    The decorator maintains full traceback information for debugging purposes by
+    logging it as a warning. For general exceptions, it attempts to extract structured
+    error information from the exception arguments, falling back to a generic internal
+    error message if the expected format is not present.
+    
+    Args:
+        func (Callable): The function to wrap with exception handling
+        
+    Returns:
+        Callable: A wrapped version of the input function with exception handling
+    """
     @wraps(func)
     def wrapper(*args: Any, **kwargs: Any):
         try:

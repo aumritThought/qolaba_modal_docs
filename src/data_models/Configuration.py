@@ -1,7 +1,22 @@
 from src.data_models.ModalAppSchemas import StubConfiguration, StubNames
 
 stub_names = StubNames()
+"""
+Configuration dictionary for Modal app stubs.
 
+This dictionary provides a centralized configuration for all Modal application stubs, allowing for:
+- Consistent infrastructure management across all services
+- Single source of truth for resource requirements
+- Easy comparison and auditing of resource allocation
+- Simple scaling adjustments when requirements change
+- Reduced configuration duplication throughout the codebase
+
+Each entry configures:
+- gpu: GPU type required (a10g, a100, h100) based on model complexity and performance needs
+- memory: Memory allocation in MB to ensure stable model loading and inference
+- container_idle_timeout: Time in seconds before container shuts down when idle to optimize costs
+- num_containers: Number of containers to provision for handling concurrent requests
+"""
 stub_dictionary : dict[str, StubConfiguration] = {
     stub_names.sdxl_text_to_image : StubConfiguration(gpu = "a10g", memory = 11000, container_idle_timeout = 60, num_containers=1),
     stub_names.sdxl_image_to_image : StubConfiguration(gpu = "a10g", memory = 11000, container_idle_timeout = 60, num_containers=1),

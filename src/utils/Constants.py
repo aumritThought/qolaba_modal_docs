@@ -445,136 +445,104 @@ User Query :
 
 
 
-#Parameter dictionary
+"""
+Mapping between external app IDs and internal service configurations.
+
+This dictionary maps client-facing application IDs (e.g., "ap-JOsvgUBfInC2UQnz0FQFkG") 
+to their corresponding internal service configurations. Each entry contains:
+
+- app_id: The internal service identifier used to locate the service in the container
+- init_parameters: Configuration parameters for initializing the service
+- model_name: User-friendly name for the service/model
+
+This mapping allows to find the particular service associated with given unique id 
+starting with "ap-....". The service is stored in container with the name defined 
+in app_id. 
+"""
 app_dict = {
-    "ap-JOsvgUBfInC2UQnz0FQFkG": {
-        "app_id" : "SDXL_Text_To_Image_modal",
-        "init_parameters" : {
-            "model" : SDXL_TURBO
-        },
-        "model_name" : "sdxl_turbo_text2image" 
-    },
-    "ap-K7xLpNmRtW9vYhA5z0FQFkG": {
-        "app_id" : "HairFast_modal",
-        "init_parameters" : {
-        },
-        "model_name" : "HairFast_text2image" 
-    },
-    "ap-PZYd1Bb5QH57Rw4BF0dPA4": {
-        "app_id" : "SDXL_Text_To_Image_modal",
-        "init_parameters" : {
-            "model" : VIBRANT
-        },
-        "model_name" : "pixela_text2image" 
-    },
-    "ap-VbAWaTpRHAcfqywOmcjN2y": {
-        "app_id" : "SDXL_Text_To_Image_modal",
-        "init_parameters" : {
-            "model" : CARTOON3D
-        },
-        "model_name" : "cartoon_text2image" 
-    },
-    "ap-7vTmulaxjyiCzQEj1BOOvJ": {
-        "app_id" : "SDXL_Text_To_Image_modal",
-        "init_parameters" : {
-            "model" : CARTOON
-        },
-        "model_name" : "anime_text2image" 
-    },
-    "ap-uU4Xo4z6KgFHFjW9gnAl3q": {
-        "app_id" : "SDXL_Text_To_Image_modal",
-        "init_parameters" : {
-            "model" : REALISTIC
-        },
-        "model_name" : "realistic_text2image" 
-    },
-
-    "ap-oDVXRQ7bCaWW05O52P1mlA": {
-        "app_id" : "sdxltext2image_api",
-        "init_parameters" : {
-        },
-        "model_name" : "SDXL_text2image" 
-    },
-
+    #current
     "ap-Xm3pLZVdE8gY4WbR1TcSjQ": {
         "app_id" : "sdxl3text2image_api",
         "init_parameters" : {
         },
         "model_name" : "SDXL3_text2image" 
     },
-
+    #current
     "ap-sdSyd0idsndjnsnsndjsds": {
         "app_id" : "dalletext2image_api",
         "init_parameters" : {
         },
         "model_name" : "dalle_text2image" 
     },
+    #current
     "ap-fGhKl3mfkdlpqrsTuvwxYz": {
         "app_id" : "falaifluxprotext2image_api",
         "init_parameters" : {
         },
         "model_name" : "fluxpro_text2image" 
     },
+    #current
     "ap-fGhKl3mfkdlpqrtsUVWcba": {
         "app_id" : "falaifluxdevtext2image_api",
         "init_parameters" : {
         },
         "model_name" : "fluxdev_text2image" 
     },
+    #current
     "ap-jXyZa9bcdefghijklmnopq": {
         "app_id" : "falaifluxschnelltext2image_api",
         "init_parameters" : {
         },
         "model_name" : "fluxschnell_text2image" 
     },
+    #current
     "ap-hJkLm4nqzxybwvUTSRdca": {
         "app_id" : "ideogramtext2image_api",
         "init_parameters" : {
         },
         "model_name" : "ideogram_text2image" 
     },
+    #current
     "ap-jKlMn5opqzabcXyZtUVw": {
         "app_id" : "falairefactorv3text2image_api",
         "init_parameters" : {
         },
         "model_name" : "recraftv3_text2image" 
     },
+    #current
     "ap-mNopQ8rstuvwXYZabcde": {
         "app_id" : "falaisd35largetext2image_api",
         "init_parameters" : {
         },
         "model_name" : "sd35_text2image" 
     },
+    #current
     "ap-rStUv6xyzabcdPQRSefg": {
         "app_id" : "falaisd35largeturbotext2image_api",
         "init_parameters" : {
         },
         "model_name" : "sd35_turbo_text2image" 
     },
+    #current
     "ap-nOpQr7stuvwxYzABcdef": {
         "app_id" : "falaisd35mediumtext2image_api",
         "init_parameters" : {
         },
         "model_name" : "sd35_medium_text2image" 
     },
+    #current
     "ap-n2p3fg3gsvbgnYeEEdef": {
         "app_id" : "imagegentext2image_api",
         "init_parameters" : {
         },
         "model_name" : "imagegen_text2image" 
     },
+    #current
     "ap-x7q8hj9kltmNoPqRzabc": {
         "app_id" : "leonardotext2image_api",
         "init_parameters" : {
         },
         "model_name" : "leonardo_text2image" 
-    },
-    
-    "ap-jK8lQwzR2tNfshYvB4mxd": {
-        "app_id" : "ailabhairstyle_api",
-        "init_parameters" : {
-        },
-        "model_name" : "hairstyle_image2image" 
     },
 
     "ap-p7nMcLvX9yKjWqHgA5tZd": {
@@ -611,113 +579,56 @@ app_dict = {
         },
         "model_name" : "minimax_video" 
     },
-
+    #current
     "ap-fGhKl3mfkdlpqrshuwwabc": {
         "app_id" : "falaifluxdevimage2image_api",
         "init_parameters" : {
         },
         "model_name" : "fluxdev_image2image" 
     },
+    #current
     "ap-hTjXy7qplkzvnmwqrsdabc": {
         "app_id" : "ideogramremix_api",
         "init_parameters" : {
         },
         "model_name" : "ideogram_remix_image2image" 
     },
+    #Current
     "ap-gFhLq9zvbnmopxkytswabc": {
         "app_id" : "falaifluxproredux_api",
         "init_parameters" : {
         },
         "model_name" : "flux_redux_image2image" 
     },
+    #current
     "ap-mNqZx4rtyjvbcfghwklpde": {
         "app_id" : "falaifluxprocanny_api",
         "init_parameters" : {
         },
         "model_name" : "flux_canny_image2image" 
     },
+    #current
     "ap-gWfZx8rjvtyqopmnbcdehij": {
         "app_id" : "falaifluxprodepth_api",
         "init_parameters" : {
         },
         "model_name" : "flux_depth_image2image" 
     },
+    #current
     "ap-jKlMn8zxcvbnmasdfghijkm": {
         "app_id" : "omnigenv1_api",
         "init_parameters" : {
         },
         "model_name" : "omnigen_image2image" 
     },
+    #current
     "ap-hJkLm8nqwertyuiopasdfg": {
         "app_id" : "falaifluxpulid_api",
         "init_parameters" : {
         },
         "model_name" : "pulid_image2image" 
     },
-    "ap-Jf2aKs8dPqXzRb1Yv6hN7L": {
-        "app_id" : "SDXL_Image_To_Image_modal",
-        "init_parameters" : {
-            "model" : SDXL_TURBO
-        },
-        "model_name" : "sdxl_turbo_image2image" 
-    },
 
-    "ap-vcbg1l7bBuScbDuUOk3Shl": {
-        "app_id" : "SDXL_Image_To_Image_modal",
-        "init_parameters" : {
-            "model" : VIBRANT
-        },
-        "model_name" : "pixela_image2image" 
-    },
-    "ap-Rgtph3LFS9rRT5X7XREazo": {
-        "app_id" : "SDXL_Image_To_Image_modal",
-        "init_parameters" : {
-            "model" : CARTOON3D
-        },
-        "model_name" : "cartoon_image2image" 
-    },
-    "ap-Zj2zfXKq52zvpib7jGqYFp": {
-        "app_id" : "SDXL_Image_To_Image_modal",
-        "init_parameters" : {
-            "model" : CARTOON
-        },
-        "model_name" : "anime_image2image" 
-    },
-    "ap-nM68b4WwQ6VzdNwwXBrOHE": {
-        "app_id" : "SDXL_Image_To_Image_modal",
-        "init_parameters" : {
-            "model" : REALISTIC
-        },
-        "model_name" : "realistic_image2image" 
-    },
-
-    "ap-eRSyl0imzrUrbvgdAYwDTl": {
-        "app_id" : "sdxlimage2image_api",
-        "init_parameters" : {
-        },
-        "model_name" : "SDXL_image2image" 
-    },
-
-    "ap-F7gH2jPzV5xQ8eT3kLb9Yn": {
-        "app_id" : "sdxl3image2image_api",
-        "init_parameters" : {
-        },
-        "model_name" : "SDXL3_image2image" 
-    },
-
-    "ap-ssndjnidsierrsnsnd223d": {
-        "app_id" : "didvideo_api",
-        "init_parameters" : {
-        },
-        "model_name" : "did_video" 
-    },
-
-    "ap-m9XvuyMHQI0W5K0aE13N9t": {
-        "app_id" : "Stable_Video_Diffusion_modal",
-        "init_parameters" : {
-        },
-        "model_name" : "stable_diffusion_video" 
-    },
 
     "ap-a1Syd0inzrUrbvgdAbcser": {
         "app_id" : "elvenlabsaudio_api",
@@ -731,57 +642,22 @@ app_dict = {
         },
         "model_name" : "MusicGen_audio" 
     },
-    "ap-a1b2c3d4e5f6g7h8i9j0kq": {
-        "app_id" : "SDXL_controlnet_modal",
-        "init_parameters" : {
-            "model" : COLORFUL,
-            "controlnet_model" : "openpose"
-        },
-        "model_name" : "Openpose_controlnet__image2image" 
-    },
-    "ap-1us0FK21Ach6eiWxo22is8": {
-        "app_id" : "SDXL_controlnet_modal",
-        "init_parameters" : {
-            "model" : COLORFUL,
-            "controlnet_model" : "canny"
-        },
-        "model_name" : "Canny_controlnet__image2image" 
-    },
-    "ap-WrXnJBXy23XpPh6IlH5tRX": {
-        "app_id" : "SDXL_controlnet_modal",
-        "init_parameters" :{
-            "model" : COLORFUL,
-            "controlnet_model" : "depth"
-        },
-        "model_name" : "depth_controlnet__image2image" 
-    },
-    "ap-ebD8V0XxzAuKSu696A11nd": {
-        "app_id" : "SDXL_controlnet_modal",
-        "init_parameters" : {
-            "model" : COLORFUL,
-            "controlnet_model" : "sketch"
-        },
-        "model_name" : "sketch_controlnet__image2image" 
-    },
+   
+    #current
     "ap-7XmHk4LtVgFJq2cQoE3yB8": {
         "app_id" : "falaiflux3inpainting_api", #"clipdropcleanupimage2image_api",
         "init_parameters" : {
         },
         "model_name" : "clipdrop_cleanup_image2image" 
     },
-
+    #current
     "ap-L4vHj7YbXeT2qKoU1fW3G7": {
         "app_id" : "falaiflux3replacebackground_api",
         "init_parameters" : {
         },
         "model_name" : "Replace_background_image2image" 
     },
-    "ap-TYMECaYPMCcOyK2ZgNHgqQ": {
-        "app_id" : "QRCode_Generation_modal", 
-        "init_parameters" : {
-        },
-        "model_name" : "QR_code_image2image" 
-    },
+    
     "ap-lpocU0cB9szyuvta9lZ83B": {
         "app_id" : "Illusion_Diffusion_modal",
         "init_parameters" : {
@@ -801,25 +677,21 @@ app_dict = {
         },
         "model_name" : "face_consistent_FRND_image2image"
     },
+    #current
     "ap-kV3kwXL9QXJxYS6jV1VtkT": {
         "app_id" : "BackGround_Removal_modal",
         "init_parameters" : {
         },
         "model_name" : "Background_removal_image2image"
     },
-    "ap-kNvCpegQY2HiDHmk5X7X6F": {
-        "app_id" : "IPAdapter_image_variation_modal",
-        "init_parameters" : {
-            "model" : COLORFUL
-        },
-        "model_name" : "variation_image2image" 
-    },
+    #current
     "ap-NFDMz1Rn9UlpS6zMl2FNpm": {
         "app_id" : "Ultrasharp_Upscaler_modal",
         "init_parameters" : {
         },
         "model_name" : "upscaling_image2image" 
     },
+    #current
     "ap-GJQWk3Tb8VxRz5nLp7HNyq": {
         "app_id" : "flux_refiner_modal",
         "init_parameters" : {
