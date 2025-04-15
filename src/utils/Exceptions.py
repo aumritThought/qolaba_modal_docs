@@ -9,46 +9,6 @@ import traceback
 from src.data_models.ModalAppSchemas import APITaskResponse
 from src.utils.Constants import INTERNAL_ERROR
 
-async def handle_Request_exceptions(request: Request, exc: Exception):
-    """
-    Asynchronous exception handler for FastAPI request validation errors.
-    
-    This function catches RequestValidationError exceptions raised during request processing
-    and transforms them into a standardized JSON response format. It extracts field-specific
-    validation errors and returns them in a structured format that can be easily consumed
-    by frontend applications.
-    
-    Args:
-        request (Request): The FastAPI request object that caused the exception
-        exc (Exception): The exception that was raised during request processing
-        
-    Returns:
-        JSONResponse: A standardized error response with validation details and 422 status code
-        
-    Notes:
-        This function is designed to be registered as an exception handler with FastAPI's
-        exception_handler decorator, allowing consistent error handling across the API.
-    """
-    if isinstance(exc, RequestValidationError):
-        custom_error = {
-            "errors": [
-                {
-                    "field": error["loc"][0],
-                    "message": error["msg"],
-                    "type": error["type"],
-                }
-                for error in exc.errors()
-            ]
-        }
-        task_response = APITaskResponse(
-            error="Validation error",
-            error_data=custom_error,
-            status="FAILED"
-        )
-
-        return JSONResponse(content=task_response.model_dump(), status_code=422)
-
-
 def handle_exceptions(func: Callable):
     """
     Decorator for catching and formatting exceptions in route handlers.

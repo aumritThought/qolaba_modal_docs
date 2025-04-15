@@ -10,14 +10,12 @@ from src.data_models.ModalAppSchemas import APIInput, APITaskResponse, TaskStatu
 from src.FastAPIServer.celery.Worker import task_gen, get_task_status, initialize_shared_object
 from src.utils.Globals import check_token, upload_to_gcp
 from src.utils.Constants import app_dict, INTERNAL_ERROR, OUTPUT_IMAGE_EXTENSION
-from src.utils.Exceptions import handle_Request_exceptions, handle_exceptions
+from src.utils.Exceptions import handle_exceptions
 import uvicorn, os, io
-from fastapi.exceptions import RequestValidationError
 from transparent_background import Remover
 from PIL import Image
 
 app = FastAPI()
-app.exception_handler(RequestValidationError)(handle_Request_exceptions)
 auth_scheme = HTTPBearer()
 
 @app.on_event("startup")
