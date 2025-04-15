@@ -283,7 +283,7 @@ dalle_supported_quality = constr(pattern = '|'.join(DALLE_SUPPORTED_QUALITY))
 FLUX_RATIO_LIST = ["1:1", "16:9", "2:3", "3:2", "4:5", "5:4", "9:16"]
 
 # Celery configuration
-CELERY_RESULT_EXPIRATION_TIME = 3600
+CELERY_RESULT_EXPIRATION_TIME = 14400
 REDIS_URL = "redis://localhost:6379/0"
 CELERY_MAX_RETRY = 1
 CELERY_SOFT_LIMIT = 7200
