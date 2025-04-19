@@ -519,7 +519,11 @@ class Kling2MasterParameters(BaseModel):
     # Keep Literal type for the final validated field
     duration: Literal["5", "10"] = "5"
     aspect_ratio: Literal["16:9", "9:16", "1:1"] = "16:9"
-    cfg_scale: float = Query(default=7.0, ge=MIN_GUIDANCE_SCALE, le=MAX_GUIDANCE_SCALE)
+    cfg_scale: float = Query(
+        default=0.7, # Or 1.0, check Fal AI docs for typical/recommended value
+        ge=0.0,      # Assuming minimum is 0.0, adjust if needed
+        le=1.0       # Set maximum allowed value to 1.0
+    )
 
     @field_validator('duration', mode='before')
     @classmethod
