@@ -3,6 +3,8 @@ from fastapi import Query
 from typing import  Optional, Any, List, Literal
 from src.utils.Constants import *
 from src.utils.Constants import sdxl_model_string, controlnet_models
+from src.utils.Constants import MIN_GUIDANCE_SCALE, MAX_GUIDANCE_SCALE # Ensure these are imported if not already
+
 
 class StubNames(BaseModel):
     sdxl_text_to_image: str = "SDXL_Text_To_Image"
@@ -474,3 +476,19 @@ class ListofTranslation(BaseModel):
 
 class NSFWSchema(BaseModel):
     NSFW_content : bool 
+
+class Veo2Parameters(BaseModel):
+    prompt: str | None = "A lego chef cooking eggs"
+    file_url:str|None=""
+    duration:Literal["5s","6s", "7s", "8s"]="5s"
+    aspect_ratio : Literal["16:9","9:16", "auto_prefer_portrait", "auto"]="16:9"
+    cfg_scale:float=Query(default=0.5, ge=MIN_GUIDANCE_SCALE, le=MAX_GUIDANCE_SCALE)
+
+class Kling2MasterParameters(BaseModel):
+    prompt: str | None = "slow-motion sequence captures the catastrophic implosion of a skyscraper, dust and debris billowing outwards in a chaotic ballet of destruction, while a haunting, orchestral score underscores the sheer power and finality of the event."
+    negative_prompt:str=""
+    file_url:Optional[str]=None
+    # --- FIX: Use Literal to enforce valid duration strings ---
+    duration: Literal["5", "10"] = "5"
+    aspect_ratio : Literal["16:9","9:16", "1:1"]="16:9"
+    cfg_scale:float=Query(default=7.0, ge=MIN_GUIDANCE_SCALE, le=MAX_GUIDANCE_SCALE)

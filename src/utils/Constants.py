@@ -579,6 +579,18 @@ app_dict = {
         },
         "model_name" : "minimax_video" 
     },
+    "ap-9mRnTycbyjwDlWFn8CLJlo": {
+        "app_id" : "veo2_api",
+        "init_parameters" : {
+        },
+        "model_name" : "GoogleVeo2_image2video" 
+    },
+    "ap-8lQmSxbaxhvCyWFn2CLJlM": {
+        "app_id" : "kling2master_api",
+        "init_parameters" : {
+        },
+        "model_name" : "Kling2Master_image2video" 
+    },
     #current
     "ap-fGhKl3mfkdlpqrshuwwabc": {
         "app_id" : "falaifluxdevimage2image_api",
