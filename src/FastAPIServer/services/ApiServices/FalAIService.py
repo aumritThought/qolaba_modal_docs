@@ -1148,7 +1148,7 @@ class Veo2(IService):
 
             # Determine model_id based on whether an image URL is provided
             if parameters.file_url:
-                model_id = "fal-ai/veo2/image-to-video"
+                model_id = "fal-ai/veo2"
                 arguments = {
                     "prompt": parameters.prompt,
             "image_url": parameters.file_url,
@@ -1158,7 +1158,7 @@ class Veo2(IService):
                 }
             else:
                 # Assuming a text-to-video endpoint exists if no image URL
-                model_id = "fal-ai/veo2/text-to-video" # Check Fal docs for exact ID
+                model_id = "fal-ai/veo2" # Check Fal docs for exact ID
                 arguments = {
                     "prompt": parameters.prompt,
                     "duration": parameters.duration,
