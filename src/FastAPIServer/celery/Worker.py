@@ -2,7 +2,7 @@ from celery import Celery
 import time, io
 from celery.signals import worker_init, worker_process_init
 from src.utils.Constants import REDIS_URL, CELERY_RESULT_EXPIRATION_TIME, CELERY_MAX_RETRY, CELERY_SOFT_LIMIT, OUTPUT_IMAGE_EXTENSION
-from src.data_models.ModalAppSchemas import APIInput, APITaskResponse, TaskResponse
+from src.data_models.ModalAppSchemas import APIInput, APITaskResponse, TaskResponse, TimeData
 from celery.result import AsyncResult
 from src.FastAPIServer.services.ServiceContainer import ServiceContainer, ServiceRegistry
 from src.utils.Globals import upload_data_gcp, compress_image
@@ -10,6 +10,10 @@ from PIL import Image
 import concurrent.futures
 from PIL import Image
 import io
+from src.utils.Constants import INTERNAL_ERROR # Import INTERNAL_ERROR
+from loguru import logger
+from pydantic import ValidationError
+
 
 celery = Celery(
     "task_scheduler",
@@ -139,101 +143,167 @@ def get_service_list()-> dict:
 def create_task(parameters: dict) -> dict:
     """
     Main task handler for processing AI requests.
-    
-    This function takes parameters for an AI task, retrieves the appropriate service
-    based on the app_id, executes the task, and processes the results. For image generation
-    tasks, it handles uploading results to GCP in parallel and checks for NSFW content.
-    Images flagged as inappropriate are removed from the final result list.
-    
-    The function supports both API-based services and Modal-based services with different
-    execution paths for each type.
-    
-    Args:
-        parameters (dict): Task parameters including app_id and specific model parameters
-        
-    Returns:
-        dict: API response with task results, timing information, and status
-        
-    Raises:
-        Exception: If the specified app_id is not available or if response is empty
+    # ... (rest of docstring) ...
     """
     st = time.time()
-    parameters : APIInput = APIInput(**parameters)
-    app = service_registry.get_service(parameters.app_id)
+    output_data = None # Initialize output_data
+    task_status = "FAILED" # Default status to FAILED
+    error_details = None
+    error_type = INTERNAL_ERROR
 
-    if(parameters.app_id in service_registry.api_services):
-        if(parameters.app_id == "falaiflux3replacebackground_api"):
-            remover=container.bg_remover()
-            output_data = TaskResponse(**app(remover).remote(parameters.parameters))
-        else:
-            output_data = TaskResponse(**app().remote(parameters.parameters))
+    try:
+        # --- Validate Input ---
+        try:
+            parameters_model : APIInput = APIInput(**parameters)
+            logger.info(f"Validated task input for app_id: {parameters_model.app_id}")
+        except ValidationError as e:
+            logger.error(f"Input validation failed: {e}")
+            raise Exception("Input Validation Error", str(e)) # Re-raise for Celery/handler
 
-    elif(parameters.app_id in service_registry.modal_services):
-        
-        app = app.with_options(gpu=parameters.inference_type)
+        app_provider = service_registry.get_service(parameters_model.app_id)
+        app_instance = None
 
-        app = app(parameters.init_parameters)
-        
-        output_data = TaskResponse(**app.run_inference.remote(parameters.parameters))
-        
-    else:
-        raise Exception("Given APP Id is not available")
-
-
-    if output_data.extension is not None:
-        urls = [None] * len(output_data.result)
-        low_res_urls = [None] * len(output_data.result)
-        has_copyright_content = [False]*len(output_data.result)
-
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            full_res_futures = [executor.submit(upload_image, i, img, output_data.extension, parameters.upscale) 
-                                for i, img in enumerate(output_data.result)]
-            
-            for future in concurrent.futures.as_completed(full_res_futures):
-                index, url = future.result()
-                urls[index] = url
-
-            if output_data.extension == OUTPUT_IMAGE_EXTENSION:
-                low_res_futures = [executor.submit(upload_low_res_image, i, img, output_data.extension) 
-                                for i, img in enumerate(output_data.result)]
-                copyrighted_content_futures = [executor.submit(identify_copy_righted_materials, urls[index], index) for index in range(len(urls))]
+        # --- Execute Service ---
+        logger.info(f"Executing service: {parameters_model.app_id}")
+        if parameters_model.app_id in service_registry.api_services:
+            # Handle specific dependencies like bg_remover
+            if parameters_model.app_id == "falaiflux3replacebackground_api":
+                 remover_instance = container.bg_remover()
+                 app_instance = app_provider(remover=remover_instance) # Pass dependency
+                 service_output = app_instance.remote(parameters_model.parameters)
             else:
+                 app_instance = app_provider() # Instantiate the service
+                 service_output = app_instance.remote(parameters_model.parameters)
+
+            # --- Validate Service Output ---
+            output_data = TaskResponse(**service_output)
+            logger.info(f"API Service {parameters_model.app_id} executed successfully.")
+
+        elif parameters_model.app_id in service_registry.modal_services:
+            # Handle Modal service execution (assuming it returns TaskResponse compatible dict)
+            # This part seems less likely to be the source based on the error, but good to check
+            app_modal = app_provider.with_options(gpu=parameters_model.inference_type)
+            app_modal_instance = app_modal(parameters_model.init_parameters)
+            service_output = app_modal_instance.run_inference.remote(parameters_model.parameters)
+
+            # --- Validate Service Output ---
+            output_data = TaskResponse(**service_output)
+            logger.info(f"Modal Service {parameters_model.app_id} executed successfully.")
+
+        else:
+            logger.error(f"App ID not found: {parameters_model.app_id}")
+            raise Exception("Service Not Found", f"Given APP Id '{parameters_model.app_id}' is not available")
+
+        # If we reach here without error, process results
+        task_status = "SUCCESS" # Set status to SUCCESS only if everything above passed
+
+        # --- Process Results (Uploads, etc.) ---
+        if output_data and output_data.extension is not None:
+            logger.info(f"Processing results with extension: {output_data.extension}")
+            urls = [None] * len(output_data.result)
+            low_res_urls = [None] * len(output_data.result)
+            has_copyright_content = [False] * len(output_data.result)
+
+            # Use ThreadPoolExecutor (ensure imports are present)
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                full_res_futures = [executor.submit(upload_image, i, img, output_data.extension, parameters_model.upscale)
+                                    for i, img in enumerate(output_data.result)]
+
+                for future in concurrent.futures.as_completed(full_res_futures):
+                    index, url = future.result()
+                    urls[index] = url
+
                 low_res_futures = []
-            copyrighted_content_futures = []
+                copyrighted_content_futures = []
+                if output_data.extension == OUTPUT_IMAGE_EXTENSION:
+                    if parameters_model.check_copyright_content: # Only check if requested
+                        # Pass the correct container instance to identify_copy_righted_materials
+                        # Ensure container is accessible (it should be if initialized correctly)
+                        copyrighted_content_futures = [executor.submit(identify_copy_righted_materials, urls[index], index)
+                                                      for index in range(len(urls))]
+                    # Create low-res images only for image outputs
+                    low_res_futures = [executor.submit(upload_low_res_image, i, img, output_data.extension)
+                                       for i, img in enumerate(output_data.result)]
 
-            for future in concurrent.futures.as_completed(low_res_futures):
-                index, url = future.result()
-                low_res_urls[index] = url
-            if(parameters.check_copyright_content == True):
-                for future in concurrent.futures.as_completed(copyrighted_content_futures):
-                    bool_data, index = future.result()
-                    has_copyright_content[index] = bool_data
-        
-        urls = [url for url, bool_val in zip(urls, has_copyright_content) if not bool_val]
-        low_res_urls = [url for url, bool_val in zip(low_res_urls, has_copyright_content) if not bool_val]
-        output_data.result = urls
-        output_data.low_res_urls = low_res_urls
+                # Process results
+                for future in concurrent.futures.as_completed(low_res_futures):
+                    index, url = future.result()
+                    low_res_urls[index] = url
 
-        # output_data.Has_copyrighted_Content = has_copyright_content
-        if(output_data == None or output_data == {} or output_data == ""):
-            raise Exception("Received an empty response from model")
+                if parameters_model.check_copyright_content:
+                     for future in concurrent.futures.as_completed(copyrighted_content_futures):
+                         is_copyrighted, index = future.result()
+                         has_copyright_content[index] = is_copyrighted
 
-    time_required = time.time() - st
-    
-    if (output_data.time.runtime< time_required < output_data.time.runtime + output_data.time.startup_time):
-        output_data.time.startup_time = 0
-    
-    output_data.time.runtime = time_required - output_data.time.startup_time
+            # Filter results based on copyright check
+            final_urls = [url for url, is_copyrighted in zip(urls, has_copyright_content) if not is_copyrighted]
+            final_low_res_urls = [url for url, is_copyrighted in zip(low_res_urls, has_copyright_content) if not is_copyrighted]
+
+            # Update output_data only if it exists
+            if output_data:
+                 output_data.result = final_urls
+                 output_data.low_res_urls = final_low_res_urls
+                 # Optionally add copyright info if needed in the response schema
+                 # output_data.Has_copyrighted_Content = [c for c, is_c in zip(has_copyright_content, has_copyright_content) if not is_c] # Filtered list
+
+            if not final_urls: # Check if all results were filtered out
+                logger.warning("All results filtered out due to copyright/NSFW checks.")
+                # Decide how to handle this - maybe raise an error or return empty success?
+                # For now, let it proceed, APITaskResponse output will be empty
+
+        # --- Calculate Timing ---
+        time_required = time.time() - st
+        if output_data and output_data.time: # Check if output_data and time exist
+            if output_data.time.runtime < time_required < (output_data.time.runtime + output_data.time.startup_time):
+                 output_data.time.startup_time = 0 # Adjust startup time if needed
+            # Ensure runtime calculation is robust
+            output_data.time.runtime = max(0, time_required - output_data.time.startup_time)
+        else:
+            # Handle case where output_data or output_data.time is None
+            logger.warning("Could not calculate detailed timing, output_data or output_data.time missing.")
+            # Assign total time to runtime if time object doesn't exist
+            if output_data and not output_data.time:
+                 output_data.time = TimeData(startup_time=0, runtime=time_required)
+
+
+    except Exception as e:
+        # Catch any exception during the process
+        logger.exception(f"Task execution failed for app_id {parameters.get('app_id', 'N/A')}: {e}")
+        task_status = "FAILED"
+        # Try to get specific error details if available
+        if hasattr(e, 'args') and len(e.args) >= 2:
+             error_type = str(e.args[0])
+             error_details = str(e.args[1])
+        else:
+             error_type = type(e).__name__
+             error_details = str(e)
+
+    # --- Construct Final Response ---
+    final_output_dict = {}
+    time_required_dict = {}
+
+    if task_status == "SUCCESS" and output_data:
+        final_output_dict = {
+            "result" : output_data.result,
+            "Has_NSFW_Content" : output_data.Has_NSFW_Content,
+            "low_res_urls" : output_data.low_res_urls
+            # Add "Has_copyrighted_Content" if needed and present in output_data
+            # "Has_copyrighted_Content" : getattr(output_data, 'Has_copyrighted_Content', [])
+        }
+        if output_data.time:
+            time_required_dict = output_data.time.model_dump()
 
     task_response = APITaskResponse(
-         status="SUCCESS",
-         input = parameters.model_dump(),
-         output = {"result" : output_data.result, "Has_NSFW_Content" : output_data.Has_NSFW_Content, "low_res_urls" : output_data.low_res_urls, "Has_copyrighted_Content" : output_data.Has_copyrighted_Content},
-         time_required = output_data.time.model_dump()
+         status=task_status,
+         input = parameters, # Log original input dict
+         output = final_output_dict if task_status == "SUCCESS" else {},
+         time_required = time_required_dict if task_status == "SUCCESS" else {},
+         error = error_type if task_status == "FAILED" else None,
+         error_data = error_details if task_status == "FAILED" else None
     )
 
+    # Return the final validated model dump
     return task_response.model_dump()
-
 
 def task_gen(parameters: APIInput) -> dict:
     """

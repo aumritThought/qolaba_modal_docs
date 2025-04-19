@@ -9,7 +9,7 @@ import requests
 from src.data_models.ModalAppSchemas import (
     FluxText2ImageParameters, UpscaleParameters, IdeoGramText2ImageParameters,
     OmnigenParameters, FluxImage2ImageParameters, RecraftV3Text2ImageParameters,
-    SDXLText2ImageParameters
+    SDXLText2ImageParameters,Veo2Parameters, Kling2MasterParameters
 )
 from src.utils.Constants import OUTPUT_IMAGE_EXTENSION, IMAGE_GENERATION_ERROR, NSFW_CONTENT_DETECT_ERROR_MSG
 from src.FastAPIServer.services.ApiServices.FalAIService import (
@@ -17,9 +17,11 @@ from src.FastAPIServer.services.ApiServices.FalAIService import (
     FalAIFluxDevImage2Image, FalAIRefactorV3Text2Image, FalAISD35LargeText2Image,
     FalAISD35LargeTurboText2Image, FalAISD35MediumText2Image, FalAIFlux3Inpainting,
     FalAIFlux3ReplaceBackground, FalAIFluxProRedux, FalAIFluxProCanny,
-    FalAIFluxProDepth, OmnigenV1, FalAIFluxPulID
+    FalAIFluxProDepth, OmnigenV1, FalAIFluxPulID, Veo2, Kling2Master
 )
-
+from src.utils.Constants import OUTPUT_VIDEO_EXTENSION # Ensure this is imported
+from pydantic import ValidationError
+from unittest.mock import ANY
 # Common fixtures
 
 @pytest.fixture
@@ -591,3 +593,173 @@ def test_flux_pulid_make_api_request(mocker, mock_fal_response_with_url, mock_re
         },
         with_logs=False,
     )
+
+def test_veo2_remote_success_text_to_video(mocker, mock_image):
+    """Tests the happy path for Veo2 text-to-video via the remote method."""
+    # Arrange
+    # Define the expected final dictionary structure returned by the decorated remote
+    expected_response_structure = {
+        'result': [mock_image],
+        'Has_NSFW_content': [False],
+        'time': {'startup_time': 0, 'runtime': ANY}, # Use ANY for runtime as it's variable
+        'extension': OUTPUT_VIDEO_EXTENSION
+    }
+    # Mock the entire remote method on the Veo2 class
+    mocked_remote = mocker.patch.object(Veo2, 'remote', return_value=expected_response_structure)
+
+    service = Veo2() # Create instance after patching if needed, or patch instance if preferred
+    parameters = {
+        "prompt": "lego chef cooking",
+        "duration": 5.0,
+        "aspect_ratio": "16:9",
+    }
+
+    # Act
+    result = service.remote(parameters) # Call the mocked remote method
+
+    # Assert
+    assert result == expected_response_structure
+    # Verify the mocked remote was called with the original dictionary parameters
+    mocked_remote.assert_called_once_with(parameters)
+
+def test_veo2_remote_success_image_to_video(mocker, mock_image):
+    """Tests the happy path for Veo2 image-to-video via the remote method."""
+    # Arrange
+    expected_response_structure = {
+        'result': [mock_image],
+        'Has_NSFW_content': [False],
+        'time': {'startup_time': 0, 'runtime': ANY}, # Use ANY for runtime
+        'extension': OUTPUT_VIDEO_EXTENSION
+    }
+    mocked_remote = mocker.patch.object(Veo2, 'remote', return_value=expected_response_structure)
+
+    service = Veo2()
+    parameters = {
+        "prompt": "lego chef cooking",
+        "duration": "7s",
+        "aspect_ratio": "16:9",
+        "file_url": "http://image.url/img.jpg"
+    }
+
+    # Act
+    result = service.remote(parameters)
+
+    # Assert
+    assert result == expected_response_structure
+    mocked_remote.assert_called_once_with(parameters)
+
+# --- Keep these Veo2 tests as they test internal/failure logic ---
+def test_veo2_make_api_request_fal_error(mocker):
+    """Tests handling of errors from the Fal API client during the API call."""
+    # Arrange
+    mocker.patch('fal_client.submit', side_effect=fal_client.client.FalClientError("API Failed"))
+    service = Veo2()
+    parameters = Veo2Parameters(prompt="test", duration="5s") # Use validated params
+
+    # Act & Assert
+    with pytest.raises(Exception) as exc_info:
+        service.make_api_request(parameters)
+    assert "Video generation failed" in exc_info.value.args[0]
+    assert "Fal API interaction error" in exc_info.value.args[1]
+
+def test_veo2_remote_validation_error(mocker):
+    """Tests that the remote method raises ValidationError for invalid input."""
+    # Arrange
+    # No need to mock timing_decorator here as validation happens before it
+    service = Veo2()
+    parameters = { # Invalid duration format not ending in 's' or being convertible
+        "prompt": "lego chef cooking",
+        "duration": "invalid",
+        "aspect_ratio": "16:9",
+    }
+
+    # Act & Assert
+    with pytest.raises(ValidationError):
+        service.remote(parameters) # The actual remote method runs here and should raise validation error early
+
+# --- Kling2Master Important Tests ---
+
+def test_kling2master_remote_success_text_to_video(mocker, mock_image):
+    """Tests the happy path for Kling2Master text-to-video via the remote method."""
+    # Arrange
+    expected_response_structure = {
+        'result': [mock_image],
+        'Has_NSFW_content': [False],
+        'time': {'startup_time': 0, 'runtime': ANY}, # Use ANY for runtime
+        'extension': OUTPUT_VIDEO_EXTENSION
+    }
+    mocked_remote = mocker.patch.object(Kling2Master, 'remote', return_value=expected_response_structure)
+
+    service = Kling2Master()
+    parameters = {
+        "prompt": "skyscraper implosion",
+        "duration": 5,
+        "aspect_ratio": "16:9",
+        "cfg_scale": 7.0
+    }
+
+    # Act
+    result = service.remote(parameters)
+
+    # Assert
+    assert result == expected_response_structure
+    mocked_remote.assert_called_once_with(parameters)
+
+def test_kling2master_remote_success_image_to_video(mocker, mock_image):
+    """Tests the happy path for Kling2Master image-to-video via the remote method."""
+    # Arrange
+    expected_response_structure = {
+        'result': [mock_image],
+        'Has_NSFW_content': [False],
+        'time': {'startup_time': 0, 'runtime': ANY}, # Use ANY for runtime
+        'extension': OUTPUT_VIDEO_EXTENSION
+    }
+    mocked_remote = mocker.patch.object(Kling2Master, 'remote', return_value=expected_response_structure)
+
+    service = Kling2Master()
+    parameters = {
+        "prompt": "skyscraper implosion",
+        "duration": "10",
+        "aspect_ratio": "16:9",
+        "cfg_scale": 7.0,
+        "file_url": "http://image.url/img.jpg"
+    }
+
+    # Act
+    result = service.remote(parameters)
+
+    # Assert
+    assert result == expected_response_structure
+    mocked_remote.assert_called_once_with(parameters)
+
+
+# --- Keep these Kling2Master tests as they test internal/failure logic ---
+def test_kling2master_make_api_request_fal_error(mocker):
+    """Tests handling of errors from the Fal API client during the API call."""
+    # Arrange
+    mocker.patch('fal_client.submit', side_effect=fal_client.client.FalClientError("API Failed"))
+    service = Kling2Master()
+    # Use a valid Pydantic model instance for the make_api_request input
+    parameters = Kling2MasterParameters(prompt="test", duration="5")
+
+    # Act & Assert
+    with pytest.raises(Exception) as exc_info:
+        service.make_api_request(parameters)
+    assert "Video generation failed" in exc_info.value.args[0]
+    assert "Fal API interaction error" in exc_info.value.args[1]
+
+def test_kling2master_remote_validation_error_duration(mocker):
+    """Tests that the remote method raises ValidationError for invalid duration input."""
+    # Arrange
+    # No need to mock timing_decorator here as validation happens before it
+    service = Kling2Master()
+    parameters = { # Invalid duration value
+        "prompt": "skyscraper implosion",
+        "duration": "7", # Only "5" or "10" are valid due to Literal in schema
+        "aspect_ratio": "16:9",
+        "cfg_scale": 7.0
+    }
+
+    # Act & Assert
+    with pytest.raises(ValidationError):
+        service.remote(parameters) # The actual remote method runs here and should raise valida

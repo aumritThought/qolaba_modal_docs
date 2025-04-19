@@ -3,6 +3,8 @@ from fastapi import Query
 from typing import  Optional, Any, List, Literal
 from src.utils.Constants import *
 from src.utils.Constants import sdxl_model_string, controlnet_models
+from src.utils.Constants import MIN_GUIDANCE_SCALE, MAX_GUIDANCE_SCALE # Ensure these are imported if not already
+
 
 class StubNames(BaseModel):
     sdxl_text_to_image: str = "SDXL_Text_To_Image"
@@ -474,3 +476,77 @@ class ListofTranslation(BaseModel):
 
 class NSFWSchema(BaseModel):
     NSFW_content : bool 
+
+class Veo2Parameters(BaseModel):
+    prompt: str | None = "A lego chef cooking eggs"
+    file_url: str | None = None # Changed default to None for clarity
+    # Keep the Literal type for the final validated field
+    duration: Literal["5s", "6s", "7s", "8s"] = "5s"
+    aspect_ratio: Literal["16:9", "9:16", "auto_prefer_portrait", "auto"] = "16:9"
+    cfg_scale: float = Query(default=0.5, ge=MIN_GUIDANCE_SCALE, le=MAX_GUIDANCE_SCALE)
+
+    @field_validator('duration', mode='before')
+    @classmethod
+    def format_duration(cls, v):
+        allowed_ints = {5, 6, 7, 8}
+        allowed_strs = {"5s", "6s", "7s", "8s"}
+
+        if isinstance(v, int):
+            if v in allowed_ints:
+                return f"{v}s"
+            else:
+                raise ValueError(f"Integer duration must be one of {allowed_ints}")
+        elif isinstance(v, str):
+            # Allow valid strings directly or try converting string digits
+            if v in allowed_strs:
+                return v
+            elif v.isdigit():
+                int_v = int(v)
+                if int_v in allowed_ints:
+                    return f"{int_v}s"
+                else:
+                     raise ValueError(f"String duration '{v}' must represent one of {allowed_ints}")
+            else:
+                 raise ValueError(f"String duration '{v}' is not in the allowed format {allowed_strs}")
+        # Raise error for any other type
+        raise TypeError(f"Duration must be an integer {allowed_ints} or string {allowed_strs}")
+
+
+class Kling2MasterParameters(BaseModel):
+    prompt: str | None = "slow-motion sequence captures the catastrophic implosion of a skyscraper, dust and debris billowing outwards in a chaotic ballet of destruction, while a haunting, orchestral score underscores the sheer power and finality of the event."
+    negative_prompt: str = ""
+    file_url: Optional[str] = None
+    # Keep Literal type for the final validated field
+    duration: Literal["5", "10"] = "5"
+    aspect_ratio: Literal["16:9", "9:16", "1:1"] = "16:9"
+    cfg_scale: float = Query(
+        default=0.7, # Or 1.0, check Fal AI docs for typical/recommended value
+        ge=0.0,      # Assuming minimum is 0.0, adjust if needed
+        le=1.0       # Set maximum allowed value to 1.0
+    )
+
+    @field_validator('duration', mode='before')
+    @classmethod
+    def format_duration(cls, v):
+        allowed_ints = {5, 10}
+        allowed_strs = {"5", "10"}
+
+        if isinstance(v, int):
+            if v in allowed_ints:
+                return str(v) # Convert valid int to string
+            else:
+                raise ValueError(f"Integer duration must be one of {allowed_ints}")
+        elif isinstance(v, str):
+            # Allow valid strings directly or check if it's a digit string
+            if v in allowed_strs:
+                return v
+            elif v.isdigit():
+                int_v = int(v)
+                if int_v in allowed_ints:
+                     return str(int_v) # Return the valid string representation
+                else:
+                    raise ValueError(f"String duration '{v}' must represent one of {allowed_ints}")
+            else:
+                 raise ValueError(f"String duration '{v}' is not in the allowed format {allowed_strs}")
+        # Raise error for any other type
+        raise TypeError(f"Duration must be an integer {allowed_ints} or string {allowed_strs}")
