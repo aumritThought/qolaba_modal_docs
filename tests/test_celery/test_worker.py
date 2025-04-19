@@ -176,12 +176,19 @@ def test_create_task_modal_service(mocker):
     mock_service.with_options.assert_called_once_with(gpu='a10g')
     mock_with_init.run_inference.remote.assert_called_once_with({"prompt": "test"})
 
+
 def test_create_task_exception(mocker):
-    # Mock registry
+    # Mock registry and container
     mock_registry = mocker.patch('src.FastAPIServer.celery.Worker.service_registry')
+    mock_container = mocker.patch('src.FastAPIServer.celery.Worker.container')
+    mock_logger = mocker.patch('src.FastAPIServer.celery.Worker.logger')
+
+    # Setup registry mocks: No services available, get_service returns None
     mock_registry.api_services = []
     mock_registry.modal_services = []
-    
+    # Let get_service be called, but it won't find the service in the lists later
+    mock_registry.get_service.return_value = None
+
     # Create test parameters
     parameters = {
         "app_id": "nonexistent_app",
@@ -192,12 +199,24 @@ def test_create_task_exception(mocker):
         "check_copyright_content": False,
         "celery": False
     }
-    
-    # Test exception case
-    with pytest.raises(Exception) as exc_info:
-        create_task(parameters)
-    
-    assert str(exc_info.value) == "Given APP Id is not available"
+
+    # Call the function directly
+    result = create_task(parameters)
+
+    # Assert the structure and status of the returned dictionary
+    assert isinstance(result, dict)
+    assert result.get("status") == "FAILED"
+    assert result.get("error") == "Service Not Found"
+    assert result.get("error_data") is not None
+    assert "Given APP Id 'nonexistent_app' is not available" in result.get("error_data", "")
+    assert result.get("input") == parameters
+    assert result.get("output") == {}
+    assert result.get("time_required") == {}
+
+    # Verify logger was called
+    # Ensure the calls match what happens *before* the exception is caught
+    mock_logger.error.assert_called_once_with(f"App ID not found: nonexistent_app")
+    mock_logger.exception.assert_called_once()
 
 def test_task_gen_celery(mocker):
     # Mock celery task
