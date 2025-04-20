@@ -1,9 +1,32 @@
 from modal import App, method, Volume, Secret
 from src.data_models.Configuration import stub_dictionary
-from src.data_models.ModalAppSchemas import StubNames, InitParameters, FaceConsistentParameters
-from src.utils.Globals import get_base_image, SafetyChecker, generate_image_urls, prepare_response, get_image_from_url, get_refiner
-from src.utils.Constants import VOLUME_NAME, VOLUME_PATH, FACE_CONSISTENT_ERROR, FACE_DETECT_ERROR_MSG, SECRET_NAME, sdxl_model_list, extra_negative_prompt, OUTPUT_IMAGE_EXTENSION
-import torch, time, os, sys
+from src.data_models.ModalAppSchemas import (
+    StubNames,
+    InitParameters,
+    FaceConsistentParameters,
+)
+from src.utils.Globals import (
+    get_base_image,
+    SafetyChecker,
+    generate_image_urls,
+    prepare_response,
+    get_image_from_url,
+    get_refiner,
+)
+from src.utils.Constants import (
+    VOLUME_NAME,
+    VOLUME_PATH,
+    FACE_CONSISTENT_ERROR,
+    FACE_DETECT_ERROR_MSG,
+    SECRET_NAME,
+    sdxl_model_list,
+    extra_negative_prompt,
+    OUTPUT_IMAGE_EXTENSION,
+)
+import torch
+import time
+import os
+import sys
 from diffusers import StableDiffusionXLPipeline
 from insightface.app import FaceAnalysis
 from insightface.utils import face_align
@@ -15,6 +38,7 @@ app = App(stub_name)
 
 vol = Volume.from_name(VOLUME_NAME)
 
+
 def download_face_model():
     os.chdir("../IP-Adapter")
     sys.path.insert(0, "../IP-Adapter")
@@ -22,10 +46,13 @@ def download_face_model():
     from ip_adapter.ip_adapter_faceid import IPAdapterFaceIDXL
 
     pipe = StableDiffusionXLPipeline.from_pretrained(
-            "stabilityai/stable-diffusion-xl-base-1.0", torch_dtype=torch.float16, use_safetensors=True, variant="fp16"
-        )
+        "stabilityai/stable-diffusion-xl-base-1.0",
+        torch_dtype=torch.float16,
+        use_safetensors=True,
+        variant="fp16",
+    )
 
-    app = FaceAnalysis(name="buffalo_l", providers=['CUDAExecutionProvider'])
+    app = FaceAnalysis(name="buffalo_l", providers=["CUDAExecutionProvider"])
     app.prepare(ctx_id=0, det_size=(640, 640))
 
     ip_ckpt = "../ip-adapter-faceid_sdxl.bin"
@@ -33,37 +60,47 @@ def download_face_model():
     IPAdapterFaceIDXL(pipe, ip_ckpt, "cpu")
 
 
-image = get_base_image().run_commands(
-    "git clone https://github.com/tencent-ailab/IP-Adapter.git",
-    "wget https://huggingface.co/h94/IP-Adapter-FaceID/resolve/main/ip-adapter-faceid_sdxl.bin",
-    "pip install --upgrade --force-reinstall onnxruntime-gpu --extra-index-url https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/",
-).run_function(download_face_model, secrets= [Secret.from_name(SECRET_NAME)], gpu="a10g")
+image = (
+    get_base_image()
+    .run_commands(
+        "git clone https://github.com/tencent-ailab/IP-Adapter.git",
+        "wget https://huggingface.co/h94/IP-Adapter-FaceID/resolve/main/ip-adapter-faceid_sdxl.bin",
+        "pip install --upgrade --force-reinstall onnxruntime-gpu --extra-index-url https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/",
+    )
+    .run_function(
+        download_face_model, secrets=[Secret.from_name(SECRET_NAME)], gpu="a10g"
+    )
+)
 
 app.image = image
 
 
-
-@app.cls(gpu = stub_dictionary[stub_name].gpu, 
-          container_idle_timeout = stub_dictionary[stub_name].container_idle_timeout,
-          memory = stub_dictionary[stub_name].memory,
-          volumes = {VOLUME_PATH: vol},
-          secrets = [Secret.from_name(SECRET_NAME)],
-          concurrency_limit=stub_dictionary[stub_name].num_containers)
+@app.cls(
+    gpu=stub_dictionary[stub_name].gpu,
+    container_idle_timeout=stub_dictionary[stub_name].container_idle_timeout,
+    memory=stub_dictionary[stub_name].memory,
+    volumes={VOLUME_PATH: vol},
+    secrets=[Secret.from_name(SECRET_NAME)],
+    concurrency_limit=stub_dictionary[stub_name].num_containers,
+)
 class stableDiffusion:
-    def __init__(self, init_parameters : dict) -> None:
+    def __init__(self, init_parameters: dict) -> None:
         st = time.time()
         os.chdir("../IP-Adapter")
         sys.path.insert(0, "../IP-Adapter")
 
         from ip_adapter.ip_adapter_faceid import IPAdapterFaceIDXL
 
-        init_parameters : InitParameters = InitParameters(**init_parameters)
-        
+        init_parameters: InitParameters = InitParameters(**init_parameters)
+
         pipe = StableDiffusionXLPipeline.from_single_file(
-            sdxl_model_list.get(init_parameters.model), torch_dtype=torch.float16, use_safetensors=True, variant="fp16"
+            sdxl_model_list.get(init_parameters.model),
+            torch_dtype=torch.float16,
+            use_safetensors=True,
+            variant="fp16",
         )
         pipe.to("cuda")
-        if(init_parameters.lora_model):
+        if init_parameters.lora_model:
             pipe.load_lora_weights(init_parameters.lora_model)
 
         self.refiner = get_refiner(pipe)
@@ -71,60 +108,62 @@ class stableDiffusion:
         # pipe.enable_xformers_memory_efficient_attention()
         # self.refiner.enable_xformers_memory_efficient_attention()
 
-        self.app = FaceAnalysis(name="buffalo_l", providers=['CUDAExecutionProvider'])
+        self.app = FaceAnalysis(name="buffalo_l", providers=["CUDAExecutionProvider"])
         self.app.prepare(ctx_id=0, det_size=(640, 640))
 
         ip_ckpt = "../ip-adapter-faceid_sdxl.bin"
         device = "cuda"
 
         self.ip_model = IPAdapterFaceIDXL(pipe, ip_ckpt, device)
-        
+
         self.safety_checker = SafetyChecker()
         self.container_execution_time = time.time() - st
 
     @method()
-    def run_inference(self, parameters : dict) -> dict:
+    def run_inference(self, parameters: dict) -> dict:
         st = time.time()
 
-        parameters : FaceConsistentParameters = FaceConsistentParameters(**parameters)
+        parameters: FaceConsistentParameters = FaceConsistentParameters(**parameters)
 
         parameters.negative_prompt = parameters.negative_prompt + extra_negative_prompt
 
         parameters.file_url = get_image_from_url(parameters.file_url)
 
-        face_img=np.array(parameters.file_url)
+        face_img = np.array(parameters.file_url)
 
         faces = self.app.get(face_img)
-        
-        if(len(faces) == 0):
+
+        if len(faces) == 0:
             raise Exception(FACE_CONSISTENT_ERROR, FACE_DETECT_ERROR_MSG)
 
         faceid_embeds = torch.from_numpy(faces[0].normed_embedding).unsqueeze(0)
-        face_image = face_align.norm_crop(face_img, landmark=faces[0].kps, image_size=224)
+        face_image = face_align.norm_crop(
+            face_img, landmark=faces[0].kps, image_size=224
+        )
 
         images = []
 
         for i in range(0, parameters.batch):
             image = self.ip_model.generate(
-                prompt = parameters.prompt,
-                negative_prompt = parameters.negative_prompt,
+                prompt=parameters.prompt,
+                negative_prompt=parameters.negative_prompt,
                 face_image=face_image,
                 faceid_embeds=faceid_embeds,
-                width=parameters.width, 
+                width=parameters.width,
                 height=parameters.height,
-                num_inference_steps = parameters.num_inference_steps,
-                denoising_end = 0.8,
-                guidance_scale = parameters.guidance_scale,
+                num_inference_steps=parameters.num_inference_steps,
+                denoising_end=0.8,
+                guidance_scale=parameters.guidance_scale,
                 output_type="latent",
-                s_scale = parameters.strength,
-                num_samples = 1
+                s_scale=parameters.strength,
+                num_samples=1,
             )
             torch.cuda.empty_cache()
 
             image = self.refiner(
-                prompt = parameters.prompt,
-                num_inference_steps = parameters.num_inference_steps,
-                guidance_scale = parameters.guidance_scale,
+                prompt=parameters.prompt,
+                num_inference_steps=parameters.num_inference_steps,
+                guidance_scale=parameters.guidance_scale,
                 denoising_start=0.8,
                 image=image[0],
             ).images[0]
@@ -136,4 +175,10 @@ class stableDiffusion:
 
         self.runtime = time.time() - st
 
-        return prepare_response(images, has_nsfw_content, self.container_execution_time, self.runtime, OUTPUT_IMAGE_EXTENSION)
+        return prepare_response(
+            images,
+            has_nsfw_content,
+            self.container_execution_time,
+            self.runtime,
+            OUTPUT_IMAGE_EXTENSION,
+        )

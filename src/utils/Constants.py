@@ -1,19 +1,20 @@
 from pydantic import constr
 import os
 from dotenv import load_dotenv
+
 load_dotenv()
 
-#Volume variables
+# Volume variables
 VOLUME_NAME = "SDXL-LORA-Volume"
 VOLUME_PATH = "/SDXL_models"
 
-#Environment variables
+# Environment variables
 PYTHON_VERSION = "3.11.8"
 
 BASE_IMAGE_COMMANDS = [
     "apt-get update && apt-get install ffmpeg libsm6 libxext6 git curl wget pkg-config libssl-dev openssl git-lfs clang -y",
     "git lfs install",
-    "pip3 install torch torchvision torchaudio"
+    "pip3 install torch torchvision torchaudio",
 ]
 
 REQUIREMENT_FILE_PATH = "req_docker_deploy.txt"
@@ -38,26 +39,30 @@ REALISTIC_2 = "Realistic 2"
 ANIME = "Anime"
 ANIME_2 = "Anime 2"
 CARTOON = "Cartoon"
-CARTOON3D = "3D Cartoon" 
+CARTOON3D = "3D Cartoon"
 SDXL_TURBO = "SDXL Turbo"
 
 sdxl_model_list = {
-    REV_ANIM : SDXL_REVANIME_MODEL,
-    VIBRANT : SDXL_PIXELA_MODEL,
-    COLORFUL : SDXL_COLORFUL_MODEL,
-    REALISTIC : SDXL_REALISTIC_MODEL,
-    REALISTIC_2 : SDXL_REALISTIC_2_MODEL, 
-    ANIME : SDXL_ANIME_MODEL,
-    ANIME_2 : SDXL_ANIME_2_MODEL,
-    CARTOON : SDXL_CARTOON_MODEL,
-    CARTOON3D : SDXL_3DCARTOON_MODEL,
-    SDXL_TURBO : SDXL_TURBO_MODEL
+    REV_ANIM: SDXL_REVANIME_MODEL,
+    VIBRANT: SDXL_PIXELA_MODEL,
+    COLORFUL: SDXL_COLORFUL_MODEL,
+    REALISTIC: SDXL_REALISTIC_MODEL,
+    REALISTIC_2: SDXL_REALISTIC_2_MODEL,
+    ANIME: SDXL_ANIME_MODEL,
+    ANIME_2: SDXL_ANIME_2_MODEL,
+    CARTOON: SDXL_CARTOON_MODEL,
+    CARTOON3D: SDXL_3DCARTOON_MODEL,
+    SDXL_TURBO: SDXL_TURBO_MODEL,
 }
 
 sdxl_model_string = "|".join(sdxl_model_list.keys())
 
-AILAB_HAIRSTYLE_URL = "https://www.ailabapi.com/api/portrait/effects/hairstyle-editor-pro"
-AILAB_STATUS_URL = "https://www.ailabapi.com/api/common/query-async-task-result?task_id="
+AILAB_HAIRSTYLE_URL = (
+    "https://www.ailabapi.com/api/portrait/effects/hairstyle-editor-pro"
+)
+AILAB_STATUS_URL = (
+    "https://www.ailabapi.com/api/common/query-async-task-result?task_id="
+)
 AVAILABLE_HAIRSTYLES = [
     "BuzzCut",
     "UnderCut",
@@ -109,10 +114,10 @@ AVAILABLE_HAIRSTYLES = [
     "LooseCurlyAfro",
     "LongTwintails",
     "LongHimeCut",
-    "BoxBraids"
+    "BoxBraids",
 ]
 
-available_hairstyles = constr(pattern = '|'.join(AVAILABLE_HAIRSTYLES))
+available_hairstyles = constr(pattern="|".join(AVAILABLE_HAIRSTYLES))
 
 AVAILABLE_HAIRCOLORS = [
     "blonde",
@@ -135,10 +140,10 @@ AVAILABLE_HAIRCOLORS = [
     "multicolored",
     "darkBlue",
     "burgundy",
-    "darkGreen"
+    "darkGreen",
 ]
 
-available_haircolors = constr(pattern = '|'.join(AVAILABLE_HAIRCOLORS))
+available_haircolors = constr(pattern="|".join(AVAILABLE_HAIRCOLORS))
 
 
 SDXL_REFINER_MODEL = "stabilityai/stable-diffusion-xl-refiner-1.0"
@@ -155,10 +160,10 @@ SKETCH = "sketch"
 DEPTH = "depth"
 
 controlnet_model_list = {
-    OPENPOSE : OPENPOSE_PATH,
-    SKETCH : SKETCH_PATH,
-    CANNY : CANNY_PATH,
-    DEPTH : DEPTH_PATH
+    OPENPOSE: OPENPOSE_PATH,
+    SKETCH: SKETCH_PATH,
+    CANNY: CANNY_PATH,
+    DEPTH: DEPTH_PATH,
 }
 
 controlnet_models = "|".join(controlnet_model_list.keys())
@@ -178,45 +183,45 @@ MAX_BATCH = 8
 MIN_BATCH = 1
 HW_MULTIPLE = 8
 
-#Image_To_Image Configuration
+# Image_To_Image Configuration
 MAX_STRENGTH = 1
 MIN_STRENGTH = 0
 
-#Background removal Configuration
+# Background removal Configuration
 MAX_COLOR = 255
 MIN_COLOR = 0
 
-#stable video configuration
+# stable video configuration
 MAX_FPS = 30
 MIN_FPS = 5
 
 
-#Music Gen config
+# Music Gen config
 MUSIC_GEN_API = "https://api.musicfy.lol/v1/generate-music"
 
-#Ideogram url
+# Ideogram url
 IDEOGRAM_GENERATE_URL = "https://api.ideogram.ai/generate"
 IDEOGRAM_EDIT_URL = "https://api.ideogram.ai/edit"
 IDEOGRAM_REMIX_URL = "https://api.ideogram.ai/remix"
 IDEOGRAM_ASPECT_RATIO = {
-   "9:16" : "ASPECT_9_16",
-   "16:9" : "ASPECT_16_9",
-    "3:2" : "ASPECT_3_2",
-   "2:3" : "ASPECT_2_3",
-   "4:3" : "ASPECT_4_3",
-    "3:4" : "ASPECT_3_4",
-    "1:1" : "ASPECT_1_1",
-    "1:3" : "ASPECT_1_3",
-    "3:1" : "ASPECT_3_1"
+    "9:16": "ASPECT_9_16",
+    "16:9": "ASPECT_16_9",
+    "3:2": "ASPECT_3_2",
+    "2:3": "ASPECT_2_3",
+    "4:3": "ASPECT_4_3",
+    "3:4": "ASPECT_3_4",
+    "1:1": "ASPECT_1_1",
+    "1:3": "ASPECT_1_3",
+    "3:1": "ASPECT_3_1",
 }
 
-#Imagegen aspect ratios
+# Imagegen aspect ratios
 IMAGEGEN_ASPECT_RATIOS = ["9:16", "16:9", "4:3", "3:4", "1:1"]
 
-#Leonardo Image generation Url
-LEONARDO_IMAGE_GEN_URL = 'https://cloud.leonardo.ai/api/rest/v1/generations'
+# Leonardo Image generation Url
+LEONARDO_IMAGE_GEN_URL = "https://cloud.leonardo.ai/api/rest/v1/generations"
 LEONARDO_IMAGE_STATUS_URL = "https://cloud.leonardo.ai/api/rest/v1/generations/"
-#Recraft V3 style list
+# Recraft V3 style list
 RECRAFT_V3_STYLES = [
     "any",
     "realistic_image",
@@ -241,45 +246,62 @@ RECRAFT_V3_STYLES = [
     "vector_illustration/engraving",
     "vector_illustration/line_art",
     "vector_illustration/line_circuit",
-    "vector_illustration/linocut"
+    "vector_illustration/linocut",
 ]
-recraft_v3_style_cond = constr(pattern = '|'.join(RECRAFT_V3_STYLES))
+recraft_v3_style_cond = constr(pattern="|".join(RECRAFT_V3_STYLES))
 
-#Did api configuration
+# Did api configuration
 DID_TALK_API = "https://api.d-id.com/talks"
 DID_AVATAR_STYLES = ["circle", "normal", "closeUp"]
-did_avatar_styles = constr(pattern = '|'.join(DID_AVATAR_STYLES))
-DID_EXPRESSION_LIST = ["surprise", "happy", "serious", "neutral" ]
-did_expression_list = constr(pattern = '|'.join(DID_EXPRESSION_LIST))
+did_avatar_styles = constr(pattern="|".join(DID_AVATAR_STYLES))
+DID_EXPRESSION_LIST = ["surprise", "happy", "serious", "neutral"]
+did_expression_list = constr(pattern="|".join(DID_EXPRESSION_LIST))
 
-#SDXL API configuration
+# SDXL API configuration
 STABILITY_API = "https://api.stability.ai"
 SDXL_ENGINE_ID = "stable-diffusion-xl-1024-v1-0"
 SDXL_DEFAULT_PRESET = "enhance"
-SDXL_STYLE_PRESET_LIST = ["3d-model", "analog-film", "anime", "cinematic", "comic-book", "digital-art", "enhance", "fantasy-art", "isometric", "line-art", "low-poly", "modeling-compound", "neon-punk", "origami", "photographic", "pixel-art", "tile-texture"]
-sdxl_preset_list = constr(pattern = '|'.join(SDXL_STYLE_PRESET_LIST))
+SDXL_STYLE_PRESET_LIST = [
+    "3d-model",
+    "analog-film",
+    "anime",
+    "cinematic",
+    "comic-book",
+    "digital-art",
+    "enhance",
+    "fantasy-art",
+    "isometric",
+    "line-art",
+    "low-poly",
+    "modeling-compound",
+    "neon-punk",
+    "origami",
+    "photographic",
+    "pixel-art",
+    "tile-texture",
+]
+sdxl_preset_list = constr(pattern="|".join(SDXL_STYLE_PRESET_LIST))
 SDXL_INPAINT_URL = "https://api.stability.ai/v2beta/stable-image/edit/inpaint"
 SDXL3_RATIO_LIST = ["16:9", "1:1", "21:9", "2:3", "3:2", "4:5", "5:4", "9:16", "9:21"]
 SDX3_URL = "https://api.stability.ai/v2beta/stable-image/generate/sd3"
 
 
-
-#Elevenlabs configuration
+# Elevenlabs configuration
 MAX_SUPPORTED_AUDIO_FILE_ELEVENLABS = 3
 MIN_SUPPORTED_AUDIO_FILE_ELEVENLABS = 1
-ELEVENLABS_GENDER_LIST = ["female","male"]
-ELEVENLABS_AGE_LIST = ['young', 'middle_aged', 'old']
-ELEVENLABS_ACCENT_LIST = ['british', 'american', 'african', 'australian', 'indian']
-elevenlabs_age_list = constr(pattern = '|'.join(ELEVENLABS_AGE_LIST))
-elevenlabs_accent_list = constr(pattern = '|'.join(ELEVENLABS_ACCENT_LIST))
-elevenlabs_gender_list = constr(pattern = '|'.join(ELEVENLABS_GENDER_LIST))
+ELEVENLABS_GENDER_LIST = ["female", "male"]
+ELEVENLABS_AGE_LIST = ["young", "middle_aged", "old"]
+ELEVENLABS_ACCENT_LIST = ["british", "american", "african", "australian", "indian"]
+elevenlabs_age_list = constr(pattern="|".join(ELEVENLABS_AGE_LIST))
+elevenlabs_accent_list = constr(pattern="|".join(ELEVENLABS_ACCENT_LIST))
+elevenlabs_gender_list = constr(pattern="|".join(ELEVENLABS_GENDER_LIST))
 
-#Dalle configuration
+# Dalle configuration
 DALLE_SUPPORTED_HW = ["1024x1024", "1024x1792", "1792x1024"]
 DALLE_SUPPORTED_QUALITY = ["hd", "standard"]
-dalle_supported_quality = constr(pattern = '|'.join(DALLE_SUPPORTED_QUALITY))
+dalle_supported_quality = constr(pattern="|".join(DALLE_SUPPORTED_QUALITY))
 
-#Flux ratio list
+# Flux ratio list
 FLUX_RATIO_LIST = ["1:1", "16:9", "2:3", "3:2", "4:5", "5:4", "9:16"]
 
 # Celery configuration
@@ -288,25 +310,27 @@ REDIS_URL = "redis://localhost:6379/0"
 CELERY_MAX_RETRY = 1
 CELERY_SOFT_LIMIT = 7200
 
-#Modal app cache configuration
-MAX_TIME_MODAL_APP_CACHE =  3600
+# Modal app cache configuration
+MAX_TIME_MODAL_APP_CACHE = 3600
 
-#OpenAI text to speech per character cost
+# OpenAI text to speech per character cost
 TTS_CHAR_COST = 0.000015
 
-#GOOGLE credential info
+# GOOGLE credential info
 google_credentials_info = {
     "type": os.environ["GCP_TYPE"],
     "project_id": os.environ["GCP_PROJECT_ID"],
     "private_key_id": os.environ["GCP_PRIVATE_KEY_ID"],
-    "private_key": os.environ["GCP_PRIVATE_KEY"].encode('utf-8').decode('unicode_escape'),
+    "private_key": os.environ["GCP_PRIVATE_KEY"]
+    .encode("utf-8")
+    .decode("unicode_escape"),
     "client_email": os.environ["GCP_CLIENT_EMAIL"],
     "client_id": os.environ["GCP_CLIENT_ID"],
     "auth_uri": os.environ["GCP_AUTH_URI"],
     "token_uri": os.environ["GCP_TOKEN_URI"],
     "auth_provider_x509_cert_url": os.environ["GCP_AUTH_PROVIDER_X509_CERT_URL"],
     "client_x509_cert_url": os.environ["GCP_CLIENT_X509_CERT_URL"],
-    "universe_domain": os.environ["GCP_UNIVERSE_DOMAIN"]
+    "universe_domain": os.environ["GCP_UNIVERSE_DOMAIN"],
 }
 
 OUTPUT_IMAGE_EXTENSION = "webp"
@@ -315,13 +339,13 @@ OUTPUT_VIDEO_EXTENSION = "mp4"
 OUTPUT_PDF_EXTENSION = "pdf"
 
 content_type = {
-    OUTPUT_IMAGE_EXTENSION : "image/jpeg",
-    OUTPUT_AUDIO_EXTENSION : "audio/mpeg",
-    OUTPUT_VIDEO_EXTENSION : "video/mp4",
-    OUTPUT_PDF_EXTENSION : "application/pdf"
+    OUTPUT_IMAGE_EXTENSION: "image/jpeg",
+    OUTPUT_AUDIO_EXTENSION: "audio/mpeg",
+    OUTPUT_VIDEO_EXTENSION: "video/mp4",
+    OUTPUT_PDF_EXTENSION: "application/pdf",
 }
 
-extra_negative_prompt="disfigured, kitsch, ugly, oversaturated, greain, low-res, Deformed, blurry, bad anatomy, poorly drawn face, mutation, mutated, extra limb, poorly drawn hands, missing limb, floating limbs, disconnected limbs, malformed hands, blur, out of focus, long neck, long body, disgusting, poorly drawn, childish, mutilated, mangled, old, surreal, calligraphy, sign, writing, watermark, text, body out of frame, extra legs, extra arms, extra feet, out of frame, poorly drawn feet, cross-eye"
+extra_negative_prompt = "disfigured, kitsch, ugly, oversaturated, greain, low-res, Deformed, blurry, bad anatomy, poorly drawn face, mutation, mutated, extra limb, poorly drawn hands, missing limb, floating limbs, disconnected limbs, malformed hands, blur, out of focus, long neck, long body, disgusting, poorly drawn, childish, mutilated, mangled, old, surreal, calligraphy, sign, writing, watermark, text, body out of frame, extra legs, extra arms, extra feet, out of frame, poorly drawn feet, cross-eye"
 
 gender_word = "gender"
 
@@ -444,7 +468,6 @@ User Query :
 """
 
 
-
 """
 Mapping between external app IDs and internal service configurations.
 
@@ -460,274 +483,225 @@ starting with "ap-....". The service is stored in container with the name define
 in app_id. 
 """
 app_dict = {
-    #current
+    # current
     "ap-Xm3pLZVdE8gY4WbR1TcSjQ": {
-        "app_id" : "sdxl3text2image_api",
-        "init_parameters" : {
-        },
-        "model_name" : "SDXL3_text2image" 
+        "app_id": "sdxl3text2image_api",
+        "init_parameters": {},
+        "model_name": "SDXL3_text2image",
     },
-    #current
+    # current
     "ap-sdSyd0idsndjnsnsndjsds": {
-        "app_id" : "dalletext2image_api",
-        "init_parameters" : {
-        },
-        "model_name" : "dalle_text2image" 
+        "app_id": "dalletext2image_api",
+        "init_parameters": {},
+        "model_name": "dalle_text2image",
     },
-    #current
+    # current
     "ap-fGhKl3mfkdlpqrsTuvwxYz": {
-        "app_id" : "falaifluxprotext2image_api",
-        "init_parameters" : {
-        },
-        "model_name" : "fluxpro_text2image" 
+        "app_id": "falaifluxprotext2image_api",
+        "init_parameters": {},
+        "model_name": "fluxpro_text2image",
     },
-    #current
+    # current
     "ap-fGhKl3mfkdlpqrtsUVWcba": {
-        "app_id" : "falaifluxdevtext2image_api",
-        "init_parameters" : {
-        },
-        "model_name" : "fluxdev_text2image" 
+        "app_id": "falaifluxdevtext2image_api",
+        "init_parameters": {},
+        "model_name": "fluxdev_text2image",
     },
-    #current
+    # current
     "ap-jXyZa9bcdefghijklmnopq": {
-        "app_id" : "falaifluxschnelltext2image_api",
-        "init_parameters" : {
-        },
-        "model_name" : "fluxschnell_text2image" 
+        "app_id": "falaifluxschnelltext2image_api",
+        "init_parameters": {},
+        "model_name": "fluxschnell_text2image",
     },
-    #current
+    # current
     "ap-hJkLm4nqzxybwvUTSRdca": {
-        "app_id" : "ideogramtext2image_api",
-        "init_parameters" : {
-        },
-        "model_name" : "ideogram_text2image" 
+        "app_id": "ideogramtext2image_api",
+        "init_parameters": {},
+        "model_name": "ideogram_text2image",
     },
-    #current
+    # current
     "ap-jKlMn5opqzabcXyZtUVw": {
-        "app_id" : "falairefactorv3text2image_api",
-        "init_parameters" : {
-        },
-        "model_name" : "recraftv3_text2image" 
+        "app_id": "falairefactorv3text2image_api",
+        "init_parameters": {},
+        "model_name": "recraftv3_text2image",
     },
-    #current
+    # current
     "ap-mNopQ8rstuvwXYZabcde": {
-        "app_id" : "falaisd35largetext2image_api",
-        "init_parameters" : {
-        },
-        "model_name" : "sd35_text2image" 
+        "app_id": "falaisd35largetext2image_api",
+        "init_parameters": {},
+        "model_name": "sd35_text2image",
     },
-    #current
+    # current
     "ap-rStUv6xyzabcdPQRSefg": {
-        "app_id" : "falaisd35largeturbotext2image_api",
-        "init_parameters" : {
-        },
-        "model_name" : "sd35_turbo_text2image" 
+        "app_id": "falaisd35largeturbotext2image_api",
+        "init_parameters": {},
+        "model_name": "sd35_turbo_text2image",
     },
-    #current
+    # current
     "ap-nOpQr7stuvwxYzABcdef": {
-        "app_id" : "falaisd35mediumtext2image_api",
-        "init_parameters" : {
-        },
-        "model_name" : "sd35_medium_text2image" 
+        "app_id": "falaisd35mediumtext2image_api",
+        "init_parameters": {},
+        "model_name": "sd35_medium_text2image",
     },
-    #current
+    # current
     "ap-n2p3fg3gsvbgnYeEEdef": {
-        "app_id" : "imagegentext2image_api",
-        "init_parameters" : {
-        },
-        "model_name" : "imagegen_text2image" 
+        "app_id": "imagegentext2image_api",
+        "init_parameters": {},
+        "model_name": "imagegen_text2image",
     },
-    #current
+    # current
     "ap-x7q8hj9kltmNoPqRzabc": {
-        "app_id" : "leonardotext2image_api",
-        "init_parameters" : {
-        },
-        "model_name" : "leonardo_text2image" 
+        "app_id": "leonardotext2image_api",
+        "init_parameters": {},
+        "model_name": "leonardo_text2image",
     },
-
     "ap-p7nMcLvX9yKjWqHgA5tZd": {
-        "app_id" : "falaikling15video_api",
-        "init_parameters" : {
-        },
-        "model_name" : "Kling1.5_video" 
+        "app_id": "falaikling15video_api",
+        "init_parameters": {},
+        "model_name": "Kling1.5_video",
     },
-
     "ap-3bTkNvcwqsiHmDEt6RUUgX": {
-        "app_id" : "falaihunyuanvideo_api",
-        "init_parameters" : {
-        },
-        "model_name" : "Hunyuan_video" 
+        "app_id": "falaihunyuanvideo_api",
+        "init_parameters": {},
+        "model_name": "Hunyuan_video",
     },
-
     "ap-9kPnRwbzxhvDyWFm2CLLkM": {
-        "app_id" : "runwayimage2video_api",
-        "init_parameters" : {
-        },
-        "model_name" : "Runway_image2video" 
+        "app_id": "runwayimage2video_api",
+        "init_parameters": {},
+        "model_name": "Runway_image2video",
     },
-
     "ap-4nSmKlcqwtjBpNHr8YIIhZ": {
-        "app_id" : "lumavideo_api",
-        "init_parameters" : {
-        },
-        "model_name" : "Luma_video" 
+        "app_id": "lumavideo_api",
+        "init_parameters": {},
+        "model_name": "Luma_video",
     },
-
     "ap-5hQmJxyzptiGyVBn3WSSfL": {
-        "app_id" : "falaiminimaxvideo_api",
-        "init_parameters" : {
-        },
-        "model_name" : "minimax_video" 
+        "app_id": "falaiminimaxvideo_api",
+        "init_parameters": {},
+        "model_name": "minimax_video",
     },
     "ap-9mRnTycbyjwDlWFn8CLJlo": {
-        "app_id" : "veo2_api",
-        "init_parameters" : {
-        },
-        "model_name" : "GoogleVeo2_image2video" 
+        "app_id": "veo2_api",
+        "init_parameters": {},
+        "model_name": "GoogleVeo2_image2video",
     },
     "ap-8lQmSxbaxhvCyWFn2CLJlM": {
-        "app_id" : "kling2master_api",
-        "init_parameters" : {
-        },
-        "model_name" : "Kling2Master_image2video" 
+        "app_id": "kling2master_api",
+        "init_parameters": {},
+        "model_name": "Kling2Master_image2video",
     },
-    #current
+    # current
     "ap-fGhKl3mfkdlpqrshuwwabc": {
-        "app_id" : "falaifluxdevimage2image_api",
-        "init_parameters" : {
-        },
-        "model_name" : "fluxdev_image2image" 
+        "app_id": "falaifluxdevimage2image_api",
+        "init_parameters": {},
+        "model_name": "fluxdev_image2image",
     },
-    #current
+    # current
     "ap-hTjXy7qplkzvnmwqrsdabc": {
-        "app_id" : "ideogramremix_api",
-        "init_parameters" : {
-        },
-        "model_name" : "ideogram_remix_image2image" 
+        "app_id": "ideogramremix_api",
+        "init_parameters": {},
+        "model_name": "ideogram_remix_image2image",
     },
-    #Current
+    # Current
     "ap-gFhLq9zvbnmopxkytswabc": {
-        "app_id" : "falaifluxproredux_api",
-        "init_parameters" : {
-        },
-        "model_name" : "flux_redux_image2image" 
+        "app_id": "falaifluxproredux_api",
+        "init_parameters": {},
+        "model_name": "flux_redux_image2image",
     },
-    #current
+    # current
     "ap-mNqZx4rtyjvbcfghwklpde": {
-        "app_id" : "falaifluxprocanny_api",
-        "init_parameters" : {
-        },
-        "model_name" : "flux_canny_image2image" 
+        "app_id": "falaifluxprocanny_api",
+        "init_parameters": {},
+        "model_name": "flux_canny_image2image",
     },
-    #current
+    # current
     "ap-gWfZx8rjvtyqopmnbcdehij": {
-        "app_id" : "falaifluxprodepth_api",
-        "init_parameters" : {
-        },
-        "model_name" : "flux_depth_image2image" 
+        "app_id": "falaifluxprodepth_api",
+        "init_parameters": {},
+        "model_name": "flux_depth_image2image",
     },
-    #current
+    # current
     "ap-jKlMn8zxcvbnmasdfghijkm": {
-        "app_id" : "omnigenv1_api",
-        "init_parameters" : {
-        },
-        "model_name" : "omnigen_image2image" 
+        "app_id": "omnigenv1_api",
+        "init_parameters": {},
+        "model_name": "omnigen_image2image",
     },
-    #current
+    # current
     "ap-hJkLm8nqwertyuiopasdfg": {
-        "app_id" : "falaifluxpulid_api",
-        "init_parameters" : {
-        },
-        "model_name" : "pulid_image2image" 
+        "app_id": "falaifluxpulid_api",
+        "init_parameters": {},
+        "model_name": "pulid_image2image",
     },
-
-
     "ap-a1Syd0inzrUrbvgdAbcser": {
-        "app_id" : "elvenlabsaudio_api",
-        "init_parameters" : {
-        },
-        "model_name" : "Elven_labs_audio" 
+        "app_id": "elvenlabsaudio_api",
+        "init_parameters": {},
+        "model_name": "Elven_labs_audio",
     },
     "ap-a124dfigzcUFbggGAgchrr": {
-        "app_id" : "musicgen_api",
-        "init_parameters" : {
-        },
-        "model_name" : "MusicGen_audio" 
+        "app_id": "musicgen_api",
+        "init_parameters": {},
+        "model_name": "MusicGen_audio",
     },
-   
-    #current
+    # current
     "ap-7XmHk4LtVgFJq2cQoE3yB8": {
-        "app_id" : "falaiflux3inpainting_api", #"clipdropcleanupimage2image_api",
-        "init_parameters" : {
-        },
-        "model_name" : "clipdrop_cleanup_image2image" 
+        "app_id": "falaiflux3inpainting_api",  # "clipdropcleanupimage2image_api",
+        "init_parameters": {},
+        "model_name": "clipdrop_cleanup_image2image",
     },
-    #current
+    # current
     "ap-L4vHj7YbXeT2qKoU1fW3G7": {
-        "app_id" : "falaiflux3replacebackground_api",
-        "init_parameters" : {
-        },
-        "model_name" : "Replace_background_image2image" 
+        "app_id": "falaiflux3replacebackground_api",
+        "init_parameters": {},
+        "model_name": "Replace_background_image2image",
     },
-    
     "ap-lpocU0cB9szyuvta9lZ83B": {
-        "app_id" : "Illusion_Diffusion_modal",
-        "init_parameters" : {
-        },
-        "model_name" : "Illusion_Diffusion_image2image"  
+        "app_id": "Illusion_Diffusion_modal",
+        "init_parameters": {},
+        "model_name": "Illusion_Diffusion_image2image",
     },
     "ap-SwsTOsD7STxJ0obCkskUHw": {
-        "app_id" : "IPAdapter_face_consistent_modal",
-        "init_parameters" : {
-            "model" : COLORFUL
-        },
-        "model_name" : "face_consistent_image2image"
+        "app_id": "IPAdapter_face_consistent_modal",
+        "init_parameters": {"model": COLORFUL},
+        "model_name": "face_consistent_image2image",
     },
     "ap-jL9u1wFpY5sRv2XmN3aQ44": {
-        "app_id" : "IPAdapter_FRND_face_consistent_modal",
-        "init_parameters" : {
-        },
-        "model_name" : "face_consistent_FRND_image2image"
+        "app_id": "IPAdapter_FRND_face_consistent_modal",
+        "init_parameters": {},
+        "model_name": "face_consistent_FRND_image2image",
     },
-    #current
+    # current
     "ap-kV3kwXL9QXJxYS6jV1VtkT": {
-        "app_id" : "BackGround_Removal_modal",
-        "init_parameters" : {
-        },
-        "model_name" : "Background_removal_image2image"
+        "app_id": "BackGround_Removal_modal",
+        "init_parameters": {},
+        "model_name": "Background_removal_image2image",
     },
-    #current
+    # current
     "ap-NFDMz1Rn9UlpS6zMl2FNpm": {
-        "app_id" : "Ultrasharp_Upscaler_modal",
-        "init_parameters" : {
-        },
-        "model_name" : "upscaling_image2image" 
+        "app_id": "Ultrasharp_Upscaler_modal",
+        "init_parameters": {},
+        "model_name": "upscaling_image2image",
     },
-    #current
+    # current
     "ap-GJQWk3Tb8VxRz5nLp7HNyq": {
-        "app_id" : "flux_refiner_modal",
-        "init_parameters" : {
-        },
-        "model_name" : "refiner_image2image" 
+        "app_id": "flux_refiner_modal",
+        "init_parameters": {},
+        "model_name": "refiner_image2image",
     },
     "ap-6x49kD4Tj8ymuASjzQFZCQ": {
-        "app_id" : "promptparrot_api",
-        "init_parameters" : {
-        },
-        "model_name" : "promptparrot_text2text" 
+        "app_id": "promptparrot_api",
+        "init_parameters": {},
+        "model_name": "promptparrot_text2text",
     },
     "ap-7xK52mP9Nw3vbHLqYxRVtB": {
-        "app_id" : "videopromptparrot_api",
-        "init_parameters" : {
-        },
-        "model_name" : "videopromptparrot_text2text" 
+        "app_id": "videopromptparrot_api",
+        "init_parameters": {},
+        "model_name": "videopromptparrot_text2text",
     },
     "ap-5aH3nL9Pq2XvWmBk8YtRzN": {
-        "app_id" : "OOTDiffusion_modal",
-        "init_parameters" : {
-        },
-        "model_name" : "OOTDiffusion_image2image" 
-    }
+        "app_id": "OOTDiffusion_modal",
+        "init_parameters": {},
+        "model_name": "OOTDiffusion_image2image",
+    },
 }
 
 COPYRIGHT_DETECTION_FUNCTION_CALLING_SCHEMA = {
@@ -750,40 +724,39 @@ COPYRIGHT_DETECTION_FUNCTION_CALLING_SCHEMA = {
             
             You must return false for any content that does not fall into the NSFW category.
         """,
-    "parameters": {
-    "type": "object",
-    "properties": {
-        "contains_protected_content": {
-            "type": "boolean",
-            "description": "Returns true if any NSFW content is detected in the image. You must return false for other cases"
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "contains_protected_content": {
+                    "type": "boolean",
+                    "description": "Returns true if any NSFW content is detected in the image. You must return false for other cases",
+                },
+                "reason": {"type": "string", "description": "provide the reason"},
+            },
+            "required": ["contains_protected_content"],
         },
-        "reason" : {
-            "type" : "string",
-            "description" : "provide the reason"
-        }
     },
-    "required": ["contains_protected_content"]
-    }
-}
 }
 
 BUCKET_NAME = os.environ["BUCKET_NAME"]
 STAGING_API = f"https://storage.googleapis.com/{BUCKET_NAME}/"
 
 
-#Error Configuration
+# Error Configuration
 INTERNAL_ERROR = "Internal Error"
 
 ELEVENLABS_ERROR = "Elevenlabs Error"
 VOICE_ID_ERROR_MSG = "Voice not supported. Please try a different one."
 CLONE_AUDIO_LEN_ERROR_MSG = "Audio length must be between 60 and 600 seconds."
-CLONE_AUDIO_OPEN_ERROR_MSG = "No valid audio files detected. Please upload at least one working audio file."
+CLONE_AUDIO_OPEN_ERROR_MSG = (
+    "No valid audio files detected. Please upload at least one working audio file."
+)
 
 FACE_CONSISTENT_ERROR = "Face Consistent Error"
 FACE_DETECT_ERROR_MSG = "Unable to detect faces. Please provide a clear image."
 
 IMAGE_GENERATION_ERROR = "Image Generation Error"
-NSFW_CONTENT_DETECT_ERROR_MSG = "Request cancelled due to detection of NSFW content. Please ensure your prompt is appropriate." 
+NSFW_CONTENT_DETECT_ERROR_MSG = "Request cancelled due to detection of NSFW content. Please ensure your prompt is appropriate."
 REFINER_ERROR_MSG = "Request cancelled due to large image or Internal error"
 
 IMAGE_FETCH_ERROR = "Image URL Error"

@@ -1,39 +1,52 @@
 import pytest
 import base64
-from unittest.mock import MagicMock, patch, Mock
-import concurrent.futures
+from unittest.mock import MagicMock
 from PIL import Image
 import io
 import fal_client
-import requests
 from src.data_models.ModalAppSchemas import (
-    FluxText2ImageParameters, UpscaleParameters, IdeoGramText2ImageParameters,
-    OmnigenParameters, FluxImage2ImageParameters, RecraftV3Text2ImageParameters,
-    SDXLText2ImageParameters,Veo2Parameters, Kling2MasterParameters
+    FluxText2ImageParameters,
+    IdeoGramText2ImageParameters,
+    OmnigenParameters,
+    FluxImage2ImageParameters,
+    SDXLText2ImageParameters,
+    Veo2Parameters,
+    Kling2MasterParameters,
 )
-from src.utils.Constants import OUTPUT_IMAGE_EXTENSION, IMAGE_GENERATION_ERROR, NSFW_CONTENT_DETECT_ERROR_MSG
+from src.utils.Constants import IMAGE_GENERATION_ERROR, NSFW_CONTENT_DETECT_ERROR_MSG
 from src.FastAPIServer.services.ApiServices.FalAIService import (
-    FalAIFluxProText2Image, FalAIFluxDevText2Image, FalAIFluxschnellText2Image,
-    FalAIFluxDevImage2Image, FalAIRefactorV3Text2Image, FalAISD35LargeText2Image,
-    FalAISD35LargeTurboText2Image, FalAISD35MediumText2Image, FalAIFlux3Inpainting,
-    FalAIFlux3ReplaceBackground, FalAIFluxProRedux, FalAIFluxProCanny,
-    FalAIFluxProDepth, OmnigenV1, FalAIFluxPulID, Veo2, Kling2Master
+    FalAIFluxProText2Image,
+    FalAIFluxDevText2Image,
+    FalAIFluxDevImage2Image,
+    FalAISD35LargeText2Image,
+    FalAISD35LargeTurboText2Image,
+    FalAIFlux3Inpainting,
+    FalAIFluxProRedux,
+    FalAIFluxProCanny,
+    FalAIFluxProDepth,
+    OmnigenV1,
+    FalAIFluxPulID,
+    Veo2,
+    Kling2Master,
 )
-from src.utils.Constants import OUTPUT_VIDEO_EXTENSION # Ensure this is imported
+from src.utils.Constants import OUTPUT_VIDEO_EXTENSION  # Ensure this is imported
 from pydantic import ValidationError
 from unittest.mock import ANY
 # Common fixtures
 
+
 @pytest.fixture
 def mock_image():
-    img = Image.new('RGB', (100, 100), color='red')
+    img = Image.new("RGB", (100, 100), color="red")
     img_byte_arr = io.BytesIO()
-    img.save(img_byte_arr, format='JPEG')
+    img.save(img_byte_arr, format="JPEG")
     return img_byte_arr.getvalue()
+
 
 @pytest.fixture
 def mock_pil_image():
-    return Image.new('RGB', (100, 100), color='red')
+    return Image.new("RGB", (100, 100), color="red")
+
 
 @pytest.fixture
 def mock_response(mock_image):
@@ -43,43 +56,45 @@ def mock_response(mock_image):
     mock_resp.text = ""
     return mock_resp
 
+
 @pytest.fixture
 def mock_fal_response():
     return {
         "images": [{"url": "data:image/jpeg;base64,SGVsbG8gV29ybGQ="}],
-        "has_nsfw_concepts": [0]
+        "has_nsfw_concepts": [0],
     }
+
 
 @pytest.fixture
 def mock_fal_response_with_url():
     return {
         "images": [{"url": "https://example.com/image.jpg"}],
-        "has_nsfw_concepts": [0]
+        "has_nsfw_concepts": [0],
     }
+
 
 @pytest.fixture
 def mock_nsfw_response():
     return {
         "images": [{"url": "data:image/jpeg;base64,SGVsbG8gV29ybGQ="}],
-        "has_nsfw_concepts": [1]
+        "has_nsfw_concepts": [1],
     }
+
 
 # Test cases for common patterns
 
+
 def test_flux_pro_text2image_make_api_request(mocker, mock_fal_response):
     # Arrange
-    mocker.patch('fal_client.subscribe', return_value=mock_fal_response)
+    mocker.patch("fal_client.subscribe", return_value=mock_fal_response)
     service = FalAIFluxProText2Image()
     parameters = FluxText2ImageParameters(
-        prompt="test prompt", 
-        width=512, 
-        height=512, 
-        batch=1
+        prompt="test prompt", width=512, height=512, batch=1
     )
-    
+
     # Act
     result = service.make_api_request(parameters)
-    
+
     # Assert
     assert result == base64.b64decode("SGVsbG8gV29ybGQ=")
     fal_client.subscribe.assert_called_once_with(
@@ -94,61 +109,58 @@ def test_flux_pro_text2image_make_api_request(mocker, mock_fal_response):
         with_logs=False,
     )
 
+
 def test_flux_pro_text2image_nsfw_detection(mocker, mock_nsfw_response):
     # Arrange
-    mocker.patch('fal_client.subscribe', return_value=mock_nsfw_response)
+    mocker.patch("fal_client.subscribe", return_value=mock_nsfw_response)
     service = FalAIFluxProText2Image()
     parameters = FluxText2ImageParameters(
-        prompt="test prompt", 
-        width=512, 
-        height=512, 
-        batch=1
+        prompt="test prompt", width=512, height=512, batch=1
     )
-    
+
     # Act & Assert
     with pytest.raises(Exception) as exc_info:
         service.make_api_request(parameters)
-    
+
     assert exc_info.value.args[0] == IMAGE_GENERATION_ERROR
     assert exc_info.value.args[1] == NSFW_CONTENT_DETECT_ERROR_MSG
+
 
 # def test_flux_pro_text2image_remote(mocker, mock_fal_response):
 #     # Arrange
 #     mock_make_api_request = mocker.patch.object(
-#         FalAIFluxProText2Image, 'make_api_request', 
+#         FalAIFluxProText2Image, 'make_api_request',
 #         return_value=base64.b64decode("SGVsbG8gV29ybGQ=")
 #     )
 #     mocker.patch('src.utils.Globals.prepare_response', return_value={"success": True})
-    
+
 #     service = FalAIFluxProText2Image()
 #     parameters = {
-#         "prompt": "test prompt", 
-#         "width": 512, 
-#         "height": 512, 
+#         "prompt": "test prompt",
+#         "width": 512,
+#         "height": 512,
 #         "batch": 2
 #     }
-    
+
 #     # Act
 #     result = service.remote(parameters)
-    
+
 #     # Assert
 #     assert result == {"success": True}
 #     assert mock_make_api_request.call_count == 2
 
+
 def test_flux_dev_text2image_make_api_request(mocker, mock_fal_response):
     # Arrange
-    mocker.patch('fal_client.subscribe', return_value=mock_fal_response)
+    mocker.patch("fal_client.subscribe", return_value=mock_fal_response)
     service = FalAIFluxDevText2Image()
     parameters = FluxText2ImageParameters(
-        prompt="test prompt", 
-        width=512, 
-        height=512, 
-        batch=1
+        prompt="test prompt", width=512, height=512, batch=1
     )
-    
+
     # Act
     result = service.make_api_request(parameters)
-    
+
     # Assert
     assert result == base64.b64decode("SGVsbG8gV29ybGQ=")
     fal_client.subscribe.assert_called_once_with(
@@ -163,21 +175,22 @@ def test_flux_dev_text2image_make_api_request(mocker, mock_fal_response):
         with_logs=False,
     )
 
+
 # def test_flux_schnell_text2image_make_api_request(mocker, mock_fal_response_with_url, mock_response):
 #     # Arrange
 #     mocker.patch('fal_client.subscribe', return_value=mock_fal_response_with_url)
 #     mocker.patch('src.utils.Globals.make_request', return_value=mock_response)
 #     service = FalAIFluxschnellText2Image()
 #     parameters = FluxText2ImageParameters(
-#         prompt="test prompt", 
-#         width=512, 
-#         height=512, 
+#         prompt="test prompt",
+#         width=512,
+#         height=512,
 #         batch=1
 #     )
-    
+
 #     # Act
 #     result = service.make_api_request(parameters)
-    
+
 #     # Assert
 #     assert result == mock_response.content
 #     fal_client.subscribe.assert_called_once_with(
@@ -192,22 +205,23 @@ def test_flux_dev_text2image_make_api_request(mocker, mock_fal_response):
 #         with_logs=False,
 #     )
 
+
 def test_flux_dev_image2image_make_api_request(mocker, mock_fal_response):
     # Arrange
-    mocker.patch('fal_client.subscribe', return_value=mock_fal_response)
+    mocker.patch("fal_client.subscribe", return_value=mock_fal_response)
     service = FalAIFluxDevImage2Image()
     parameters = FluxImage2ImageParameters(
-        prompt="test prompt", 
+        prompt="test prompt",
         file_url="https://example.com/image.jpg",
         strength=0.7,
-        width=512, 
-        height=512, 
-        batch=1
+        width=512,
+        height=512,
+        batch=1,
     )
-    
+
     # Act
     result = service.make_api_request(parameters)
-    
+
     # Assert
     assert result == base64.b64decode("SGVsbG8gV29ybGQ=")
     fal_client.subscribe.assert_called_once_with(
@@ -223,6 +237,7 @@ def test_flux_dev_image2image_make_api_request(mocker, mock_fal_response):
         with_logs=False,
     )
 
+
 # def test_recraft_v3_text2image_make_api_request(mocker, mock_fal_response_with_url, mock_response):
 #     # Arrange
 #     mocker.patch('fal_client.subscribe', return_value=mock_fal_response_with_url)
@@ -230,16 +245,16 @@ def test_flux_dev_image2image_make_api_request(mocker, mock_fal_response):
 #     mocker.patch('requests.get', return_value=mock_response)
 #     service = FalAIRefactorV3Text2Image()
 #     parameters = RecraftV3Text2ImageParameters(
-#         prompt="test prompt", 
-#         width=512, 
+#         prompt="test prompt",
+#         width=512,
 #         height=512,
 #         style="cinematic",
 #         batch=1
 #     )
-    
+
 #     # Act
 #     result = service.make_api_request(parameters)
-    
+
 #     # Assert
 #     assert result == mock_response.content
 #     fal_client.subscribe.assert_called_once_with(
@@ -252,23 +267,24 @@ def test_flux_dev_image2image_make_api_request(mocker, mock_fal_response):
 #         with_logs=False,
 #     )
 
+
 def test_sdxl_large_text2image_make_api_request(mocker, mock_fal_response):
     # Arrange
-    mocker.patch('fal_client.subscribe', return_value=mock_fal_response)
+    mocker.patch("fal_client.subscribe", return_value=mock_fal_response)
     service = FalAISD35LargeText2Image()
     parameters = SDXLText2ImageParameters(
         prompt="test prompt",
         negative_prompt="bad quality",
-        width=512, 
+        width=512,
         height=512,
         num_inference_steps=20,
         guidance_scale=7.5,
-        batch=1
+        batch=1,
     )
-    
+
     # Act
     result = service.make_api_request(parameters)
-    
+
     # Assert
     assert result == base64.b64decode("SGVsbG8gV29ybGQ=")
     fal_client.subscribe.assert_called_once_with(
@@ -287,23 +303,24 @@ def test_sdxl_large_text2image_make_api_request(mocker, mock_fal_response):
         with_logs=False,
     )
 
+
 def test_sdxl_large_turbo_text2image_make_api_request(mocker, mock_fal_response):
     # Arrange
-    mocker.patch('fal_client.subscribe', return_value=mock_fal_response)
+    mocker.patch("fal_client.subscribe", return_value=mock_fal_response)
     service = FalAISD35LargeTurboText2Image()
     parameters = SDXLText2ImageParameters(
         prompt="test prompt",
         negative_prompt="bad quality",
-        width=512, 
+        width=512,
         height=512,
         num_inference_steps=20,
         guidance_scale=7.5,
-        batch=1
+        batch=1,
     )
-    
+
     # Act
     result = service.make_api_request(parameters)
-    
+
     # Assert
     assert result == base64.b64decode("SGVsbG8gV29ybGQ=")
     fal_client.subscribe.assert_called_once_with(
@@ -322,22 +339,25 @@ def test_sdxl_large_turbo_text2image_make_api_request(mocker, mock_fal_response)
         with_logs=False,
     )
 
-def test_flux3_inpainting_generate_image(mocker, mock_fal_response_with_url, mock_response):
+
+def test_flux3_inpainting_generate_image(
+    mocker, mock_fal_response_with_url, mock_response
+):
     # Arrange
-    mocker.patch('fal_client.subscribe', return_value=mock_fal_response_with_url)
-    mocker.patch('src.utils.Globals.make_request', return_value=mock_response)
-    mocker.patch('requests.get', return_value=mock_response)
+    mocker.patch("fal_client.subscribe", return_value=mock_fal_response_with_url)
+    mocker.patch("src.utils.Globals.make_request", return_value=mock_response)
+    mocker.patch("requests.get", return_value=mock_response)
     service = FalAIFlux3Inpainting()
     parameters = IdeoGramText2ImageParameters(
         prompt="test prompt",
         file_url="https://example.com/image.jpg",
         mask_url="https://example.com/mask.jpg",
-        batch=1
+        batch=1,
     )
-    
+
     # Act
     result = service.generate_image(parameters)
-    
+
     # Assert
     assert result == mock_response.content
     fal_client.subscribe.assert_called_once_with(
@@ -353,12 +373,13 @@ def test_flux3_inpainting_generate_image(mocker, mock_fal_response_with_url, moc
         with_logs=False,
     )
 
+
 # def test_flux3_inpainting_remote(mocker, mock_pil_image, mock_response):
 #     # Arrange
 #     mock_response_obj = Mock()
 #     mock_response_obj.content = mock_response.content
 #     mock_response_obj.status_code = 200
-    
+
 #     mocker.patch('src.utils.Globals.get_image_from_url', return_value=mock_pil_image)
 #     mocker.patch('src.utils.Globals.make_request', return_value=mock_response_obj)
 #     mocker.patch('src.utils.Globals.invert_bw_image_color', return_value=mock_pil_image)
@@ -366,7 +387,7 @@ def test_flux3_inpainting_generate_image(mocker, mock_fal_response_with_url, moc
 #     mocker.patch('src.utils.Globals.upload_data_gcp', return_value=mock_pil_image)
 #     mocker.patch.object(FalAIFlux3Inpainting, 'generate_image', return_value=mock_response.content)
 #     mocker.patch('src.utils.Globals.prepare_response', return_value={"success": True})
-    
+
 #     service = FalAIFlux3Inpainting()
 #     parameters = {
 #         "prompt": "test prompt",
@@ -374,10 +395,10 @@ def test_flux3_inpainting_generate_image(mocker, mock_fal_response_with_url, moc
 #         "mask_url": "https://example.com/mask.jpg",
 #         "batch": 1
 #     }
-    
+
 #     # Act
 #     result = service.remote(parameters)
-    
+
 #     # Assert
 #     assert result == {"success": True}
 #     assert service.generate_image.call_count == 1
@@ -387,11 +408,11 @@ def test_flux3_inpainting_generate_image(mocker, mock_fal_response_with_url, moc
 #     mock_remover = MagicMock()
 #     mock_remover.process.return_value = mock_pil_image
 #     mock_pil_image.getchannel = MagicMock(return_value=mock_pil_image)
-    
+
 #     mock_response_obj = Mock()
 #     mock_response_obj.content = mock_response.content
 #     mock_response_obj.status_code = 200
-    
+
 #     mocker.patch('src.utils.Globals.get_image_from_url', return_value=mock_pil_image)
 #     mocker.patch('src.utils.Globals.make_request', return_value=mock_response_obj)
 #     mocker.patch('src.utils.Globals.invert_bw_image_color', return_value=mock_pil_image)
@@ -399,41 +420,44 @@ def test_flux3_inpainting_generate_image(mocker, mock_fal_response_with_url, moc
 #     mocker.patch('src.utils.Globals.upload_data_gcp', return_value="https://mock-gcp-url.com/image.jpg")
 #     mocker.patch.object(FalAIFlux3ReplaceBackground, 'generate_image', return_value=mock_response.content)
 #     mocker.patch('src.utils.Globals.prepare_response', return_value={"success": True})
-    
+
 #     service = FalAIFlux3ReplaceBackground(remover=mock_remover)
 #     parameters = {
 #         "prompt": "test prompt",
 #         "file_url": "https://example.com/image.jpg",
 #         "batch": 1
 #     }
-    
+
 #     # Act
 #     result = service.remote(parameters)
-    
+
 #     # Assert
 #     assert result == {"success": True}
 #     mock_remover.process.assert_called_once_with(mock_pil_image, type="rgba")
 #     assert service.generate_image.call_count == 1
 
-def test_flux_pro_redux_make_api_request(mocker, mock_fal_response_with_url, mock_response):
+
+def test_flux_pro_redux_make_api_request(
+    mocker, mock_fal_response_with_url, mock_response
+):
     # Arrange
-    mocker.patch('fal_client.subscribe', return_value=mock_fal_response_with_url)
-    mocker.patch('src.utils.Globals.make_request', return_value=mock_response)
-    mocker.patch('requests.get', return_value=mock_response)
+    mocker.patch("fal_client.subscribe", return_value=mock_fal_response_with_url)
+    mocker.patch("src.utils.Globals.make_request", return_value=mock_response)
+    mocker.patch("requests.get", return_value=mock_response)
     service = FalAIFluxProRedux()
     parameters = FluxImage2ImageParameters(
         prompt="test prompt",
         file_url="https://example.com/image.jpg",
         strength=0.7,
         num_inference_steps=20,
-        width=512, 
+        width=512,
         height=512,
-        batch=1
+        batch=1,
     )
-    
+
     # Act
     result = service.make_api_request(parameters)
-    
+
     # Assert
     assert result == mock_response.content
     fal_client.subscribe.assert_called_once_with(
@@ -452,24 +476,27 @@ def test_flux_pro_redux_make_api_request(mocker, mock_fal_response_with_url, moc
         with_logs=False,
     )
 
-def test_flux_pro_canny_make_api_request(mocker, mock_fal_response_with_url, mock_response):
+
+def test_flux_pro_canny_make_api_request(
+    mocker, mock_fal_response_with_url, mock_response
+):
     # Arrange
-    mocker.patch('fal_client.subscribe', return_value=mock_fal_response_with_url)
-    mocker.patch('src.utils.Globals.make_request', return_value=mock_response)
-    mocker.patch('requests.get', return_value=mock_response)
+    mocker.patch("fal_client.subscribe", return_value=mock_fal_response_with_url)
+    mocker.patch("src.utils.Globals.make_request", return_value=mock_response)
+    mocker.patch("requests.get", return_value=mock_response)
     service = FalAIFluxProCanny()
     parameters = FluxImage2ImageParameters(
         prompt="test prompt",
         file_url="https://example.com/image.jpg",
         num_inference_steps=20,
-        width=512, 
+        width=512,
         height=512,
-        batch=1
+        batch=1,
     )
-    
+
     # Act
     result = service.make_api_request(parameters)
-    
+
     # Assert
     assert result == mock_response.content
     fal_client.subscribe.assert_called_once_with(
@@ -486,24 +513,27 @@ def test_flux_pro_canny_make_api_request(mocker, mock_fal_response_with_url, moc
         with_logs=False,
     )
 
-def test_flux_pro_depth_make_api_request(mocker, mock_fal_response_with_url, mock_response):
+
+def test_flux_pro_depth_make_api_request(
+    mocker, mock_fal_response_with_url, mock_response
+):
     # Arrange
-    mocker.patch('fal_client.subscribe', return_value=mock_fal_response_with_url)
-    mocker.patch('src.utils.Globals.make_request', return_value=mock_response)
-    mocker.patch('requests.get', return_value=mock_response)
+    mocker.patch("fal_client.subscribe", return_value=mock_fal_response_with_url)
+    mocker.patch("src.utils.Globals.make_request", return_value=mock_response)
+    mocker.patch("requests.get", return_value=mock_response)
     service = FalAIFluxProDepth()
     parameters = FluxImage2ImageParameters(
         prompt="test prompt",
         file_url="https://example.com/image.jpg",
         num_inference_steps=20,
-        width=512, 
+        width=512,
         height=512,
-        batch=1
+        batch=1,
     )
-    
+
     # Act
     result = service.make_api_request(parameters)
-    
+
     # Assert
     assert result == mock_response.content
     fal_client.subscribe.assert_called_once_with(
@@ -520,24 +550,25 @@ def test_flux_pro_depth_make_api_request(mocker, mock_fal_response_with_url, moc
         with_logs=False,
     )
 
+
 def test_omnigen_v1_make_api_request(mocker, mock_fal_response_with_url, mock_response):
     # Arrange
-    mocker.patch('fal_client.subscribe', return_value=mock_fal_response_with_url)
-    mocker.patch('src.utils.Globals.make_request', return_value=mock_response)
-    mocker.patch('requests.get', return_value=mock_response)
+    mocker.patch("fal_client.subscribe", return_value=mock_fal_response_with_url)
+    mocker.patch("src.utils.Globals.make_request", return_value=mock_response)
+    mocker.patch("requests.get", return_value=mock_response)
     service = OmnigenV1()
     parameters = OmnigenParameters(
         prompt="test prompt",
         file_url="https://example.com/image.jpg",
         num_inference_steps=20,
-        width=512, 
+        width=512,
         height=512,
-        batch=1
+        batch=1,
     )
-    
+
     # Act
     result = service.make_api_request(parameters)
-    
+
     # Assert
     assert result == mock_response.content
     fal_client.subscribe.assert_called_once_with(
@@ -551,29 +582,30 @@ def test_omnigen_v1_make_api_request(mocker, mock_fal_response_with_url, mock_re
             "num_images": 1,
             "enable_safety_checker": True,
             "output_format": "jpeg",
-            "input_image_urls": ["https://example.com/image.jpg"]
+            "input_image_urls": ["https://example.com/image.jpg"],
         },
         with_logs=False,
     )
 
+
 def test_flux_pulid_make_api_request(mocker, mock_fal_response_with_url, mock_response):
     # Arrange
-    mocker.patch('fal_client.subscribe', return_value=mock_fal_response_with_url)
-    mocker.patch('src.utils.Globals.make_request', return_value=mock_response)
-    mocker.patch('requests.get', return_value=mock_response)
+    mocker.patch("fal_client.subscribe", return_value=mock_fal_response_with_url)
+    mocker.patch("src.utils.Globals.make_request", return_value=mock_response)
+    mocker.patch("requests.get", return_value=mock_response)
     service = FalAIFluxPulID()
     parameters = FluxImage2ImageParameters(
         prompt="test prompt",
         negative_prompt="bad quality",
         file_url="https://example.com/image.jpg",
-        width=512, 
+        width=512,
         height=512,
-        batch=1
+        batch=1,
     )
-    
+
     # Act
     result = service.make_api_request(parameters)
-    
+
     # Assert
     assert result == mock_response.content
     fal_client.subscribe.assert_called_once_with(
@@ -594,20 +626,28 @@ def test_flux_pulid_make_api_request(mocker, mock_fal_response_with_url, mock_re
         with_logs=False,
     )
 
+
 def test_veo2_remote_success_text_to_video(mocker, mock_image):
     """Tests the happy path for Veo2 text-to-video via the remote method."""
     # Arrange
     # Define the expected final dictionary structure returned by the decorated remote
     expected_response_structure = {
-        'result': [mock_image],
-        'Has_NSFW_content': [False],
-        'time': {'startup_time': 0, 'runtime': ANY}, # Use ANY for runtime as it's variable
-        'extension': OUTPUT_VIDEO_EXTENSION
+        "result": [mock_image],
+        "Has_NSFW_content": [False],
+        "time": {
+            "startup_time": 0,
+            "runtime": ANY,
+        },  # Use ANY for runtime as it's variable
+        "extension": OUTPUT_VIDEO_EXTENSION,
     }
     # Mock the entire remote method on the Veo2 class
-    mocked_remote = mocker.patch.object(Veo2, 'remote', return_value=expected_response_structure)
+    mocked_remote = mocker.patch.object(
+        Veo2, "remote", return_value=expected_response_structure
+    )
 
-    service = Veo2() # Create instance after patching if needed, or patch instance if preferred
+    service = (
+        Veo2()
+    )  # Create instance after patching if needed, or patch instance if preferred
     parameters = {
         "prompt": "lego chef cooking",
         "duration": 5.0,
@@ -615,30 +655,33 @@ def test_veo2_remote_success_text_to_video(mocker, mock_image):
     }
 
     # Act
-    result = service.remote(parameters) # Call the mocked remote method
+    result = service.remote(parameters)  # Call the mocked remote method
 
     # Assert
     assert result == expected_response_structure
     # Verify the mocked remote was called with the original dictionary parameters
     mocked_remote.assert_called_once_with(parameters)
 
+
 def test_veo2_remote_success_image_to_video(mocker, mock_image):
     """Tests the happy path for Veo2 image-to-video via the remote method."""
     # Arrange
     expected_response_structure = {
-        'result': [mock_image],
-        'Has_NSFW_content': [False],
-        'time': {'startup_time': 0, 'runtime': ANY}, # Use ANY for runtime
-        'extension': OUTPUT_VIDEO_EXTENSION
+        "result": [mock_image],
+        "Has_NSFW_content": [False],
+        "time": {"startup_time": 0, "runtime": ANY},  # Use ANY for runtime
+        "extension": OUTPUT_VIDEO_EXTENSION,
     }
-    mocked_remote = mocker.patch.object(Veo2, 'remote', return_value=expected_response_structure)
+    mocked_remote = mocker.patch.object(
+        Veo2, "remote", return_value=expected_response_structure
+    )
 
     service = Veo2()
     parameters = {
         "prompt": "lego chef cooking",
         "duration": "7s",
         "aspect_ratio": "16:9",
-        "file_url": "http://image.url/img.jpg"
+        "file_url": "http://image.url/img.jpg",
     }
 
     # Act
@@ -648,13 +691,16 @@ def test_veo2_remote_success_image_to_video(mocker, mock_image):
     assert result == expected_response_structure
     mocked_remote.assert_called_once_with(parameters)
 
+
 # --- Keep these Veo2 tests as they test internal/failure logic ---
 def test_veo2_make_api_request_fal_error(mocker):
     """Tests handling of errors from the Fal API client during the API call."""
     # Arrange
-    mocker.patch('fal_client.submit', side_effect=fal_client.client.FalClientError("API Failed"))
+    mocker.patch(
+        "fal_client.submit", side_effect=fal_client.client.FalClientError("API Failed")
+    )
     service = Veo2()
-    parameters = Veo2Parameters(prompt="test", duration="5s") # Use validated params
+    parameters = Veo2Parameters(prompt="test", duration="5s")  # Use validated params
 
     # Act & Assert
     with pytest.raises(Exception) as exc_info:
@@ -662,12 +708,13 @@ def test_veo2_make_api_request_fal_error(mocker):
     assert "Video generation failed" in exc_info.value.args[0]
     assert "Fal API interaction error" in exc_info.value.args[1]
 
+
 def test_veo2_remote_validation_error(mocker):
     """Tests that the remote method raises ValidationError for invalid input."""
     # Arrange
     # No need to mock timing_decorator here as validation happens before it
     service = Veo2()
-    parameters = { # Invalid duration format not ending in 's' or being convertible
+    parameters = {  # Invalid duration format not ending in 's' or being convertible
         "prompt": "lego chef cooking",
         "duration": "invalid",
         "aspect_ratio": "16:9",
@@ -675,27 +722,33 @@ def test_veo2_remote_validation_error(mocker):
 
     # Act & Assert
     with pytest.raises(ValidationError):
-        service.remote(parameters) # The actual remote method runs here and should raise validation error early
+        service.remote(
+            parameters
+        )  # The actual remote method runs here and should raise validation error early
+
 
 # --- Kling2Master Important Tests ---
+
 
 def test_kling2master_remote_success_text_to_video(mocker, mock_image):
     """Tests the happy path for Kling2Master text-to-video via the remote method."""
     # Arrange
     expected_response_structure = {
-        'result': [mock_image],
-        'Has_NSFW_content': [False],
-        'time': {'startup_time': 0, 'runtime': ANY}, # Use ANY for runtime
-        'extension': OUTPUT_VIDEO_EXTENSION
+        "result": [mock_image],
+        "Has_NSFW_content": [False],
+        "time": {"startup_time": 0, "runtime": ANY},  # Use ANY for runtime
+        "extension": OUTPUT_VIDEO_EXTENSION,
     }
-    mocked_remote = mocker.patch.object(Kling2Master, 'remote', return_value=expected_response_structure)
+    mocked_remote = mocker.patch.object(
+        Kling2Master, "remote", return_value=expected_response_structure
+    )
 
     service = Kling2Master()
     parameters = {
         "prompt": "skyscraper implosion",
         "duration": 5,
         "aspect_ratio": "16:9",
-        "cfg_scale": 7.0
+        "cfg_scale": 7.0,
     }
 
     # Act
@@ -705,16 +758,19 @@ def test_kling2master_remote_success_text_to_video(mocker, mock_image):
     assert result == expected_response_structure
     mocked_remote.assert_called_once_with(parameters)
 
+
 def test_kling2master_remote_success_image_to_video(mocker, mock_image):
     """Tests the happy path for Kling2Master image-to-video via the remote method."""
     # Arrange
     expected_response_structure = {
-        'result': [mock_image],
-        'Has_NSFW_content': [False],
-        'time': {'startup_time': 0, 'runtime': ANY}, # Use ANY for runtime
-        'extension': OUTPUT_VIDEO_EXTENSION
+        "result": [mock_image],
+        "Has_NSFW_content": [False],
+        "time": {"startup_time": 0, "runtime": ANY},  # Use ANY for runtime
+        "extension": OUTPUT_VIDEO_EXTENSION,
     }
-    mocked_remote = mocker.patch.object(Kling2Master, 'remote', return_value=expected_response_structure)
+    mocked_remote = mocker.patch.object(
+        Kling2Master, "remote", return_value=expected_response_structure
+    )
 
     service = Kling2Master()
     parameters = {
@@ -722,7 +778,7 @@ def test_kling2master_remote_success_image_to_video(mocker, mock_image):
         "duration": "10",
         "aspect_ratio": "16:9",
         "cfg_scale": 7.0,
-        "file_url": "http://image.url/img.jpg"
+        "file_url": "http://image.url/img.jpg",
     }
 
     # Act
@@ -737,7 +793,9 @@ def test_kling2master_remote_success_image_to_video(mocker, mock_image):
 def test_kling2master_make_api_request_fal_error(mocker):
     """Tests handling of errors from the Fal API client during the API call."""
     # Arrange
-    mocker.patch('fal_client.submit', side_effect=fal_client.client.FalClientError("API Failed"))
+    mocker.patch(
+        "fal_client.submit", side_effect=fal_client.client.FalClientError("API Failed")
+    )
     service = Kling2Master()
     # Use a valid Pydantic model instance for the make_api_request input
     parameters = Kling2MasterParameters(prompt="test", duration="5")
@@ -748,18 +806,21 @@ def test_kling2master_make_api_request_fal_error(mocker):
     assert "Video generation failed" in exc_info.value.args[0]
     assert "Fal API interaction error" in exc_info.value.args[1]
 
+
 def test_kling2master_remote_validation_error_duration(mocker):
     """Tests that the remote method raises ValidationError for invalid duration input."""
     # Arrange
     # No need to mock timing_decorator here as validation happens before it
     service = Kling2Master()
-    parameters = { # Invalid duration value
+    parameters = {  # Invalid duration value
         "prompt": "skyscraper implosion",
-        "duration": "7", # Only "5" or "10" are valid due to Literal in schema
+        "duration": "7",  # Only "5" or "10" are valid due to Literal in schema
         "aspect_ratio": "16:9",
-        "cfg_scale": 7.0
+        "cfg_scale": 7.0,
     }
 
     # Act & Assert
     with pytest.raises(ValidationError):
-        service.remote(parameters) # The actual remote method runs here and should raise valida
+        service.remote(
+            parameters
+        )  # The actual remote method runs here and should raise valida
