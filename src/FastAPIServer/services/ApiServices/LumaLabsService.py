@@ -1,9 +1,11 @@
+import concurrent.futures
+
+from lumaai import LumaAI
+
 from src.data_models.ModalAppSchemas import LumaLabsVideoParameters
-from src.utils.Globals import timing_decorator, prepare_response, make_request
 from src.FastAPIServer.services.IService import IService
 from src.utils.Constants import OUTPUT_VIDEO_EXTENSION
-import concurrent.futures
-from lumaai import LumaAI
+from src.utils.Globals import make_request, prepare_response, timing_decorator
 
 
 class LumaVideo(IService):

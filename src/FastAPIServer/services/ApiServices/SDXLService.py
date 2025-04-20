@@ -1,18 +1,19 @@
 import base64
+import concurrent.futures
+
 from src.data_models.ModalAppSchemas import SDXL3APITextToImageParameters
-from src.utils.Globals import (
-    timing_decorator,
-    make_request,
-    prepare_response,
-    convert_to_aspect_ratio,
-)
 from src.FastAPIServer.services.IService import IService
 from src.utils.Constants import (
     OUTPUT_IMAGE_EXTENSION,
-    extra_negative_prompt,
     SDXL3_RATIO_LIST,
+    extra_negative_prompt,
 )
-import concurrent.futures
+from src.utils.Globals import (
+    convert_to_aspect_ratio,
+    make_request,
+    prepare_response,
+    timing_decorator,
+)
 
 
 class SDXL3Text2Image(IService):

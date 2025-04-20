@@ -1,8 +1,9 @@
+import time
+
 from src.data_models.ModalAppSchemas import SDXLText2ImageParameters
-from src.utils.Globals import timing_decorator, make_request, prepare_response
 from src.FastAPIServer.services.IService import IService
 from src.utils.Constants import OUTPUT_IMAGE_EXTENSION
-import time
+from src.utils.Globals import make_request, prepare_response, timing_decorator
 
 
 class LeonardoText2Image(IService):

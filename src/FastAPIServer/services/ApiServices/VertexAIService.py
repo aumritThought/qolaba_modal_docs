@@ -1,22 +1,24 @@
-from src.data_models.ModalAppSchemas import IdeoGramText2ImageParameters
-from src.utils.Globals import (
-    timing_decorator,
-    prepare_response,
-    convert_to_aspect_ratio,
-)
-from src.FastAPIServer.services.IService import IService
-from src.utils.Constants import (
-    OUTPUT_IMAGE_EXTENSION,
-    IMAGEGEN_ASPECT_RATIOS,
-    google_credentials_info,
-    IMAGEGEN_ERROR,
-    IMAGEGEN_ERROR_MSG,
-)
 import concurrent.futures
-import vertexai
-from vertexai.preview.vision_models import ImageGenerationModel
+
 import google.auth
 import google.auth.transport.requests
+import vertexai
+from vertexai.preview.vision_models import ImageGenerationModel
+
+from src.data_models.ModalAppSchemas import IdeoGramText2ImageParameters
+from src.FastAPIServer.services.IService import IService
+from src.utils.Constants import (
+    IMAGEGEN_ASPECT_RATIOS,
+    IMAGEGEN_ERROR,
+    IMAGEGEN_ERROR_MSG,
+    OUTPUT_IMAGE_EXTENSION,
+    google_credentials_info,
+)
+from src.utils.Globals import (
+    convert_to_aspect_ratio,
+    prepare_response,
+    timing_decorator,
+)
 
 
 class ImageGenText2Image(IService):

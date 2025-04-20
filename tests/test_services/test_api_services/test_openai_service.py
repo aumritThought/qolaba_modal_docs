@@ -1,10 +1,12 @@
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
+
 from src.FastAPIServer.services.ApiServices.OpenAIService import (
     DalleText2Image,
     GeminiAIImageCheck,
 )
-from src.utils.Constants import NSFW_CONTENT_DETECT_ERROR_MSG, IMAGE_GENERATION_ERROR
+from src.utils.Constants import IMAGE_GENERATION_ERROR, NSFW_CONTENT_DETECT_ERROR_MSG
 
 
 def test_make_dalle_api_request_success(mocker):

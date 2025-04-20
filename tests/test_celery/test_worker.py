@@ -1,18 +1,20 @@
-import pytest
 import io
-from PIL import Image
 from unittest.mock import MagicMock
+
+import pytest
+from PIL import Image
+
+from src.data_models.ModalAppSchemas import APIInput
 from src.FastAPIServer.celery.Worker import (
+    create_task,
+    get_service_list,
+    get_task_status,
     initialize_shared_object,
+    on_worker_init,
+    task_gen,
     upload_image,
     upload_low_res_image,
-    on_worker_init,
-    get_service_list,
-    create_task,
-    task_gen,
-    get_task_status,
 )
-from src.data_models.ModalAppSchemas import APIInput
 
 
 @pytest.fixture

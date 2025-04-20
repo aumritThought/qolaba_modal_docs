@@ -1,27 +1,29 @@
-from modal import App, method, Volume, Secret
-from src.data_models.Configuration import stub_dictionary
-from src.data_models.ModalAppSchemas import StubNames, UpscaleParameters
-from src.utils.Globals import (
-    get_base_image,
-    SafetyChecker,
-    generate_image_urls,
-    prepare_response,
-    get_image_from_url,
-)
-from src.utils.Constants import (
-    VOLUME_NAME,
-    VOLUME_PATH,
-    SECRET_NAME,
-    ULTRASHARP_MODEL,
-    OUTPUT_IMAGE_EXTENSION,
-)
-import torch
 import time
+
 import cv2
 import numpy as np
-from PIL import Image
+import torch
 from imaginairy.vendored.basicsr.rrdbnet_arch import RRDBNet
 from imaginairy.vendored.realesrgan import RealESRGANer
+from modal import App, Secret, Volume, method
+from PIL import Image
+
+from src.data_models.Configuration import stub_dictionary
+from src.data_models.ModalAppSchemas import StubNames, UpscaleParameters
+from src.utils.Constants import (
+    OUTPUT_IMAGE_EXTENSION,
+    SECRET_NAME,
+    ULTRASHARP_MODEL,
+    VOLUME_NAME,
+    VOLUME_PATH,
+)
+from src.utils.Globals import (
+    SafetyChecker,
+    generate_image_urls,
+    get_base_image,
+    get_image_from_url,
+    prepare_response,
+)
 
 stub_name = StubNames().ultrasharp_upscaler
 

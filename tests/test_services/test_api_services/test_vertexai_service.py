@@ -1,6 +1,8 @@
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 from vertexai.preview.vision_models import Image, ImageGenerationModel
+
 from src.data_models.ModalAppSchemas import IdeoGramText2ImageParameters
 from src.FastAPIServer.services.ApiServices.VertexAIService import ImageGenText2Image
 from src.utils.Constants import IMAGEGEN_ERROR, IMAGEGEN_ERROR_MSG

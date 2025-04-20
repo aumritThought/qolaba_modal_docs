@@ -1,9 +1,11 @@
+import traceback
+import warnings
+from functools import wraps
+from typing import Any, Callable
+
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
-import warnings
-from typing import Callable, Any
-from functools import wraps
-import traceback
+
 from src.data_models.ModalAppSchemas import APITaskResponse
 from src.utils.Constants import INTERNAL_ERROR
 

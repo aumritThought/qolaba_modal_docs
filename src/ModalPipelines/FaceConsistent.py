@@ -1,36 +1,38 @@
-from modal import App, method, Volume, Secret
-from src.data_models.Configuration import stub_dictionary
-from src.data_models.ModalAppSchemas import (
-    StubNames,
-    InitParameters,
-    FaceConsistentParameters,
-)
-from src.utils.Globals import (
-    get_base_image,
-    SafetyChecker,
-    generate_image_urls,
-    prepare_response,
-    get_image_from_url,
-    get_refiner,
-)
-from src.utils.Constants import (
-    VOLUME_NAME,
-    VOLUME_PATH,
-    FACE_CONSISTENT_ERROR,
-    FACE_DETECT_ERROR_MSG,
-    SECRET_NAME,
-    sdxl_model_list,
-    extra_negative_prompt,
-    OUTPUT_IMAGE_EXTENSION,
-)
-import torch
-import time
 import os
 import sys
+import time
+
+import numpy as np
+import torch
 from diffusers import StableDiffusionXLPipeline
 from insightface.app import FaceAnalysis
 from insightface.utils import face_align
-import numpy as np
+from modal import App, Secret, Volume, method
+
+from src.data_models.Configuration import stub_dictionary
+from src.data_models.ModalAppSchemas import (
+    FaceConsistentParameters,
+    InitParameters,
+    StubNames,
+)
+from src.utils.Constants import (
+    FACE_CONSISTENT_ERROR,
+    FACE_DETECT_ERROR_MSG,
+    OUTPUT_IMAGE_EXTENSION,
+    SECRET_NAME,
+    VOLUME_NAME,
+    VOLUME_PATH,
+    extra_negative_prompt,
+    sdxl_model_list,
+)
+from src.utils.Globals import (
+    SafetyChecker,
+    generate_image_urls,
+    get_base_image,
+    get_image_from_url,
+    get_refiner,
+    prepare_response,
+)
 
 stub_name = StubNames().face_consistent
 

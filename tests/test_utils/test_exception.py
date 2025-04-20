@@ -1,5 +1,7 @@
 import json
+
 from fastapi.responses import JSONResponse
+
 from src.utils.Exceptions import handle_exceptions
 
 

@@ -1,6 +1,7 @@
-from pydantic import constr
 import os
+
 from dotenv import load_dotenv
+from pydantic import constr
 
 load_dotenv()
 

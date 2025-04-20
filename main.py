@@ -5,23 +5,24 @@ from pillow_heif import register_heif_opener
 
 register_heif_opener()
 
-from fastapi import FastAPI, UploadFile, Body
-from fastapi import Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+import io
+import os
+
+import uvicorn
+from fastapi import Body, Depends, FastAPI, UploadFile
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from PIL import Image
+from transparent_background import Remover
+
 from src.data_models.ModalAppSchemas import APIInput, APITaskResponse, TaskStatus
 from src.FastAPIServer.celery.Worker import (
-    task_gen,
     get_task_status,
     initialize_shared_object,
+    task_gen,
 )
-from src.utils.Globals import check_token, upload_to_gcp
-from src.utils.Constants import app_dict, INTERNAL_ERROR, OUTPUT_IMAGE_EXTENSION
+from src.utils.Constants import INTERNAL_ERROR, OUTPUT_IMAGE_EXTENSION, app_dict
 from src.utils.Exceptions import handle_exceptions
-import uvicorn
-import os
-import io
-from transparent_background import Remover
-from PIL import Image
+from src.utils.Globals import check_token, upload_to_gcp
 
 app = FastAPI()
 auth_scheme = HTTPBearer()

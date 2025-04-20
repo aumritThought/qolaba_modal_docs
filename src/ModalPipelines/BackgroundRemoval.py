@@ -1,24 +1,26 @@
-from modal import App, method, Volume, Secret
+import os
+import tempfile
+import time
+
+import torch
+from modal import App, Secret, Volume, method
+from transparent_background import Remover
+
 from src.data_models.Configuration import stub_dictionary
-from src.data_models.ModalAppSchemas import StubNames, BackGroundRemoval
-from src.utils.Globals import (
-    get_base_image,
-    SafetyChecker,
-    generate_image_urls,
-    prepare_response,
-    get_image_from_url,
-)
+from src.data_models.ModalAppSchemas import BackGroundRemoval, StubNames
 from src.utils.Constants import (
+    OUTPUT_IMAGE_EXTENSION,
+    SECRET_NAME,
     VOLUME_NAME,
     VOLUME_PATH,
-    SECRET_NAME,
-    OUTPUT_IMAGE_EXTENSION,
 )
-import torch
-import time
-import tempfile
-import os
-from transparent_background import Remover
+from src.utils.Globals import (
+    SafetyChecker,
+    generate_image_urls,
+    get_base_image,
+    get_image_from_url,
+    prepare_response,
+)
 
 stub_name = StubNames().background_removal
 

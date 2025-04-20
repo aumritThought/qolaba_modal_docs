@@ -1,13 +1,15 @@
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 from PIL import Image
-from src.data_models.ModalAppSchemas import RunwayImage2VideoParameters, PromptImage
+
+from src.data_models.ModalAppSchemas import PromptImage, RunwayImage2VideoParameters
 from src.FastAPIServer.services.ApiServices.RunWayService import RunwayImage2Video
 from src.utils.Constants import (
+    OUTPUT_VIDEO_EXTENSION,
     RUNWAY_ERROR,
     RUNWAY_ERROR_MSG,
     RUNWAY_POSITION_ERROR_MSG,
-    OUTPUT_VIDEO_EXTENSION,
 )
 
 

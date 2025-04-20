@@ -1,45 +1,44 @@
-from src.data_models.ModalAppSchemas import TaskResponse, TimeData, UpscaleParameters
-from modal import Image as MIM
-from modal import Secret
-from PIL import Image
-from PIL.Image import Image as Imagetype
+import datetime
+import io
+import math
+import os
+import re
+import time
+import uuid
+
+import numpy as np
+import requests
+import torch
 from diffusers import DiffusionPipeline
 from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
+from fastapi.security import HTTPAuthorizationCredentials
+from google.cloud import storage
+from google.oauth2 import service_account
+from modal import Cls, Secret
+from modal import Image as MIM
+from PIL import Image, ImageFilter
+from PIL.Image import Image as Imagetype
+from pillow_heif import register_heif_opener
+from requests import Response
 from transformers import CLIPImageProcessor
-import torch
-import time
-import os
-import requests
-import re
-import io
-import datetime
-import uuid
-import math
+
+from src.data_models.ModalAppSchemas import TaskResponse, TimeData, UpscaleParameters
 from src.utils.Constants import (
     BASE_IMAGE_COMMANDS,
     IMAGE_FETCH_ERROR,
-    STAGING_API,
     IMAGE_FETCH_ERROR_MSG,
     IMAGE_GENERATION_ERROR,
-    NSFW_CONTENT_DETECT_ERROR_MSG,
-    REQUIREMENT_FILE_PATH,
-    MEAN_HEIGHT,
-    SDXL_REFINER_MODEL_PATH,
-    google_credentials_info,
-    OUTPUT_IMAGE_EXTENSION,
-    SECRET_NAME,
-    content_type,
     MAX_UPLOAD_RETRY,
+    MEAN_HEIGHT,
+    NSFW_CONTENT_DETECT_ERROR_MSG,
+    OUTPUT_IMAGE_EXTENSION,
+    REQUIREMENT_FILE_PATH,
+    SDXL_REFINER_MODEL_PATH,
+    SECRET_NAME,
+    STAGING_API,
+    content_type,
+    google_credentials_info,
 )
-from fastapi.security import HTTPAuthorizationCredentials
-from requests import Response
-from google.cloud import storage
-from google.oauth2 import service_account
-import numpy as np
-from modal import Cls
-from PIL import ImageFilter
-from pillow_heif import register_heif_opener
-
 
 register_heif_opener()
 

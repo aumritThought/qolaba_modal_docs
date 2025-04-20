@@ -1,17 +1,18 @@
-import pytest
 import os
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 from dependency_injector import providers
 from transparent_background import Remover
 
+from src.data_models.ModalAppSchemas import TaskResponse, TimeData
+from src.FastAPIServer.services.ApiServices.OpenAIService import GeminiAIImageCheck
+from src.FastAPIServer.services.IService import IService
 from src.FastAPIServer.services.ServiceContainer import (
     ServiceContainer,
-    list_apps,
     ServiceRegistry,
+    list_apps,
 )
-from src.FastAPIServer.services.IService import IService
-from src.FastAPIServer.services.ApiServices.OpenAIService import GeminiAIImageCheck
-from src.data_models.ModalAppSchemas import TimeData, TaskResponse
 
 
 # Test for ServiceContainer class

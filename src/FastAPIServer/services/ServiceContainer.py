@@ -1,17 +1,18 @@
+import os
+
 from dependency_injector import containers, providers
+from modal import Cls
+from modal._utils.async_utils import synchronizer
+from modal.client import _Client
+from modal.environments import ensure_env
+from modal_proto import api_pb2
+from transparent_background import Remover
 
 # Do not remove this line. It imports the classes from this file into memory because of that, it is easy to identify that they are subscriber of Iservice class
 ####
 from src.FastAPIServer.services.ApiServices.OpenAIService import GeminiAIImageCheck
 from src.FastAPIServer.services.IService import IService
 from src.utils.Globals import get_clean_name
-from modal.client import _Client
-from modal.environments import ensure_env
-from modal_proto import api_pb2
-from modal._utils.async_utils import synchronizer
-import os
-from modal import Cls
-from transparent_background import Remover
 
 
 class ServiceContainer(containers.DeclarativeContainer):

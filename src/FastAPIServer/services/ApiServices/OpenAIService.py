@@ -1,20 +1,26 @@
-from src.data_models.ModalAppSchemas import DalleParameters, NSFWSchema
-from src.utils.Globals import timing_decorator, make_request, prepare_response
-from openai import OpenAI
-from src.utils.Constants import DALLE_SUPPORTED_HW
-from src.FastAPIServer.services.IService import IService
-from src.utils.Constants import (
-    OUTPUT_IMAGE_EXTENSION,
-    IMAGE_GENERATION_ERROR,
-    NSFW_CONTENT_DETECT_ERROR_MSG,
-    COPYRIGHT_DETECTION_FUNCTION_CALLING_SCHEMA,
-)
 import concurrent.futures
+
 import google.auth
 import google.auth.transport.requests
 from google import genai
-from src.utils.Constants import google_credentials_info
-from src.utils.Globals import get_image_from_url
+from openai import OpenAI
+
+from src.data_models.ModalAppSchemas import DalleParameters, NSFWSchema
+from src.FastAPIServer.services.IService import IService
+from src.utils.Constants import (
+    COPYRIGHT_DETECTION_FUNCTION_CALLING_SCHEMA,
+    DALLE_SUPPORTED_HW,
+    IMAGE_GENERATION_ERROR,
+    NSFW_CONTENT_DETECT_ERROR_MSG,
+    OUTPUT_IMAGE_EXTENSION,
+    google_credentials_info,
+)
+from src.utils.Globals import (
+    get_image_from_url,
+    make_request,
+    prepare_response,
+    timing_decorator,
+)
 
 
 class DalleText2Image(IService):

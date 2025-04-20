@@ -1,10 +1,11 @@
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 from PIL import Image
 
 from src.FastAPIServer.services.ApiServices.IdeogramService import (
-    IdeoGramText2Image,
     IdeogramRemix,
+    IdeoGramText2Image,
 )
 
 

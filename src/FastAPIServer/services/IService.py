@@ -1,19 +1,20 @@
-from abc import ABC, abstractmethod
 import os
+from abc import ABC, abstractmethod
+
 from src.utils.Constants import (
-    STABILITY_API,
-    SDXL_INPAINT_URL,
+    AILAB_HAIRSTYLE_URL,
+    AILAB_STATUS_URL,
     DID_TALK_API,
-    SDXL_ENGINE_ID,
-    MUSIC_GEN_API,
-    IDEOGRAM_GENERATE_URL,
     IDEOGRAM_EDIT_URL,
+    IDEOGRAM_GENERATE_URL,
     IDEOGRAM_REMIX_URL,
     LEONARDO_IMAGE_GEN_URL,
     LEONARDO_IMAGE_STATUS_URL,
-    AILAB_HAIRSTYLE_URL,
-    AILAB_STATUS_URL,
+    MUSIC_GEN_API,
     SDX3_URL,
+    SDXL_ENGINE_ID,
+    SDXL_INPAINT_URL,
+    STABILITY_API,
 )
 
 

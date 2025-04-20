@@ -1,11 +1,14 @@
-from pydantic import BaseModel, Field, field_validator, model_validator
+from typing import Any, List, Literal, Optional
+
 from fastapi import Query
-from typing import Optional, Any, List, Literal
+from pydantic import BaseModel, Field, field_validator, model_validator
+
 from src.utils.Constants import *
-from src.utils.Constants import sdxl_model_string, controlnet_models
 from src.utils.Constants import (
-    MIN_GUIDANCE_SCALE,
     MAX_GUIDANCE_SCALE,
+    MIN_GUIDANCE_SCALE,
+    controlnet_models,
+    sdxl_model_string,
 )  # Ensure these are imported if not already
 
 

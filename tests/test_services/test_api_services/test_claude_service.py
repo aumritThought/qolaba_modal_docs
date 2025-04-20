@@ -1,6 +1,8 @@
-import pytest
 from unittest.mock import MagicMock
+
 import google.auth
+import pytest
+
 from src.FastAPIServer.services.ApiServices.ClaudeAIService import (
     PromptParrot,
     VideoPromptParrot,

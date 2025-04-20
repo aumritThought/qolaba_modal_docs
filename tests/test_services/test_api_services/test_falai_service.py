@@ -1,37 +1,42 @@
-import pytest
 import base64
-from unittest.mock import MagicMock
-from PIL import Image
 import io
+from unittest.mock import ANY, MagicMock
+
 import fal_client
+import pytest
+from PIL import Image
+from pydantic import ValidationError
+
 from src.data_models.ModalAppSchemas import (
+    FluxImage2ImageParameters,
     FluxText2ImageParameters,
     IdeoGramText2ImageParameters,
+    Kling2MasterParameters,
     OmnigenParameters,
-    FluxImage2ImageParameters,
     SDXLText2ImageParameters,
     Veo2Parameters,
-    Kling2MasterParameters,
 )
-from src.utils.Constants import IMAGE_GENERATION_ERROR, NSFW_CONTENT_DETECT_ERROR_MSG
 from src.FastAPIServer.services.ApiServices.FalAIService import (
-    FalAIFluxProText2Image,
-    FalAIFluxDevText2Image,
-    FalAIFluxDevImage2Image,
-    FalAISD35LargeText2Image,
-    FalAISD35LargeTurboText2Image,
     FalAIFlux3Inpainting,
-    FalAIFluxProRedux,
+    FalAIFluxDevImage2Image,
+    FalAIFluxDevText2Image,
     FalAIFluxProCanny,
     FalAIFluxProDepth,
-    OmnigenV1,
+    FalAIFluxProRedux,
+    FalAIFluxProText2Image,
     FalAIFluxPulID,
-    Veo2,
+    FalAISD35LargeText2Image,
+    FalAISD35LargeTurboText2Image,
     Kling2Master,
+    OmnigenV1,
+    Veo2,
 )
-from src.utils.Constants import OUTPUT_VIDEO_EXTENSION  # Ensure this is imported
-from pydantic import ValidationError
-from unittest.mock import ANY
+from src.utils.Constants import (
+    IMAGE_GENERATION_ERROR,
+    NSFW_CONTENT_DETECT_ERROR_MSG,
+    OUTPUT_VIDEO_EXTENSION,  # Ensure this is imported
+)
+
 # Common fixtures
 
 

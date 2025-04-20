@@ -1,37 +1,39 @@
-from src.data_models.ModalAppSchemas import (
-    FluxText2ImageParameters,
-    IdeoGramText2ImageParameters,
-    OmnigenParameters,
-    FluxImage2ImageParameters,
-    RecraftV3Text2ImageParameters,
-    SDXLText2ImageParameters,
-    Kling2MasterParameters,
-)
-from src.utils.Globals import timing_decorator, prepare_response, make_request
-from src.FastAPIServer.services.IService import IService
-from src.utils.Constants import (
-    OUTPUT_IMAGE_EXTENSION,
-    IMAGE_GENERATION_ERROR,
-    NSFW_CONTENT_DETECT_ERROR_MSG,
-    OUTPUT_VIDEO_EXTENSION,
-)
-import concurrent.futures
 import base64
+import concurrent.futures
+
 import fal_client
-from src.utils.Globals import (
-    get_image_from_url,
-    upload_data_gcp,
-    invert_bw_image_color,
-    simple_boundary_blur,
-)
-from PIL.Image import Image as Imagetype
-from transparent_background import Remover
 import requests  # Ensure requests is imported
 from loguru import logger  # Ensure logger is imported
+from PIL.Image import Image as Imagetype
 from pydantic import ValidationError  # Ensure ValidationError is imported
+from transparent_background import Remover
+
 from src.data_models.ModalAppSchemas import (
+    FluxImage2ImageParameters,
+    FluxText2ImageParameters,
+    IdeoGramText2ImageParameters,
+    Kling2MasterParameters,
+    OmnigenParameters,
+    RecraftV3Text2ImageParameters,
+    SDXLText2ImageParameters,
     Veo2Parameters,
 )  # Import the specific schema for Veo2
+from src.FastAPIServer.services.IService import IService
+from src.utils.Constants import (
+    IMAGE_GENERATION_ERROR,
+    NSFW_CONTENT_DETECT_ERROR_MSG,
+    OUTPUT_IMAGE_EXTENSION,
+    OUTPUT_VIDEO_EXTENSION,
+)
+from src.utils.Globals import (
+    get_image_from_url,
+    invert_bw_image_color,
+    make_request,
+    prepare_response,
+    simple_boundary_blur,
+    timing_decorator,
+    upload_data_gcp,
+)
 
 
 class FalAIFluxProText2Image(IService):

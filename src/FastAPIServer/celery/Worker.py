@@ -1,32 +1,33 @@
-from celery import Celery
-import time
+import concurrent.futures
 import io
+import time
+
+from celery import Celery
+from celery.result import AsyncResult
 from celery.signals import worker_init, worker_process_init
-from src.utils.Constants import (
-    REDIS_URL,
-    CELERY_RESULT_EXPIRATION_TIME,
-    CELERY_MAX_RETRY,
-    CELERY_SOFT_LIMIT,
-    OUTPUT_IMAGE_EXTENSION,
-)
+from loguru import logger
+from PIL import Image
+from pydantic import ValidationError
+
 from src.data_models.ModalAppSchemas import (
     APIInput,
     APITaskResponse,
     TaskResponse,
     TimeData,
 )
-from celery.result import AsyncResult
 from src.FastAPIServer.services.ServiceContainer import (
     ServiceContainer,
     ServiceRegistry,
 )
-from src.utils.Globals import upload_data_gcp, compress_image
-from PIL import Image
-import concurrent.futures
-from src.utils.Constants import INTERNAL_ERROR  # Import INTERNAL_ERROR
-from loguru import logger
-from pydantic import ValidationError
-
+from src.utils.Constants import (
+    CELERY_MAX_RETRY,
+    CELERY_RESULT_EXPIRATION_TIME,
+    CELERY_SOFT_LIMIT,
+    INTERNAL_ERROR,  # Import INTERNAL_ERROR
+    OUTPUT_IMAGE_EXTENSION,
+    REDIS_URL,
+)
+from src.utils.Globals import compress_image, upload_data_gcp
 
 celery = Celery(
     "task_scheduler",

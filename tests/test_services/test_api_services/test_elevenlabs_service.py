@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock
+
+from src.data_models.ModalAppSchemas import AudioParameters, ElevenLabsParameters
 from src.FastAPIServer.services.ApiServices.ElvenLabsAudio import ElvenLabsAudio
-from src.data_models.ModalAppSchemas import ElevenLabsParameters, AudioParameters
 
 
 def test_init(mocker):
@@ -107,8 +108,8 @@ def test_generate_audio(mocker):
     # Verify function calls
     service.client.generate.assert_called_once()
     from src.FastAPIServer.services.ApiServices.ElvenLabsAudio import (
-        upload_data_gcp,
         prepare_response,
+        upload_data_gcp,
     )
 
     upload_data_gcp.assert_called_once()

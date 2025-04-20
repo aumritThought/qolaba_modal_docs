@@ -1,7 +1,9 @@
-import pytest
 import base64
-from src.FastAPIServer.services.ApiServices.SDXLService import SDXL3Text2Image
+
+import pytest
+
 from src.data_models.ModalAppSchemas import SDXL3APITextToImageParameters
+from src.FastAPIServer.services.ApiServices.SDXLService import SDXL3Text2Image
 
 
 def test_sdxl3_text2image_init(mocker):

@@ -1,14 +1,15 @@
 import random
 import string
 import threading
-from elevenlabs import Voice, VoiceSettings
-from pydub import AudioSegment
-from src.data_models.ModalAppSchemas import ElevenLabsParameters
 from io import BytesIO
-from src.utils.Globals import timing_decorator, upload_data_gcp, prepare_response
+
+from elevenlabs import ElevenLabs, Voice, VoiceSettings
+from pydub import AudioSegment
+
+from src.data_models.ModalAppSchemas import ElevenLabsParameters
 from src.FastAPIServer.services.IService import IService
 from src.utils.Constants import OUTPUT_AUDIO_EXTENSION
-from elevenlabs import ElevenLabs
+from src.utils.Globals import prepare_response, timing_decorator, upload_data_gcp
 
 voice_genration_lock = threading.Lock()
 

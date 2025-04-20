@@ -1,16 +1,18 @@
+from unittest.mock import MagicMock
+
+import numpy as np
 import pytest
 import torch
-import numpy as np
-from unittest.mock import MagicMock
 from PIL import Image
+
 from src.utils.Globals import (
     convert_image_to_bytes,
-    prepare_response,
-    make_request,
     get_image_from_url,
-    invert_bw_image_color,
-    simple_boundary_blur,
     get_seed_generator,
+    invert_bw_image_color,
+    make_request,
+    prepare_response,
+    simple_boundary_blur,
 )
 
 

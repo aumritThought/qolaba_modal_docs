@@ -1,10 +1,11 @@
-from modal import App, Volume, Secret
+import os
+
+import torch
+from diffusers import DiffusionPipeline
+from modal import App, Secret, Volume
+
 from src.utils.Constants import *
 from src.utils.Globals import get_base_image
-import os
-from diffusers import DiffusionPipeline
-import torch
-
 
 app = App("volume-stub", secrets=[Secret.from_name("environment_configuration")])
 

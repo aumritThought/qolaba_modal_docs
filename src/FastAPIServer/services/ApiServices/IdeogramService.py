@@ -1,19 +1,20 @@
-from src.data_models.ModalAppSchemas import (
-    IdeoGramText2ImageParameters,
-    IdeoGramRemixParameters,
-)
-from src.utils.Globals import (
-    timing_decorator,
-    make_request,
-    prepare_response,
-    convert_to_aspect_ratio,
-    get_image_from_url,
-)
-from src.FastAPIServer.services.IService import IService
-from src.utils.Constants import OUTPUT_IMAGE_EXTENSION, IDEOGRAM_ASPECT_RATIO
 import concurrent.futures
 import io
 import json
+
+from src.data_models.ModalAppSchemas import (
+    IdeoGramRemixParameters,
+    IdeoGramText2ImageParameters,
+)
+from src.FastAPIServer.services.IService import IService
+from src.utils.Constants import IDEOGRAM_ASPECT_RATIO, OUTPUT_IMAGE_EXTENSION
+from src.utils.Globals import (
+    convert_to_aspect_ratio,
+    get_image_from_url,
+    make_request,
+    prepare_response,
+    timing_decorator,
+)
 
 
 class IdeoGramText2Image(IService):

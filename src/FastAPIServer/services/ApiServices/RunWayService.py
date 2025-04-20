@@ -1,10 +1,10 @@
+import base64
+import concurrent.futures
+import io
+
+from runwayml import RunwayML
+
 from src.data_models.ModalAppSchemas import RunwayImage2VideoParameters
-from src.utils.Globals import (
-    timing_decorator,
-    prepare_response,
-    make_request,
-    get_image_from_url,
-)
 from src.FastAPIServer.services.IService import IService
 from src.utils.Constants import (
     OUTPUT_VIDEO_EXTENSION,
@@ -12,10 +12,12 @@ from src.utils.Constants import (
     RUNWAY_ERROR_MSG,
     RUNWAY_POSITION_ERROR_MSG,
 )
-import concurrent.futures
-from runwayml import RunwayML
-import io
-import base64
+from src.utils.Globals import (
+    get_image_from_url,
+    make_request,
+    prepare_response,
+    timing_decorator,
+)
 
 
 class RunwayImage2Video(IService):

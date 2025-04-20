@@ -1,23 +1,25 @@
-from modal import App, method, Volume, Secret
+import time
+
+import torch
+from diffusers import ControlNetModel, StableDiffusionControlNetPipeline
+from modal import App, Secret, Volume, method
+
 from src.data_models.Configuration import stub_dictionary
-from src.data_models.ModalAppSchemas import StubNames, IllusionDuiffusion
-from src.utils.Globals import (
-    get_base_image,
-    SafetyChecker,
-    generate_image_urls,
-    prepare_response,
-    get_image_from_url,
-)
+from src.data_models.ModalAppSchemas import IllusionDuiffusion, StubNames
 from src.utils.Constants import (
+    OUTPUT_IMAGE_EXTENSION,
+    SECRET_NAME,
     VOLUME_NAME,
     VOLUME_PATH,
-    SECRET_NAME,
     extra_negative_prompt,
-    OUTPUT_IMAGE_EXTENSION,
 )
-from diffusers import StableDiffusionControlNetPipeline, ControlNetModel
-import torch
-import time
+from src.utils.Globals import (
+    SafetyChecker,
+    generate_image_urls,
+    get_base_image,
+    get_image_from_url,
+    prepare_response,
+)
 
 stub_name = StubNames().illusion_diffusion
 

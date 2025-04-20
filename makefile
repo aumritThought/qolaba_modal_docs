@@ -34,3 +34,10 @@ deploy_dev:
 test:
 	python -m pytest tests/ -rP -vv
 	python -m pytest --cov=src tests/
+
+lint:
+	ruff check --select I --fix
+	ruff check --fix
+	
+format:
+	ruff format

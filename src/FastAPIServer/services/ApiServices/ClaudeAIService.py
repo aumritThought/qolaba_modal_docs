@@ -1,15 +1,17 @@
-from src.data_models.ModalAppSchemas import PromptParrotParameters
-from src.utils.Globals import timing_decorator, prepare_response
-from src.utils.Constants import (
-    BASE_PROMPT_FOR_GENERATION,
-    google_credentials_info,
-    BASE_PROMPT_FOR_VIDEO_GENERATION,
-)
-from src.FastAPIServer.services.IService import IService
 import concurrent.futures
-from anthropic import AnthropicVertex
+
 import google.auth
 import google.auth.transport.requests
+from anthropic import AnthropicVertex
+
+from src.data_models.ModalAppSchemas import PromptParrotParameters
+from src.FastAPIServer.services.IService import IService
+from src.utils.Constants import (
+    BASE_PROMPT_FOR_GENERATION,
+    BASE_PROMPT_FOR_VIDEO_GENERATION,
+    google_credentials_info,
+)
+from src.utils.Globals import prepare_response, timing_decorator
 
 
 class PromptParrot(IService):

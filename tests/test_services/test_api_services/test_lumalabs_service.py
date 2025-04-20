@@ -1,6 +1,7 @@
+from unittest.mock import MagicMock
+
 from src.data_models.ModalAppSchemas import LumaLabsVideoParameters, PromptImage
 from src.FastAPIServer.services.ApiServices.LumaLabsService import LumaVideo
-from unittest.mock import MagicMock
 
 
 def test_generate_image_text_only_success(mocker):
