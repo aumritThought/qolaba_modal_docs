@@ -38,6 +38,9 @@ test:
 lint:
 	ruff check --select I --fix
 	ruff check --fix
-	
+
 format:
 	ruff format
+
+reqs:
+	pip install -r requirements.txt

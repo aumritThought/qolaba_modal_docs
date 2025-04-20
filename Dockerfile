@@ -20,7 +20,7 @@ WORKDIR /root/app
 
 RUN pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
 
-RUN pip install -r req_docker_deploy.txt
+RUN pip install -r requirements.txt
 
 ARG TOKEN_ID
 
