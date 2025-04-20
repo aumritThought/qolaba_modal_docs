@@ -1,27 +1,40 @@
 from dotenv import load_dotenv
+
 load_dotenv()
 from pillow_heif import register_heif_opener
+
 register_heif_opener()
 
-from fastapi import FastAPI, UploadFile, Body
-from fastapi import Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from src.data_models.ModalAppSchemas import APIInput, APITaskResponse, TaskStatus, OpenAITTSParameters
-from src.FastAPIServer.celery.Worker import task_gen, get_task_status, initialize_shared_object
-from src.utils.Globals import check_token, upload_to_gcp
-from src.utils.Constants import app_dict, INTERNAL_ERROR, OUTPUT_IMAGE_EXTENSION
-from src.utils.Exceptions import handle_exceptions
-import uvicorn, os, io
-from transparent_background import Remover
+import io
+import os
+
+import uvicorn
+from fastapi import Body, Depends, FastAPI, UploadFile
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from PIL import Image
+from transparent_background import Remover
+
+from src.data_models.ModalAppSchemas import APIInput, APITaskResponse, TaskStatus
+from src.FastAPIServer.celery.Worker import (
+    get_task_status,
+    initialize_shared_object,
+    task_gen,
+)
+from src.utils.Constants import INTERNAL_ERROR, OUTPUT_IMAGE_EXTENSION, app_dict
+from src.utils.Exceptions import handle_exceptions
+from src.utils.Globals import check_token, upload_to_gcp
 
 app = FastAPI()
 auth_scheme = HTTPBearer()
 
+
 @app.on_event("startup")
 def startup_event():
-    Remover(device="cpu") # Do not remove this line. it will download the weights which are not directly possible through celery due to ray and celery error
+    Remover(
+        device="cpu"
+    )  # Do not remove this line. it will download the weights which are not directly possible through celery due to ray and celery error
     initialize_shared_object()
+
 
 @app.post("/generate_content", response_model=APITaskResponse)
 @handle_exceptions
@@ -34,8 +47,9 @@ def generate_content(
     api_parameters.parameters = parameters
     api_parameters.init_parameters = app_dict[api_parameters.app_id]["init_parameters"]
     api_parameters.app_id = app_dict[api_parameters.app_id]["app_id"]
-    
+
     return task_gen(api_parameters)
+
 
 @app.get("/list_of_Apps", response_model=APITaskResponse)
 @handle_exceptions
@@ -50,28 +64,28 @@ def get_app_list(
 
 @app.post("/tasks", response_model=APITaskResponse)
 @handle_exceptions
-def get_status(parameters : TaskStatus,
-               api_key: HTTPAuthorizationCredentials = Depends(auth_scheme)):
+def get_status(
+    parameters: TaskStatus, api_key: HTTPAuthorizationCredentials = Depends(auth_scheme)
+):
     check_token(api_key)
     task_result = get_task_status(parameters.task_id)
 
     if task_result.status == "FAILURE":
-        
         try:
             error = task_result.info.args[0]
             error_details = task_result.info.args[1]
-        except Exception as er:
+        except Exception:
             error = INTERNAL_ERROR
             error_details = str(task_result.info)
         raise Exception(error, error_details)
-    
-    if(task_result.status == "PENDING"):
+
+    if task_result.status == "PENDING":
         task_Response = APITaskResponse(
-                task_id=parameters.task_id,
-                input=parameters.model_dump(),
-                status=task_result.status,
+            task_id=parameters.task_id,
+            input=parameters.model_dump(),
+            status=task_result.status,
         ).model_dump()
-        
+
         return task_Response
     else:
         return task_result.result
@@ -79,17 +93,18 @@ def get_status(parameters : TaskStatus,
 
 @app.post("/upload_data_GCP", response_model=APITaskResponse)
 @handle_exceptions
-def upload_file(file: UploadFile, file_type : str = Body(..., embed=True), api_key: HTTPAuthorizationCredentials = Depends(auth_scheme)):
+def upload_file(
+    file: UploadFile,
+    file_type: str = Body(..., embed=True),
+    api_key: HTTPAuthorizationCredentials = Depends(auth_scheme),
+):
     check_token(api_key)
-    if(file_type == OUTPUT_IMAGE_EXTENSION):
+    if file_type == OUTPUT_IMAGE_EXTENSION:
         image = Image.open(io.BytesIO(file.file.read()))
         url = upload_to_gcp(image, file_type)
     else:
         url = upload_to_gcp(file.file.read(), file_type)
-    task_Response = APITaskResponse(
-                output= {"url": url},
-                status="SUCCESS"
-    ).model_dump()
+    task_Response = APITaskResponse(output={"url": url}, status="SUCCESS").model_dump()
     return task_Response
 
 
