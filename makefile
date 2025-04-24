@@ -36,7 +36,7 @@ test:
 	python -m pytest --cov=src tests/
 
 lint:
-	ruff check --fix
+	ruff check
 
 format:
 	ruff format
