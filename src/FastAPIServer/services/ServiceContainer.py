@@ -9,7 +9,9 @@ from modal_proto import api_pb2
 from transparent_background import Remover
 
 from src.FastAPIServer.services.ApiServices.OpenAIService import GeminiAIImageCheck
-from src.FastAPIServer.services.ApiServices.FalAIService import Veo2, Kling2Master 
+from src.FastAPIServer.services.ApiServices.FalAIService import Veo2, Kling2Master
+from src.FastAPIServer.services.ApiServices.ElvenLabsAudio import ElvenLabsAudio
+
 
 from src.FastAPIServer.services.IService import IService
 from src.utils.Globals import get_clean_name
