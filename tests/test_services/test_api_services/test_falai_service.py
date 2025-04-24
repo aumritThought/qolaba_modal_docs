@@ -34,7 +34,8 @@ from src.FastAPIServer.services.ApiServices.FalAIService import (
 from src.utils.Constants import (
     IMAGE_GENERATION_ERROR,
     NSFW_CONTENT_DETECT_ERROR_MSG,
-    OUTPUT_VIDEO_EXTENSION,  # Ensure this is imported
+    OUTPUT_VIDEO_EXTENSION,
+    VIDEO_GENERATION_ERROR
 )
 
 # Common fixtures
@@ -697,21 +698,36 @@ def test_veo2_remote_success_image_to_video(mocker, mock_image):
     mocked_remote.assert_called_once_with(parameters)
 
 
-# --- Keep these Veo2 tests as they test internal/failure logic ---
 def test_veo2_make_api_request_fal_error(mocker):
+    mocker.patch(
+        "fal_client.submit", side_effect=fal_client.client.FalClientError("API Failed")
+    )
+    mocker.patch("src.FastAPIServer.services.ApiServices.FalAIService.logger")
+    service = Veo2()
+    parameters = Veo2Parameters(prompt="test", duration="5s", aspect_ratio="16:9")
+
+    with pytest.raises(Exception) as exc_info:
+        service.make_api_request(parameters)
+
+    assert exc_info.value.args[0] == VIDEO_GENERATION_ERROR
+    assert "couldn't create your video" in exc_info.value.args[1]
+
+def test_kling2master_make_api_request_fal_error(mocker):
     """Tests handling of errors from the Fal API client during the API call."""
     # Arrange
     mocker.patch(
         "fal_client.submit", side_effect=fal_client.client.FalClientError("API Failed")
     )
-    service = Veo2()
-    parameters = Veo2Parameters(prompt="test", duration="5s")  # Use validated params
+    mocker.patch("src.FastAPIServer.services.ApiServices.FalAIService.logger")
+    service = Kling2Master()
+    # Use a valid Pydantic model instance for the make_api_request input
+    parameters = Kling2MasterParameters(prompt="test", duration="5", aspect_ratio="16:9")
 
     # Act & Assert
     with pytest.raises(Exception) as exc_info:
         service.make_api_request(parameters)
-    assert "Video generation failed" in exc_info.value.args[0]
-    assert "Fal API interaction error" in exc_info.value.args[1]
+    assert exc_info.value.args[0] == VIDEO_GENERATION_ERROR
+    assert "We couldn't create your video. Please try again later." in exc_info.value.args[1]
 
 
 def test_veo2_remote_validation_error(mocker):
@@ -793,23 +809,6 @@ def test_kling2master_remote_success_image_to_video(mocker, mock_image):
     assert result == expected_response_structure
     mocked_remote.assert_called_once_with(parameters)
 
-
-# --- Keep these Kling2Master tests as they test internal/failure logic ---
-def test_kling2master_make_api_request_fal_error(mocker):
-    """Tests handling of errors from the Fal API client during the API call."""
-    # Arrange
-    mocker.patch(
-        "fal_client.submit", side_effect=fal_client.client.FalClientError("API Failed")
-    )
-    service = Kling2Master()
-    # Use a valid Pydantic model instance for the make_api_request input
-    parameters = Kling2MasterParameters(prompt="test", duration="5")
-
-    # Act & Assert
-    with pytest.raises(Exception) as exc_info:
-        service.make_api_request(parameters)
-    assert "Video generation failed" in exc_info.value.args[0]
-    assert "Fal API interaction error" in exc_info.value.args[1]
 
 
 def test_kling2master_remote_validation_error_duration(mocker):

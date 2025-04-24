@@ -769,3 +769,9 @@ IMAGEGEN_ERROR_MSG = "Request cancelled due to detection of NSFW content or Prom
 RUNWAY_ERROR = "Runway Error"
 RUNWAY_ERROR_MSG = "At least one image is required to generate your video"
 RUNWAY_POSITION_ERROR_MSG = "Please use different positions for two images: One image at the beginning, another at the end"
+VIDEO_GENERATION_ERROR = "Video Generation Error"
+
+VIDEO_API_ERROR_MSG = "Video generation failed due to an API error or timeout."  # For general API/timeout issues
+VIDEO_PERMISSION_ERROR_MSG = "Video generation failed due to insufficient permissions or required features not being enabled."  # For 403, allowlisting etc.
+VIDEO_DATA_MISSING_MSG = "Video generation succeeded but no video data was returned."  # For empty data fields or GCS download issues
+VIDEO_INPUT_ERROR_MSG = "Invalid input provided for video generation."  # Generic user-facing validation error
