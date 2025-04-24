@@ -98,7 +98,6 @@ class RunwayImage2Video(IService):
         else:
             raise Exception(RUNWAY_ERROR, RUNWAY_ERROR_MSG)
 
-        # print(parameters.file_url)
         task = self.client.image_to_video.create(
             model="gen3a_turbo",
             prompt_image=parameters.model_dump()["file_url"],
