@@ -8,9 +8,9 @@ from modal.environments import ensure_env
 from modal_proto import api_pb2
 from transparent_background import Remover
 
-# Do not remove this line. It imports the classes from this file into memory because of that, it is easy to identify that they are subscriber of Iservice class
-####
 from src.FastAPIServer.services.ApiServices.OpenAIService import GeminiAIImageCheck
+from src.FastAPIServer.services.ApiServices.FalAIService import Veo2, Kling2Master 
+
 from src.FastAPIServer.services.IService import IService
 from src.utils.Globals import get_clean_name
 
@@ -128,7 +128,8 @@ class ServiceRegistry:
             self.modal_services.append(app_name)
         else:
             raise Exception(
-                f"Given {app_name} does not exist, Please provide proper name"
+                "internal error",
+                f"Given {app_name} does not exist, Please provide proper name",
             )
 
     def get_service(self, service_name: str):

@@ -2,10 +2,10 @@ import base64
 import concurrent.futures
 
 import fal_client
-import requests  # Ensure requests is imported
-from loguru import logger  # Ensure logger is imported
+import requests
+from loguru import logger
 from PIL.Image import Image as Imagetype
-from pydantic import ValidationError  # Ensure ValidationError is imported
+from pydantic import ValidationError
 from transparent_background import Remover
 
 from src.data_models.ModalAppSchemas import (
@@ -17,13 +17,16 @@ from src.data_models.ModalAppSchemas import (
     RecraftV3Text2ImageParameters,
     SDXLText2ImageParameters,
     Veo2Parameters,
-)  # Import the specific schema for Veo2
+)
+
 from src.FastAPIServer.services.IService import IService
+
 from src.utils.Constants import (
     IMAGE_GENERATION_ERROR,
     NSFW_CONTENT_DETECT_ERROR_MSG,
     OUTPUT_IMAGE_EXTENSION,
     OUTPUT_VIDEO_EXTENSION,
+    VIDEO_GENERATION_ERROR,
 )
 from src.utils.Globals import (
     get_image_from_url,
@@ -1220,18 +1223,10 @@ class Veo2(IService):
             logger.exception(
                 f"Fal AI Veo2 API call, result fetching, or download failed: {e}"
             )
-            # Re-raise a user-friendly exception, check if FalClientError provides details
-            error_msg = f"Fal API interaction error: {e}"
-            # Attempt to extract more specific error message from FalClientError if possible
-            # This depends on the structure of the exception raised by fal_client
-            # if hasattr(e, 'response') and hasattr(e.response, 'text'):
-            #     try:
-            #         error_detail = e.response.json().get('detail')
-            #         if error_detail:
-            #             error_msg = f"Fal API Error: {error_detail}"
-            #     except: # Fallback if response is not JSON or detail key missing
-            #         pass
-            raise Exception("Video generation failed", error_msg)
+            error_msg = "We couldn't create your video. Please try again later."
+            logger.error(f"Veo2 service technical error: {e}")
+
+            raise Exception(VIDEO_GENERATION_ERROR, error_msg)
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
@@ -1406,7 +1401,9 @@ class Kling2Master(IService):
 
         except Exception as e:
             logger.exception(f"Fal AI Kling2Master API interaction failed: {e}")
-            error_msg = f"Fal API interaction error: {e}"
+            error_msg = "We couldn't create your video. Please try again later."
+            logger.error(f"Kling2Master service technical error: {e}")
+
             if isinstance(e, fal_client.client.FalClientError):
                 try:
                     details = e.args[0]
@@ -1415,12 +1412,13 @@ class Kling2Master(IService):
                         and len(details) > 0
                         and isinstance(details[0], dict)
                     ):
-                        error_msg = (
-                            f"Fal API Error: {details[0].get('msg', 'Unknown error')}"
+                        logger.error(
+                            f"Fal API detailed error: {details[0].get('msg', 'Unknown error')}"
                         )
                 except Exception:
                     pass
-            raise Exception("Video generation failed", error_msg)
+
+            raise Exception(VIDEO_GENERATION_ERROR, error_msg)
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:

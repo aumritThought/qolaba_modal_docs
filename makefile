@@ -36,11 +36,16 @@ test:
 	python -m pytest --cov=src tests/
 
 lint:
-	ruff check --select I --fix
-	ruff check --fix
+	ruff check
 
 format:
 	ruff format
 
 reqs:
 	pip install -r requirements.txt
+
+dev:
+	uvicorn main:app --port 9000 --reload
+
+celery:
+	celery -A src.FastAPIServer.celery.Worker.celery worker --loglevel=info
