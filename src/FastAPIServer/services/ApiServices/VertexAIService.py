@@ -13,7 +13,7 @@ from src.utils.Constants import (
     IMAGEGEN_ERROR_MSG,
     OUTPUT_IMAGE_EXTENSION,
     google_credentials_info,
-    OUTPUT_VIDEO_EXTENSION
+    OUTPUT_VIDEO_EXTENSION, VIDEO_GENERATION_ERROR
 )
 from src.utils.Globals import (
     convert_to_aspect_ratio,
@@ -125,28 +125,77 @@ class ImageGenText2Image(IService):
         return prepare_response(results, Has_NSFW_Content, 0, 0, OUTPUT_IMAGE_EXTENSION)
     
 
+    @timing_decorator
+    def remote(self, parameters: dict) -> dict:
+        try:
+            params_for_validation = parameters.copy()
+            if 'file_url' in params_for_validation:
+                del params_for_validation['file_url']
+
+            params: Veo2Parameters = Veo2Parameters(**params_for_validation)
+            duration_int = int(params.duration.replace('s', ''))
+            if not (5 <= duration_int <= 8):
+                 raise ValueError(f"Duration must be 5-8s, got {duration_int}s")
+
+        except (ValidationError, ValueError) as e:
+             logger.error(f"Input validation failed for VertexAI request: {e}", exc_info=False)
+             raise ValueError(f"Invalid input parameters: {e}") from e
+        except Exception as e:
+             logger.error(f"Unexpected error during parameter processing for VertexAI: {e}", exc_info=True)
+             raise Exception(VIDEO_GENERATION_ERROR) from e
+
+        try:
+            unique_id = str(uuid.uuid4())
+            gcs_output_uri_prefix = f"{self.gcs_output_path.rstrip('/')}/{unique_id}/"
+            api_parameters = self._prepare_api_parameters(params)
+            operation_name = self.make_api_request(
+                parameters=params,
+                api_parameters=api_parameters,
+                gcs_output_uri_prefix=gcs_output_uri_prefix
+            )
+            poll_result = self._poll_operation(operation_name)
+            download_url = self._download_from_gcs(poll_result, gcs_output_uri_prefix)
+
+            return prepare_response(
+                success=True,
+                message="Video generation successful (Vertex AI - Text-to-Video).",
+                video_url=download_url,
+                error_message=None,
+                status_code=200,
+                data_format=OUTPUT_VIDEO_EXTENSION
+            )
+
+        except FileNotFoundError as e:
+            logger.error(f"VertexAIVeo processing failed: GCS file not found. {e}", exc_info=True)
+            raise Exception(IMAGEGEN_ERROR) from e
+        except TimeoutError as e:
+            logger.error(f"VertexAIVeo processing failed: Operation timed out. {e}", exc_info=True)
+            raise Exception(IMAGEGEN_ERROR) from e
+        except Exception as e:
+            if isinstance(e, ValueError) and "Invalid input parameters" in str(e):
+                raise e
+            logger.error(f"Error during VertexAIVeo processing: {type(e).__name__} - {e}", exc_info=True)
+            raise Exception(IMAGEGEN_ERROR) from e
+
+
 class VertexAIVeo(IService):
     def __init__(self) -> None:
         super().__init__()
         self.project_id = None
         self.credentials = None
         self.model_id = "veo-2.0-generate-001"
-        # --- {{ CHANGE: Use specific location for Veo endpoint }} ---
-        self.location = "us-central1" # Hardcode or prioritize 'us-central1' for Veo
-        # --- End Change ---
+        self.location = "us-central1"
         self.api_endpoint = f"https://{self.location}-aiplatform.googleapis.com"
         self.predict_url = None
         self.fetch_url = None
         self.output_bucket_name = os.getenv("BUCKET_NAME")
         if not self.output_bucket_name:
-            # Raise error - service cannot function without a configured bucket
             raise ValueError("BUCKET_NAME environment variable is required for VertexAIVeo GCS output.")
         self.storage_client = None
 
-        logger.info(f"Initializing VertexAIVeo Service for location: {self.location}...") # Log the used location
+        logger.info(f"Initializing VertexAIVeo Service for location: {self.location}...")
         try:
             scopes = ["https://www.googleapis.com/auth/cloud-platform"]
-            # Use explicit credential loading from dict if preferred, or default()
             if google_credentials_info:
                 self.credentials, self.project_id = google.auth.load_credentials_from_dict(
                     google_credentials_info, scopes=scopes
@@ -154,23 +203,20 @@ class VertexAIVeo(IService):
             else:
                  self.credentials, self.project_id = google.auth.default(scopes=scopes)
 
-            # Fallback logic for project_id
             if not self.project_id: self.project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
             if not self.project_id: self.project_id = os.getenv("GCP_PROJECT_ID")
             if not self.project_id: raise ValueError("Could not determine Google Project ID.")
 
             self.storage_client = storage.Client(project=self.project_id, credentials=self.credentials)
-            # --- {{ CHANGE: Use self.location in URLs }} ---
             self.predict_url = f"{self.api_endpoint}/v1/projects/{self.project_id}/locations/{self.location}/publishers/google/models/{self.model_id}:predictLongRunning"
-            self.fetch_url = f"{self.api_endpoint}/v1/projects/{self.project_id}/locations/{self.location}/publishers/google/models/{self.model_id}:fetchPredictOperation"
-            # --- End Change ---
+            self.fetch_url = f"{self.api_endpoint}/v1/projects/{self.project_id}/locations/{self.location}/publishers/google/models/{self.model_id}:fetchPredictOperation" # This endpoint might be wrong
 
             self._refresh_credentials()
             logger.info(f"VertexAIVeo Initialized: Project={self.project_id}, Location={self.location}, Output Bucket='{self.output_bucket_name}'")
         except Exception as e:
             logger.exception("VertexAIVeo initialization failed.")
             self.predict_url = None; self.fetch_url = None; self.storage_client = None
-            raise RuntimeError("VertexAIVeo initialization failed") from e
+            raise Exception(VIDEO_GENERATION_ERROR) from e # Updated
 
 
     def _refresh_credentials(self):
@@ -192,22 +238,24 @@ class VertexAIVeo(IService):
         except Exception as e: raise ValueError("VertexAIVeo: Failed to get access token.") from e
 
     def _poll_operation(self, operation_name: str, timeout_seconds: int = 600, poll_interval: int = 20) -> dict:
-        if not self.fetch_url: raise RuntimeError("VertexAIVeo not initialized.")
+        # Note: The fetch_url used here might need adjustment based on Vertex AI API for polling operations
+        if not self.fetch_url: raise RuntimeError("VertexAIVeo polling URL not initialized.")
         start_time = time.time()
         while time.time() - start_time < timeout_seconds:
             try:
                 headers = {"Authorization": f"Bearer {self._get_access_token()}", "Content-Type": "application/json; charset=utf-8"}
+                # The payload might need adjustment depending on the actual polling endpoint structure
                 payload = {"operationName": operation_name}
                 response = requests.post(self.fetch_url, headers=headers, json=payload, timeout=30)
                 response.raise_for_status()
                 op_result = response.json()
                 if op_result.get("done"):
-                    if op_result.get("error"): raise Exception("Vertex AI Operation Error", f"{op_result['error'].get('message', 'Unknown API error')}")
+                    if op_result.get("error"): raise Exception(VIDEO_GENERATION_ERROR) # Updated
                     return op_result.get("response", {})
                 time.sleep(poll_interval)
             except requests.exceptions.RequestException as e: time.sleep(poll_interval * 2)
-            except Exception as e: raise
-        raise TimeoutError(f"Operation {operation_name} timed out after {timeout_seconds} seconds.")
+            except Exception as e: raise Exception(VIDEO_GENERATION_ERROR) from e # Updated
+        raise TimeoutError(f"Operation {operation_name} timed out after {timeout_seconds} seconds.") # Keep specific TimeoutError
 
     def _download_from_gcs(self, gcs_uri: str) -> bytes:
         if not self.storage_client: raise RuntimeError("GCS Storage client not initialized.")
@@ -216,86 +264,107 @@ class VertexAIVeo(IService):
             parsed_uri = urlparse(gcs_uri); bucket_name = parsed_uri.netloc; blob_name = parsed_uri.path.lstrip('/')
             if not bucket_name or not blob_name: raise ValueError(f"Could not parse GCS URI: {gcs_uri}")
             bucket = self.storage_client.bucket(bucket_name); blob = bucket.blob(blob_name)
-            if not blob.exists(timeout=30): raise FileNotFoundError(f"GCS file not found: {gcs_uri}")
+            if not blob.exists(timeout=30): raise FileNotFoundError(f"GCS file not found: {gcs_uri}") # Keep specific FileNotFoundError
             video_bytes = blob.download_as_bytes(timeout=120)
             if os.getenv("DELETE_GCS_AFTER_DOWNLOAD", "false").lower() == "true":
                 try: blob.delete(timeout=30)
                 except Exception as del_ex: logger.warning(f"Failed to delete GCS file {gcs_uri}: {del_ex}")
             return video_bytes
-        except Exception as e: raise Exception("GCS Download Error", f"Failed: {e}") from e
+        except Exception as e: raise Exception(VIDEO_GENERATION_ERROR) from e # Updated
 
     def _get_bytes_from_url(self, url: str) -> bytes:
-         response = requests.get(url, timeout=60); response.raise_for_status(); return response.content
+         try:
+             response = requests.get(url, timeout=60); response.raise_for_status(); return response.content
+         except Exception as e: raise Exception(VIDEO_GENERATION_ERROR) from e # Updated
 
     def make_api_request(self, parameters: Veo2Parameters) -> bytes:
         if not self.predict_url or not self.output_bucket_name: raise RuntimeError("VertexAIVeo not initialized or BUCKET_NAME missing.")
         timestamp = int(time.time()); request_uuid = str(uuid.uuid4()).split('-')[0]
         output_filename = f"veo_output_{timestamp}_{request_uuid}.mp4"
+        # This path might need adjustment based on how GCS output is configured in the payload
         gcs_output_uri = f"gs://{self.output_bucket_name}/veo_outputs/{output_filename}"
         headers = {"Authorization": f"Bearer {self._get_access_token()}", "Content-Type": "application/json; charset=utf-8"}
         instance = {"prompt": parameters.prompt}
 
-        # --- {{ REVERTED api_parameters to match working code }} ---
-        # Add durationSec and aspectRatio back into this dictionary
+        # API parameters might need restructuring depending on the exact payload VEO expects
         api_parameters = {
-            "storageUri": gcs_output_uri,
+            "storageUri": gcs_output_uri, # Check if this is the correct parameter name
             "sampleCount": 1,
-            "durationSec": int(parameters.duration.replace('s', '')), # RESTORED
-            "aspectRatio": parameters.aspect_ratio                  # RESTORED
+            "durationSec": int(parameters.duration.replace('s', '')),
+            "aspectRatio": parameters.aspect_ratio
         }
-        # --- End Reversion ---
 
-        if parameters.file_url:
-            try:
-                image_bytes = self._get_bytes_from_url(parameters.file_url)
-                if not image_bytes: raise ValueError("Downloaded image bytes are empty.")
-                encoded_image = base64.b64encode(image_bytes).decode("utf-8"); mime_type = "image/jpeg"
-                instance["image"] = {"bytesBase64Encoded": encoded_image, "mimeType": mime_type}
-            except Exception as e: raise Exception("Image Processing Error", f"Failed: {e}") from e
+        # Image handling needs to check parameters.file_url, which was removed in remote()
+        # This block needs adjustment if image-to-video path is ever re-enabled here
+        # if parameters.file_url:
+        #     try:
+        #         image_bytes = self._get_bytes_from_url(parameters.file_url)
+        #         if not image_bytes: raise ValueError("Downloaded image bytes are empty.")
+        #         encoded_image = base64.b64encode(image_bytes).decode("utf-8"); mime_type = "image/jpeg"
+        #         instance["image"] = {"bytesBase64Encoded": encoded_image, "mimeType": mime_type}
+        #     except Exception as e: raise Exception(VIDEO_GENERATION_ERROR) from e # Updated
 
         payload = {"instances": [instance], "parameters": api_parameters}; op_name = None
         try:
             payload_log_safe = json.dumps({'instances': [{'prompt': instance.get('prompt'), 'image_present': 'image' in instance}], 'parameters': api_parameters}, indent=2)
-            logger.debug(f"VertexAIVeo Request Payload (Restored Params): {payload_log_safe}")
+            logger.debug(f"VertexAIVeo Request Payload: {payload_log_safe}")
 
             response = requests.post(self.predict_url, headers=headers, json=payload, timeout=60); response.raise_for_status()
-            op_info = response.json(); op_name = op_info.get("name")
-            if not op_name: raise Exception("Vertex AI Error", "Failed to get operation name.")
+            op_info = response.json(); op_name = op_info.get("name") # Verify correct key for operation name
+            if not op_name: raise Exception(VIDEO_GENERATION_ERROR) # Updated
         except Exception as e:
              error_details = str(e)
              if isinstance(e, requests.exceptions.HTTPError) and e.response is not None:
                  try: error_details = f"{e.response.status_code} - {e.response.text}"
                  except: pass
              logger.exception(f"VertexAIVeo submit failed: {error_details}")
-             raise Exception("Vertex AI Submit Error", f"Failed: {error_details}") from e
+             raise Exception(VIDEO_GENERATION_ERROR) from e # Updated
 
-        # --- Polling, GCS Download, Result Processing (Keep as is) ---
         try:
             final_response = self._poll_operation(op_name)
+            # Parsing the result needs verification based on the actual VEO API response structure
             videos_list = final_response.get("videos", []); gcs_uri = videos_list[0].get("gcsUri") if videos_list else None
-            if not gcs_uri: raise Exception("Vertex AI Error", "Video GCS URI missing.")
+            if not gcs_uri: raise Exception(VIDEO_GENERATION_ERROR) # Updated
             video_bytes = self._download_from_gcs(gcs_uri)
-            if not video_bytes: raise ValueError("Downloaded video bytes are empty.")
+            if not video_bytes: raise ValueError("Downloaded video bytes are empty.") # Keep specific ValueError
             return video_bytes
         except Exception as e:
              error_prefix = "Vertex AI Processing Error"
-             if isinstance(e, FileNotFoundError): error_prefix = "GCS File Not Found"
-             elif isinstance(e, TimeoutError): error_prefix = "Operation Timeout"
-             raise Exception(error_prefix, f"{e}") from e
+             if isinstance(e, FileNotFoundError): error_prefix = "GCS File Not Found" # Keep specific context if possible
+             elif isinstance(e, TimeoutError): error_prefix = "Operation Timeout" # Keep specific context
+             # Raise generic error for propagation
+             raise Exception(VIDEO_GENERATION_ERROR) from e # Updated
+
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
+        params_for_validation = parameters.copy()
+        if 'file_url' in params_for_validation:
+            del params_for_validation['file_url']
         try:
-            params: Veo2Parameters = Veo2Parameters(**parameters)
+            params: Veo2Parameters = Veo2Parameters(**params_for_validation)
             duration_int = int(params.duration.replace('s', ''))
-            if not (5 <= duration_int <= 8): raise ValueError(f"Duration must be 5-8s, got {duration_int}s")
-        except (ValidationError, ValueError) as e: raise Exception("Input Validation Error", str(e)) from e
-        video_bytes = self.make_api_request(params)
-        result_list = [video_bytes] if isinstance(video_bytes, bytes) else []
-        return prepare_response(result=result_list, Has_NSFW_content=[False]*len(result_list), time_data=0, runtime=0, extension=OUTPUT_VIDEO_EXTENSION)
+            if not (5 <= duration_int <= 8): raise ValueError(f"Duration must be 5-8s, got {duration_int}s") # Keep specific validation error
+        except (ValidationError, ValueError) as e: raise ValueError(f"Invalid input parameters: {e}") from e # Re-raise as specific ValueError for input issues
+        # Catch any other unexpected error during validation/param processing
+        except Exception as e: raise Exception(VIDEO_GENERATION_ERROR) from e # Updated
+
+        # --- Main processing ---
+        try:
+            video_bytes = self.make_api_request(params) # This now contains the poll and download logic
+            result_list = [video_bytes] if isinstance(video_bytes, bytes) else []
+            # Ensure time_data and runtime are properly calculated or passed if needed
+            return prepare_response(result=result_list, Has_NSFW_content=[False]*len(result_list), time_data=0, runtime=0, extension=OUTPUT_VIDEO_EXTENSION)
+        except (FileNotFoundError, TimeoutError, ValueError) as e:
+            # Catch specific errors from make_api_request/helpers that we want to log differently maybe
+            logger.error(f"Error during VertexAIVeo video generation: {type(e).__name__} - {e}", exc_info=True)
+            raise Exception(VIDEO_GENERATION_ERROR) from e # Updated
+        except Exception as e:
+            # Catch all other exceptions during the main processing
+            logger.error(f"Unexpected error during VertexAIVeo video generation: {e}", exc_info=True)
+            raise Exception(VIDEO_GENERATION_ERROR) from e # Updated
 
 
-# --- Add VeoRouterService class ---
 class VeoRouterService(IService):
     def __init__(self, vertex_veo_provider: callable, fal_veo_provider: callable):
         super().__init__()
@@ -303,28 +372,33 @@ class VeoRouterService(IService):
         self._get_primary_service = vertex_veo_provider
         self._get_fallback_service = fal_veo_provider
 
+    @timing_decorator
     def remote(self, parameters: dict) -> dict:
-        primary_service = self._get_primary_service() # Get instance via provider
+        primary_service = None
+        fallback_service = None
         try:
+            primary_service = self._get_primary_service()
             logger.info(f"VeoRouter: Attempting primary: {primary_service.__class__.__name__}")
             return primary_service.remote(parameters)
+        except ValueError as validation_error:
+             # If primary failed due to input validation, re-raise it
+             logger.error(f"VeoRouter: Input validation failed in primary service {getattr(primary_service, '__class__', {}).get('__name__', 'Unknown')}: {validation_error}", exc_info=False)
+             raise validation_error # Re-raise validation errors directly
         except Exception as primary_error:
-             # Check if it's our specific validation error format
-            is_validation_error = (len(primary_error.args) >= 1 and
-                                   primary_error.args[0] == "Input Validation Error")
+             primary_service_name = getattr(primary_service, '__class__', {}).get('__name__', 'Unknown')
+             logger.warning(f"VeoRouter: Primary service {primary_service_name} failed: {type(primary_error).__name__} - {primary_error}. Attempting fallback.")
 
-            if is_validation_error:
-                logger.error(f"VeoRouter: Primary {primary_service.__class__.__name__} validation failed: {primary_error.args[1]}. Re-raising.")
-                raise primary_error # Re-raise the original validation error
-            else:
-                # --- {{ MODIFIED LOGGING }} ---
-                # Log the actual error type and message from the primary service failure
-                logger.warning(f"VeoRouter: Primary {primary_service.__class__.__name__} failed with {type(primary_error).__name__}: {primary_error}. Trying fallback.")
-                # --- End Modified Logging ---
-                fallback_service = self._get_fallback_service() # Get instance via provider
-                try:
-                    logger.info(f"VeoRouter: Attempting fallback: {fallback_service.__class__.__name__}")
-                    return fallback_service.remote(parameters)
-                except Exception as fallback_error:
-                     logger.error(f"VeoRouter: Fallback {fallback_service.__class__.__name__} also failed: {type(fallback_error).__name__} - {fallback_error}")
-                     raise fallback_error from primary_error
+             try:
+                 fallback_service = self._get_fallback_service()
+                 fallback_service_name = getattr(fallback_service, '__class__', {}).get('__name__', 'Unknown')
+                 logger.info(f"VeoRouter: Attempting fallback: {fallback_service_name}")
+                 return fallback_service.remote(parameters)
+             except ValueError as fallback_validation_error:
+                 # If fallback also fails validation, re-raise it
+                 logger.error(f"VeoRouter: Input validation failed in fallback service {fallback_service_name}: {fallback_validation_error}", exc_info=False)
+                 raise fallback_validation_error # Re-raise fallback validation errors directly
+             except Exception as fallback_error:
+                  fallback_service_name = getattr(fallback_service, '__class__', {}).get('__name__', 'Unknown')
+                  logger.error(f"VeoRouter: Fallback service {fallback_service_name} also failed: {type(fallback_error).__name__} - {fallback_error}", exc_info=True)
+                  # Raise generic error after both primary and fallback failed internally
+                  raise Exception(VIDEO_GENERATION_ERROR) from fallback_error # Updated
