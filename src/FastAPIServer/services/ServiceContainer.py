@@ -17,13 +17,13 @@ from src.FastAPIServer.services.ApiServices.FalAIService import (
     FalAIFlux3ReplaceBackground, FalAIFluxProRedux, FalAIFluxProCanny,
     FalAIFluxProDepth, OmnigenV1, FalAIFluxPulID, Veo2, Kling2Master
 )
-from src.FastAPIServer.services.ApiServices.IdeogramService import IdeoGramText2Image as IdeogramT2I, IdeogramRemix # Renamed to avoid conflict
+from src.FastAPIServer.services.ApiServices.IdeogramService import IdeoGramText2Image # Renamed to avoid conflict
 from src.FastAPIServer.services.ApiServices.LeonardoService import LeonardoText2Image
 from src.FastAPIServer.services.ApiServices.LumaLabsService import LumaVideo
 from src.FastAPIServer.services.ApiServices.OpenAIService import DalleText2Image, GeminiAIImageCheck
 from src.FastAPIServer.services.ApiServices.RunWayService import RunwayImage2Video
 from src.FastAPIServer.services.ApiServices.SDXLService import SDXL3Text2Image
-from src.FastAPIServer.services.ApiServices.VertexAIService import ImageGenText2Image # Conflicting name, handle carefully
+from src.FastAPIServer.services.ApiServices.VertexAIService import ImageGenText2Image, VertexAIVeo, VeoRouterService
 
 
 
@@ -34,7 +34,17 @@ from src.utils.Globals import get_clean_name
 class ServiceContainer(containers.DeclarativeContainer):
     bg_remover = providers.Singleton(Remover, device="cpu")
     image_checker = providers.Singleton(GeminiAIImageCheck)
+       # --- Explicit Providers for Router Dependencies ---
+    vertexaiveo_api = providers.Singleton(VertexAIVeo)
+    veo2_api = providers.Singleton(Veo2) # This is Fal Veo2
 
+    # --- {{ CORRECTED Router Factory Definition }} ---
+    # Define the router factory, injecting the PROVIDERS using .provider
+    veorouterservice_api = providers.Factory(
+        VeoRouterService,
+        vertex_veo_provider=vertexaiveo_api.provider, # Pass the provider callable
+        fal_veo_provider=veo2_api.provider          # Pass the provider callable
+    )
 
 @synchronizer.create_blocking
 async def list_apps() -> list[str]:
@@ -97,28 +107,55 @@ class ServiceRegistry:
 
         This method performs two types of service registration:
         1. API Services: Finds all classes that inherit from IService and registers them
-           as singletons in the container with standardized naming
+           as singletons in the container with standardized naming (unless explicitly defined above)
         2. Modal Services: Queries the Modal platform for available applications and
            registers them in the container
 
         This automatic discovery approach allows new services to be added with minimal
-        configuration changes.
+        configuration changes. Explicit providers in ServiceContainer override registrations here.
         """
+        # --- {{ Keep Original IService Loop }} ---
         for cls in IService.__subclasses__():
-            service_name = get_clean_name(cls.__name__)
-            service_name = f"{service_name}_api"
-            setattr(self.container, service_name, providers.Singleton(cls))
-            self.api_services.append(service_name)
-        for cls in list_apps():
+             # Skip the router class if found here, it's handled explicitly above
+             if cls == VeoRouterService:
+                 continue
+
+             service_name = get_clean_name(cls.__name__)
+             service_name_api = f"{service_name}_api"
+
+             # Check if this provider was already explicitly defined in ServiceContainer
+             if not hasattr(self.container, service_name_api):
+                  # Only register via Singleton if not explicitly defined
+                  setattr(self.container, service_name_api, providers.Singleton(cls))
+                  # Add to list only if registered here
+                  if service_name_api not in self.api_services:
+                      self.api_services.append(service_name_api)
+             elif service_name_api not in self.api_services:
+                  # If it *was* explicitly defined but not in the list yet, add it.
+                  # Handles cases like veo2_api which is explicit but needs to be listed.
+                  self.api_services.append(service_name_api)
+
+        # --- {{ Keep Original Modal Loop }} ---
+        for cls_name in list_apps():
             try:
                 Model = Cls.lookup(
-                    cls, "stableDiffusion", environment_name=os.environ["environment"]
+                    cls_name, "stableDiffusion", environment_name=os.environ["environment"]
                 )
-                cls = f"{cls}_modal"
-                setattr(self.container, cls, Model)
-                self.modal_services.append(cls)
-            except:
-                pass
+                modal_service_name = f"{cls_name}_modal"
+                # Check if explicitly defined or already added
+                if not hasattr(self.container, modal_service_name) and modal_service_name not in self.modal_services:
+                     setattr(self.container, modal_service_name, Model)
+                     self.modal_services.append(modal_service_name)
+            except Exception as e:
+                 print(f"Warning: Could not lookup/register Modal app '{cls_name}': {e}")
+                 pass
+
+        # --- {{ Add Router to List (Minimal Change) }} ---
+        # Ensure the explicitly defined router service is in the list for discovery
+        router_service_name = "veorouterservice_api"
+        if router_service_name not in self.api_services:
+            self.api_services.append(router_service_name)
+        # --- End Minimal Addition ---
 
     def register_new_modal_service(self, app_name):
         """

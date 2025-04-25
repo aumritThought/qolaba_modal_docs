@@ -6,6 +6,9 @@ import fal_client
 import pytest
 from PIL import Image
 from pydantic import ValidationError
+import base64
+import io
+from src.utils.Globals import prepare_response # Keep this
 
 from src.data_models.ModalAppSchemas import (
     FluxImage2ImageParameters,
@@ -37,6 +40,7 @@ from src.utils.Constants import (
     OUTPUT_VIDEO_EXTENSION,
     VIDEO_GENERATION_ERROR
 )
+from src.utils.Globals import prepare_response # Keep this if needed elsewhere
 
 # Common fixtures
 
@@ -132,28 +136,74 @@ def test_flux_pro_text2image_nsfw_detection(mocker, mock_nsfw_response):
     assert exc_info.value.args[1] == NSFW_CONTENT_DETECT_ERROR_MSG
 
 
-# def test_flux_pro_text2image_remote(mocker, mock_fal_response):
-#     # Arrange
-#     mock_make_api_request = mocker.patch.object(
-#         FalAIFluxProText2Image, 'make_api_request',
-#         return_value=base64.b64decode("SGVsbG8gV29ybGQ=")
-#     )
-#     mocker.patch('src.utils.Globals.prepare_response', return_value={"success": True})
 
-#     service = FalAIFluxProText2Image()
-#     parameters = {
-#         "prompt": "test prompt",
-#         "width": 512,
-#         "height": 512,
-#         "batch": 2
-#     }
 
-#     # Act
-#     result = service.remote(parameters)
+# ... fixtures ...
 
-#     # Assert
-#     assert result == {"success": True}
-#     assert mock_make_api_request.call_count == 2
+def test_flux_pro_text2image_remote(mocker, mock_fal_response):
+    # Arrange
+    mock_make_api_request = mocker.patch.object(
+        FalAIFluxProText2Image, 'make_api_request',
+        return_value=base64.b64decode("SGVsbG8gV29ybGQ=") # Return decoded bytes 'Hello World'
+    )
+
+    # Expected response structure *before* decorator might modify it
+    mock_prepare_response_return = {
+        "result": [b"Hello World", b"Hello World"],
+        "Has_NSFW_Content": [False, False],
+        "Has_copyrighted_Content": None,
+        "low_res_urls": [],
+        # Set a specific value here, the assertion will use ANY later
+        "time": {"startup_time": 0, "runtime": 1.23},
+        "extension": "webp"
+    }
+    # Patch prepare_response specifically in the FalAIService module
+    mock_prepare_response_func = mocker.patch(
+        'src.FastAPIServer.services.ApiServices.FalAIService.prepare_response',
+        return_value=mock_prepare_response_return # Mock returns this dict
+    )
+
+    # --- Patch timing_decorator where it's DEFINED ---
+    mocker.patch('src.utils.Globals.timing_decorator', lambda func: func)
+
+
+    service = FalAIFluxProText2Image()
+    parameters = {
+        "prompt": "test prompt",
+        "width": 512,
+        "height": 512,
+        "batch": 2
+    }
+
+    # Act
+    result = service.remote(parameters) # Should return mock_prepare_response_return directly
+
+    # Assert
+    # --- Define the final expected structure for assertion, using ANY ---
+    expected_final_result = {
+        "result": [b"Hello World", b"Hello World"],
+        "Has_NSFW_Content": [False, False],
+        "Has_copyrighted_Content": None,
+        "low_res_urls": [],
+        "time": {"startup_time": 0, "runtime": ANY}, # Use ANY here for the assertion
+        "extension": "webp"
+    }
+    # Assert the actual result against the structure with ANY
+    assert result == expected_final_result
+    assert mock_make_api_request.call_count == 2
+
+    # Check call args on the prepare_response mock
+    mock_prepare_response_func.assert_called_once()
+    call_args, _ = mock_prepare_response_func.call_args
+    assert len(call_args[0]) == 2
+    assert call_args[0][0] == b"Hello World"
+    assert call_args[0][1] == b"Hello World"
+    assert call_args[1] == [False, False]
+    # Arguments are result_list, nsfw_flags, startup_time, runtime, extension
+    assert call_args[4] == "webp"
+
+
+
 
 
 def test_flux_dev_text2image_make_api_request(mocker, mock_fal_response):
