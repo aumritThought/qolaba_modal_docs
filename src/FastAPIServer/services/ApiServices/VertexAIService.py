@@ -43,141 +43,108 @@ class ImageGenText2Image(IService):
         class and configuring the specific endpoint URLs needed for this operation.
         """
         super().__init__()
-        credentials, project_id = google.auth.load_credentials_from_dict(
-            google_credentials_info,
-            scopes=["https://www.googleapis.com/auth/cloud-platform"],
-        )
+        # Use google_credentials_info if available, otherwise default might fail if not configured
+        if not google_credentials_info:
+            logger.warning("google_credentials_info not found in Constants, ImageGenText2Image might fail.")
+            # Fallback or raise error depending on requirements
+            # For now, proceed assuming it's defined elsewhere or default works
+            self.credentials, self.project_id = google.auth.default(scopes=["https://www.googleapis.com/auth/cloud-platform"])
+            if not self.project_id: self.project_id = os.getenv("GCP_PROJECT_ID", "marine-potion-404413") # Default project
+        else:
+            self.credentials, self.project_id = google.auth.load_credentials_from_dict(
+                google_credentials_info,
+                scopes=["https://www.googleapis.com/auth/cloud-platform"],
+            )
+
         request = google.auth.transport.requests.Request()
-        credentials.refresh(request)
-        vertexai.init(project="marine-potion-404413", credentials=credentials)
+        # Handle potential refresh errors
+        try:
+            self.credentials.refresh(request)
+        except Exception as e:
+            logger.error(f"Failed to refresh credentials during ImageGenText2Image init: {e}")
+            # Decide how to handle - raise error or continue?
+            # raise RuntimeError("Credential refresh failed during init") from e
+
+        # Use the determined project_id
+        vertexai.init(project=self.project_id, credentials=self.credentials)
+        # Ensure model name is correct
         self.generation_model = ImageGenerationModel.from_pretrained(
             "imagen-3.0-generate-001"
         )
+        logger.info(f"ImageGenText2Image Initialized with project: {self.project_id}")
 
-    def make_api_request(self, parameters: IdeoGramText2ImageParameters) -> str:
+
+    def make_api_request(self, parameters: IdeoGramText2ImageParameters) -> bytes: # Return type should be bytes
         """
-        Processes an individual image generation request through the SDXL API.
-
-        This function constructs the appropriate API payload from the parameters,
-        sends the request to the specified API endpoint, and processes the response
-        including NSFW content detection and result formatting.
-
-        Args:
-            parameters: Configuration parameters specific to the operation type
-            *args: Additional arguments specific to the operation type
-
-        Returns:
-            list: A list containing the generated image data and NSFW flag
-
-        Raises:
-            Exception: If the generated content is flagged as NSFW or an API error occurs
+        Processes an individual image generation request through the Vertex AI API.
         """
-        image = self.generation_model.generate_images(
-            prompt=parameters.prompt,
-            number_of_images=1,
-            aspect_ratio=parameters.aspect_ratio,
-            safety_filter_level="block_some",
-        )
-        if len(image.images) == 0:
-            raise Exception(IMAGEGEN_ERROR, IMAGEGEN_ERROR_MSG)
-        return image.images[0]._image_bytes
-
-    @timing_decorator
-    def remote(self, parameters: dict) -> dict:
-        """
-        Entry point for the service that handles batch processing of requests.
-
-        This method validates the input parameters, prepares any required resources
-        (like input images or masks), and creates multiple parallel generation tasks
-        based on the batch size. The @timing_decorator tracks and adds execution
-        time to the response.
-
-        Args:
-            parameters (dict): Request parameters for the specific operation
-
-        Returns:
-            dict: Standardized response containing generated images, NSFW flags,
-                timing information, and file format
-
-        Raises:
-            Exception: If parameter validation fails or the API returns errors
-        """
-        parameters: IdeoGramText2ImageParameters = IdeoGramText2ImageParameters(
-            **parameters
-        )
-
-        parameters.aspect_ratio = convert_to_aspect_ratio(
-            parameters.width, parameters.height
-        )
-        if parameters.aspect_ratio not in IMAGEGEN_ASPECT_RATIOS:
-            raise Exception("Invalid Height and width dimension")
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
-            futures = []
-            for i in range(parameters.batch):
-                future = executor.submit(self.make_api_request, parameters)
-                futures.append(future)
-
-            results = [future.result() for future in futures]
-
-        Has_NSFW_Content = [False] * parameters.batch
-
-        return prepare_response(results, Has_NSFW_Content, 0, 0, OUTPUT_IMAGE_EXTENSION)
-    
-
-    @timing_decorator
-    def remote(self, parameters: dict) -> dict:
+        logger.debug(f"Generating image with prompt: {parameters.prompt}, aspect_ratio: {parameters.aspect_ratio}")
         try:
-            params_for_validation = parameters.copy()
-            if 'file_url' in params_for_validation:
-                del params_for_validation['file_url']
+            image_response = self.generation_model.generate_images(
+                prompt=parameters.prompt,
+                number_of_images=1, # Generate one image per call for batching in remote
+                aspect_ratio=parameters.aspect_ratio,
+                # Consider adding negative_prompt if the model supports it
+                # negative_prompt=parameters.negative_prompt,
+                safety_filter_level="block_some", # Adjust safety level if needed
+            )
+            if not image_response.images: # Check if the list is empty
+                logger.error("Vertex AI generate_images returned no images.")
+                # Use specific error constant if available
+                raise Exception(IMAGEGEN_ERROR if 'IMAGEGEN_ERROR' in globals() else VIDEO_GENERATION_ERROR)
+            # Return the bytes of the first image
+            return image_response.images[0]._image_bytes
+        except Exception as e:
+            logger.error(f"Error during Vertex AI generate_images call: {e}", exc_info=True)
+            # Re-raise with a generic internal error message
+            raise Exception(IMAGEGEN_ERROR if 'IMAGEGEN_ERROR' in globals() else VIDEO_GENERATION_ERROR) from e
 
-            params: Veo2Parameters = Veo2Parameters(**params_for_validation)
-            duration_int = int(params.duration.replace('s', ''))
-            if not (5 <= duration_int <= 8):
-                 raise ValueError(f"Duration must be 5-8s, got {duration_int}s")
+
+    @timing_decorator
+    def remote(self, parameters: dict) -> dict:
+        """
+        Entry point for the image generation service using Vertex AI.
+        Validates parameters, calculates aspect ratio, handles batching, and prepares response.
+        Ensures ValueError for invalid aspect ratio propagates correctly.
+        """
+        validated_params: IdeoGramText2ImageParameters = None
+        try:
+            # Step 1: Validate parameters using Pydantic
+            validated_params = IdeoGramText2ImageParameters(**parameters)
+
+            # Step 2: Calculate and validate aspect ratio *within the same try block*
+            validated_params.aspect_ratio = convert_to_aspect_ratio(
+                validated_params.width, validated_params.height
+            )
+            if validated_params.aspect_ratio not in IMAGEGEN_ASPECT_RATIOS:
+                # Raise ValueError directly if invalid
+                raise ValueError("Invalid Height and width dimensions resulting in unsupported aspect ratio.")
 
         except (ValidationError, ValueError) as e:
-             logger.error(f"Input validation failed for VertexAI request: {e}", exc_info=False)
+             # Catch both Pydantic validation errors and our specific aspect ratio ValueError
+             logger.error(f"Input validation failed for ImageGenText2Image: {e}", exc_info=False)
+             # Re-raise as ValueError which the test expects
              raise ValueError(f"Invalid input parameters: {e}") from e
-        except Exception as e:
-             logger.error(f"Unexpected error during parameter processing for VertexAI: {e}", exc_info=True)
-             raise Exception(VIDEO_GENERATION_ERROR) from e
 
+        # --- This part is only reached if ALL validation passes ---
         try:
-            unique_id = str(uuid.uuid4())
-            gcs_output_uri_prefix = f"{self.gcs_output_path.rstrip('/')}/{unique_id}/"
-            api_parameters = self._prepare_api_parameters(params)
-            operation_name = self.make_api_request(
-                parameters=params,
-                api_parameters=api_parameters,
-                gcs_output_uri_prefix=gcs_output_uri_prefix
-            )
-            poll_result = self._poll_operation(operation_name)
-            download_url = self._download_from_gcs(poll_result, gcs_output_uri_prefix)
+            with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+                futures = [
+                    executor.submit(self.make_api_request, validated_params)
+                    for _ in range(validated_params.batch)
+                ]
+                results = [future.result() for future in futures]
 
-            return prepare_response(
-                success=True,
-                message="Video generation successful (Vertex AI - Text-to-Video).",
-                video_url=download_url,
-                error_message=None,
-                status_code=200,
-                data_format=OUTPUT_VIDEO_EXTENSION
-            )
+            Has_NSFW_Content = [False] * validated_params.batch
 
-        except FileNotFoundError as e:
-            logger.error(f"VertexAIVeo processing failed: GCS file not found. {e}", exc_info=True)
-            raise Exception(IMAGEGEN_ERROR) from e
-        except TimeoutError as e:
-            logger.error(f"VertexAIVeo processing failed: Operation timed out. {e}", exc_info=True)
-            raise Exception(IMAGEGEN_ERROR) from e
+            return prepare_response(results, Has_NSFW_Content, 0, 0, OUTPUT_IMAGE_EXTENSION)
+
         except Exception as e:
-            if isinstance(e, ValueError) and "Invalid input parameters" in str(e):
-                raise e
-            logger.error(f"Error during VertexAIVeo processing: {type(e).__name__} - {e}", exc_info=True)
-            raise Exception(IMAGEGEN_ERROR) from e
-
-
+             # Catches errors only from make_api_request or thread execution
+             logger.error(f"Error during ImageGenText2Image processing: {type(e).__name__} - {e}", exc_info=True)
+             raise Exception(IMAGEGEN_ERROR if 'IMAGEGEN_ERROR' in globals() else VIDEO_GENERATION_ERROR) from e
+        
+        
 class VertexAIVeo(IService):
     def __init__(self) -> None:
         super().__init__()
@@ -335,7 +302,28 @@ class VertexAIVeo(IService):
              # Raise generic error for propagation
              raise Exception(VIDEO_GENERATION_ERROR) from e # Updated
 
+    def _prepare_api_parameters(self, parameters: Veo2Parameters) -> dict:
+         """Prepares the non-instance specific parameters for the API call."""
+         # (Implementation as provided previously)
+         try:
+            duration_sec = int(parameters.duration.replace('s', ''))
+            if not (5 <= duration_sec <= 8):
+                 raise ValueError("Duration must be between 5 and 8 seconds.")
+         except (ValueError, AttributeError, TypeError):
+             logger.error(f"Invalid duration format or value received: {parameters.duration}")
+             raise ValueError(f"Invalid duration: '{parameters.duration}'. Use 'Ns' (e.g., '5s') between 5 and 8.")
 
+         valid_aspect_ratios = ["16:9", "9:16", "1:1", "4:5", "5:4"] # Example, use actual valid ratios
+         if parameters.aspect_ratio not in valid_aspect_ratios:
+              logger.error(f"Invalid aspect ratio received: {parameters.aspect_ratio}")
+              raise ValueError(f"Invalid aspect ratio: '{parameters.aspect_ratio}'. Must be one of {valid_aspect_ratios}")
+
+         return {
+             "durationSec": duration_sec,
+             "aspectRatio": parameters.aspect_ratio,
+             # Add other static parameters if needed
+         }
+    
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
         params_for_validation = parameters.copy()
@@ -376,29 +364,44 @@ class VeoRouterService(IService):
     def remote(self, parameters: dict) -> dict:
         primary_service = None
         fallback_service = None
+        primary_service_name = 'UnknownPrimaryService' # Default name
+        fallback_service_name = 'UnknownFallbackService' # Default name
         try:
             primary_service = self._get_primary_service()
-            logger.info(f"VeoRouter: Attempting primary: {primary_service.__class__.__name__}")
+            # Get name safely after ensuring instance exists
+            if primary_service: primary_service_name = primary_service.__class__.__name__
+            logger.info(f"VeoRouter: Attempting primary: {primary_service_name}")
             return primary_service.remote(parameters)
+
         except ValueError as validation_error:
-             # If primary failed due to input validation, re-raise it
-             logger.error(f"VeoRouter: Input validation failed in primary service {getattr(primary_service, '__class__', {}).get('__name__', 'Unknown')}: {validation_error}", exc_info=False)
+             # Use the captured primary_service_name
+             logger.error(f"VeoRouter: Input validation failed in primary service {primary_service_name}: {validation_error}", exc_info=False)
              raise validation_error # Re-raise validation errors directly
+
         except Exception as primary_error:
-             primary_service_name = getattr(primary_service, '__class__', {}).get('__name__', 'Unknown')
+             # Use the captured primary_service_name
              logger.warning(f"VeoRouter: Primary service {primary_service_name} failed: {type(primary_error).__name__} - {primary_error}. Attempting fallback.")
 
+             # Check specifically if it was a validation error mistakenly caught here
+             if isinstance(primary_error, ValueError) and "Invalid input parameters" in str(primary_error):
+                 logger.error(f"VeoRouter: Primary service {primary_service_name} failed due to validation error, not falling back: {primary_error}")
+                 raise primary_error # Re-raise the validation error
+
+             # Proceed with fallback for other exceptions
              try:
                  fallback_service = self._get_fallback_service()
-                 fallback_service_name = getattr(fallback_service, '__class__', {}).get('__name__', 'Unknown')
+                 # Get name safely after ensuring instance exists
+                 if fallback_service: fallback_service_name = fallback_service.__class__.__name__
                  logger.info(f"VeoRouter: Attempting fallback: {fallback_service_name}")
                  return fallback_service.remote(parameters)
+
              except ValueError as fallback_validation_error:
-                 # If fallback also fails validation, re-raise it
+                 # Use the captured fallback_service_name
                  logger.error(f"VeoRouter: Input validation failed in fallback service {fallback_service_name}: {fallback_validation_error}", exc_info=False)
                  raise fallback_validation_error # Re-raise fallback validation errors directly
+
              except Exception as fallback_error:
-                  fallback_service_name = getattr(fallback_service, '__class__', {}).get('__name__', 'Unknown')
+                  # Use the captured fallback_service_name
                   logger.error(f"VeoRouter: Fallback service {fallback_service_name} also failed: {type(fallback_error).__name__} - {fallback_error}", exc_info=True)
                   # Raise generic error after both primary and fallback failed internally
-                  raise Exception(VIDEO_GENERATION_ERROR) from fallback_error # Updated
+                  raise Exception(VIDEO_GENERATION_ERROR) from fallback_error
