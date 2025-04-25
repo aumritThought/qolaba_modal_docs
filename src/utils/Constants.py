@@ -582,7 +582,7 @@ app_dict = {
         "model_name": "minimax_video",
     },
     "ap-9mRnTycbyjwDlWFn8CLJlo": {
-        "app_id": "veo2_api",
+        "app_id": "veorouterservice_api",
         "init_parameters": {},
         "model_name": "GoogleVeo2_image2video",
     },
