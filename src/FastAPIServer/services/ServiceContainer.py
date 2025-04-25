@@ -8,9 +8,23 @@ from modal.environments import ensure_env
 from modal_proto import api_pb2
 from transparent_background import Remover
 
-from src.FastAPIServer.services.ApiServices.OpenAIService import GeminiAIImageCheck
-from src.FastAPIServer.services.ApiServices.FalAIService import Veo2, Kling2Master
+from src.FastAPIServer.services.ApiServices.ClaudeAIService import PromptParrot, VideoPromptParrot
 from src.FastAPIServer.services.ApiServices.ElvenLabsAudio import ElvenLabsAudio
+from src.FastAPIServer.services.ApiServices.FalAIService import (
+    FalAIFluxProText2Image, FalAIFluxDevText2Image, FalAIFluxschnellText2Image,
+    FalAIFluxDevImage2Image, FalAIRefactorV3Text2Image, FalAISD35LargeText2Image,
+    FalAISD35LargeTurboText2Image, FalAISD35MediumText2Image, FalAIFlux3Inpainting,
+    FalAIFlux3ReplaceBackground, FalAIFluxProRedux, FalAIFluxProCanny,
+    FalAIFluxProDepth, OmnigenV1, FalAIFluxPulID, Veo2, Kling2Master
+)
+from src.FastAPIServer.services.ApiServices.IdeogramService import IdeoGramText2Image as IdeogramT2I, IdeogramRemix # Renamed to avoid conflict
+from src.FastAPIServer.services.ApiServices.LeonardoService import LeonardoText2Image
+from src.FastAPIServer.services.ApiServices.LumaLabsService import LumaVideo
+from src.FastAPIServer.services.ApiServices.OpenAIService import DalleText2Image, GeminiAIImageCheck
+from src.FastAPIServer.services.ApiServices.RunWayService import RunwayImage2Video
+from src.FastAPIServer.services.ApiServices.SDXLService import SDXL3Text2Image
+from src.FastAPIServer.services.ApiServices.VertexAIService import ImageGenText2Image # Conflicting name, handle carefully
+
 
 
 from src.FastAPIServer.services.IService import IService
