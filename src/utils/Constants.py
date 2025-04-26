@@ -299,6 +299,7 @@ elevenlabs_gender_list = constr(pattern="|".join(ELEVENLABS_GENDER_LIST))
 
 # Dalle configuration
 DALLE_SUPPORTED_HW = ["1024x1024", "1024x1792", "1792x1024"]
+GPT_IMAGE_SUPPORTED_HW = ["1024x1024", "1024x1536", "1536x1024", "auto"]
 DALLE_SUPPORTED_QUALITY = ["hd", "standard"]
 dalle_supported_quality = constr(pattern="|".join(DALLE_SUPPORTED_QUALITY))
 
@@ -495,6 +496,11 @@ app_dict = {
         "app_id": "dalletext2image_api",
         "init_parameters": {},
         "model_name": "dalle_text2image",
+    },
+    "ap-zuzhawbgipcrnxdtefhjbnvhc": {
+        "app_id": "gpttext2image_api",
+        "init_parameters": {},
+        "model_name": "gpt_text2image",
     },
     # current
     "ap-fGhKl3mfkdlpqrsTuvwxYz": {

@@ -5,7 +5,7 @@ import os
 import re
 import time
 import uuid
-
+import base64
 import numpy as np
 import requests
 import torch
@@ -21,7 +21,7 @@ from PIL.Image import Image as Imagetype
 from pillow_heif import register_heif_opener
 from requests import Response
 from transformers import CLIPImageProcessor
-
+from loguru import logger
 from src.data_models.ModalAppSchemas import TaskResponse, TimeData, UpscaleParameters
 from src.utils.Constants import (
     BASE_IMAGE_COMMANDS,
@@ -325,24 +325,6 @@ def upload_data_gcp(
 
 
 def upload_to_gcp(data: Imagetype | str, extension: str, upscale: bool = False) -> str:
-    """
-    Performs the actual upload to Google Cloud Storage.
-
-    This function handles the GCP-specific upload logic, including file naming,
-    optional image upscaling, and content type setting. It's used by upload_data_gcp
-    which provides the retry mechanism.
-
-    Args:
-        data (Imagetype | str): Image or data to upload
-        extension (str): File extension for the uploaded data
-        upscale (bool, optional): Whether to upscale images before upload. Defaults to False.
-
-    Returns:
-        str: Public URL of the uploaded file
-
-    Raises:
-        Exception: If an error occurs during the upload process
-    """
     try:
         current_time = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         random_string = str(uuid.uuid4())
@@ -373,17 +355,31 @@ def upload_to_gcp(data: Imagetype | str, extension: str, upscale: bool = False) 
             else:
                 data = output.result[0]
 
+        byte_data_content = None
         if isinstance(data, Imagetype):
             if data.mode == "RGBA":
                 with io.BytesIO() as buffer:
                     data.save(buffer, format="PNG")
-                    data = buffer.getvalue()
+                    byte_data_content = buffer.getvalue()
             else:
                 with io.BytesIO() as buffer:
                     data.save(buffer, format="JPEG")
-                    data = buffer.getvalue()
+                    byte_data_content = buffer.getvalue()
+        elif isinstance(data, str):
+            if "," in data:
+                header, encoded = data.split(",", 1)
+                byte_data_content = base64.b64decode(encoded)
+            else:
+                byte_data_content = base64.b64decode(data)
+        elif isinstance(data, bytes):
+            byte_data_content = data
 
-        byte_data = io.BytesIO(data)
+        if byte_data_content is None:
+            raise Exception(
+                "Invalid data type for upload, must be PIL Image, bytes, or base64 string."
+            )
+
+        byte_data = io.BytesIO(byte_data_content)
 
         credentials = service_account.Credentials.from_service_account_info(
             google_credentials_info
@@ -408,7 +404,8 @@ def upload_to_gcp(data: Imagetype | str, extension: str, upscale: bool = False) 
         return url
 
     except Exception as e:
-        raise Exception(f"Error uploading to GCP: {e}")
+        logger.error(f"Error uploading to GCP: {e}")
+        raise Exception(f"internal error")
 
 
 # Image operations

@@ -8,7 +8,7 @@ from PIL import Image
 from pydantic import ValidationError
 import base64
 import io
-from src.utils.Globals import prepare_response # Keep this
+from src.utils.Globals import prepare_response  # Keep this
 
 from src.data_models.ModalAppSchemas import (
     FluxImage2ImageParameters,
@@ -38,9 +38,9 @@ from src.utils.Constants import (
     IMAGE_GENERATION_ERROR,
     NSFW_CONTENT_DETECT_ERROR_MSG,
     OUTPUT_VIDEO_EXTENSION,
-    VIDEO_GENERATION_ERROR
+    VIDEO_GENERATION_ERROR,
 )
-from src.utils.Globals import prepare_response # Keep this if needed elsewhere
+from src.utils.Globals import prepare_response  # Keep this if needed elsewhere
 
 # Common fixtures
 
@@ -136,15 +136,17 @@ def test_flux_pro_text2image_nsfw_detection(mocker, mock_nsfw_response):
     assert exc_info.value.args[1] == NSFW_CONTENT_DETECT_ERROR_MSG
 
 
-
-
 # ... fixtures ...
+
 
 def test_flux_pro_text2image_remote(mocker, mock_fal_response):
     # Arrange
     mock_make_api_request = mocker.patch.object(
-        FalAIFluxProText2Image, 'make_api_request',
-        return_value=base64.b64decode("SGVsbG8gV29ybGQ=") # Return decoded bytes 'Hello World'
+        FalAIFluxProText2Image,
+        "make_api_request",
+        return_value=base64.b64decode(
+            "SGVsbG8gV29ybGQ="
+        ),  # Return decoded bytes 'Hello World'
     )
 
     # Expected response structure *before* decorator might modify it
@@ -155,28 +157,24 @@ def test_flux_pro_text2image_remote(mocker, mock_fal_response):
         "low_res_urls": [],
         # Set a specific value here, the assertion will use ANY later
         "time": {"startup_time": 0, "runtime": 1.23},
-        "extension": "webp"
+        "extension": "webp",
     }
     # Patch prepare_response specifically in the FalAIService module
     mock_prepare_response_func = mocker.patch(
-        'src.FastAPIServer.services.ApiServices.FalAIService.prepare_response',
-        return_value=mock_prepare_response_return # Mock returns this dict
+        "src.FastAPIServer.services.ApiServices.FalAIService.prepare_response",
+        return_value=mock_prepare_response_return,  # Mock returns this dict
     )
 
     # --- Patch timing_decorator where it's DEFINED ---
-    mocker.patch('src.utils.Globals.timing_decorator', lambda func: func)
-
+    mocker.patch("src.utils.Globals.timing_decorator", lambda func: func)
 
     service = FalAIFluxProText2Image()
-    parameters = {
-        "prompt": "test prompt",
-        "width": 512,
-        "height": 512,
-        "batch": 2
-    }
+    parameters = {"prompt": "test prompt", "width": 512, "height": 512, "batch": 2}
 
     # Act
-    result = service.remote(parameters) # Should return mock_prepare_response_return directly
+    result = service.remote(
+        parameters
+    )  # Should return mock_prepare_response_return directly
 
     # Assert
     # --- Define the final expected structure for assertion, using ANY ---
@@ -185,8 +183,8 @@ def test_flux_pro_text2image_remote(mocker, mock_fal_response):
         "Has_NSFW_Content": [False, False],
         "Has_copyrighted_Content": None,
         "low_res_urls": [],
-        "time": {"startup_time": 0, "runtime": ANY}, # Use ANY here for the assertion
-        "extension": "webp"
+        "time": {"startup_time": 0, "runtime": ANY},  # Use ANY here for the assertion
+        "extension": "webp",
     }
     # Assert the actual result against the structure with ANY
     assert result == expected_final_result
@@ -201,9 +199,6 @@ def test_flux_pro_text2image_remote(mocker, mock_fal_response):
     assert call_args[1] == [False, False]
     # Arguments are result_list, nsfw_flags, startup_time, runtime, extension
     assert call_args[4] == "webp"
-
-
-
 
 
 def test_flux_dev_text2image_make_api_request(mocker, mock_fal_response):
@@ -762,6 +757,7 @@ def test_veo2_make_api_request_fal_error(mocker):
     assert exc_info.value.args[0] == VIDEO_GENERATION_ERROR
     assert "couldn't create your video" in exc_info.value.args[1]
 
+
 def test_kling2master_make_api_request_fal_error(mocker):
     """Tests handling of errors from the Fal API client during the API call."""
     # Arrange
@@ -771,13 +767,18 @@ def test_kling2master_make_api_request_fal_error(mocker):
     mocker.patch("src.FastAPIServer.services.ApiServices.FalAIService.logger")
     service = Kling2Master()
     # Use a valid Pydantic model instance for the make_api_request input
-    parameters = Kling2MasterParameters(prompt="test", duration="5", aspect_ratio="16:9")
+    parameters = Kling2MasterParameters(
+        prompt="test", duration="5", aspect_ratio="16:9"
+    )
 
     # Act & Assert
     with pytest.raises(Exception) as exc_info:
         service.make_api_request(parameters)
     assert exc_info.value.args[0] == VIDEO_GENERATION_ERROR
-    assert "We couldn't create your video. Please try again later." in exc_info.value.args[1]
+    assert (
+        "We couldn't create your video. Please try again later."
+        in exc_info.value.args[1]
+    )
 
 
 def test_veo2_remote_validation_error(mocker):
@@ -858,7 +859,6 @@ def test_kling2master_remote_success_image_to_video(mocker, mock_image):
     # Assert
     assert result == expected_response_structure
     mocked_remote.assert_called_once_with(parameters)
-
 
 
 def test_kling2master_remote_validation_error_duration(mocker):

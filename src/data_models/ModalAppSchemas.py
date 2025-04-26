@@ -438,6 +438,14 @@ class DalleParameters(BaseModel):
     quality: Optional[dalle_supported_quality] = "standard"  # type: ignore
 
 
+class GPTImageParameters(BaseModel):
+    height: int = Query(ge=MIN_HEIGHT, le=MAX_HEIGHT)
+    width: int = Query(ge=MIN_HEIGHT, le=MAX_HEIGHT)
+    batch: int = Query(ge=MIN_BATCH, le=MAX_BATCH)
+    prompt: str
+    quality: Optional[dalle_supported_quality] = "auto"  # type: ignore
+
+
 class OpenAITTSParameters(BaseModel):
     prompt: str
 
