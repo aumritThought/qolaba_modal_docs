@@ -8,7 +8,7 @@ from celery.signals import worker_init, worker_process_init
 from loguru import logger
 from PIL import Image
 from pydantic import ValidationError
-
+import base64
 from src.data_models.ModalAppSchemas import (
     APIInput,
     APITaskResponse,
@@ -103,7 +103,17 @@ def upload_low_res_image(index, image_data, extension):
     Returns:
         tuple: (index, url) where index is the original position and url is the GCP storage URL
     """
-    low_rs_image = Image.open(io.BytesIO(image_data))
+    image_bytes = image_data  # Assume bytes initially
+    if isinstance(image_data, str):
+        # Decode base64 string if input is string
+        if "," in image_data:  # Handle optional data URI prefix
+            header, encoded = image_data.split(",", 1)
+            image_bytes = base64.b64decode(encoded)
+        else:  # Assume pure base64
+            image_bytes = base64.b64decode(image_data)
+    # Now image_bytes holds the raw byte data
+    low_rs_image = Image.open(io.BytesIO(image_bytes))  # Use the bytes here
+    # --- Rest of the original function ---
     low_rs_image = compress_image(low_rs_image)
     url = upload_data_gcp(low_rs_image, extension)
     return index, url

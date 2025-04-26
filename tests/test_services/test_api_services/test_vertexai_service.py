@@ -5,7 +5,11 @@ from vertexai.preview.vision_models import Image, ImageGenerationModel
 
 from src.data_models.ModalAppSchemas import IdeoGramText2ImageParameters
 from src.FastAPIServer.services.ApiServices.VertexAIService import ImageGenText2Image
-from src.utils.Constants import IMAGEGEN_ERROR, IMAGEGEN_ERROR_MSG, OUTPUT_IMAGE_EXTENSION
+from src.utils.Constants import (
+    IMAGEGEN_ERROR,
+    IMAGEGEN_ERROR_MSG,
+    OUTPUT_IMAGE_EXTENSION,
+)
 
 
 @pytest.fixture
@@ -94,19 +98,20 @@ def test_make_api_request_failure(mocker, mock_image_generation_model):
 
     assert excinfo.value.args[0] == IMAGEGEN_ERROR
 
-
-
-
-    def test_remote_success(mocker, mock_image_generation_model): # Remove mock_image_list from args
+    def test_remote_success(
+        mocker, mock_image_generation_model
+    ):  # Remove mock_image_list from args
         """Test remote method of ImageGenText2Image with successful API requests."""
         # Setup
         # --- FIX: Configure mock generate_images response directly ---
         mock_image_1 = MagicMock()
-        mock_image_1._image_bytes = b"mock_image_bytes" # Use consistent bytes for simplicity
+        mock_image_1._image_bytes = (
+            b"mock_image_bytes"  # Use consistent bytes for simplicity
+        )
         mock_image_2 = MagicMock()
         mock_image_2._image_bytes = b"mock_image_bytes"
         mock_response = MagicMock()
-        mock_response.images = [mock_image_1, mock_image_2] # List of mock images
+        mock_response.images = [mock_image_1, mock_image_2]  # List of mock images
         mock_image_generation_model.generate_images.return_value = mock_response
         # --- End Fix ---
 
@@ -118,28 +123,35 @@ def test_make_api_request_failure(mocker, mock_image_generation_model):
         mocker.patch("src.utils.Globals.timing_decorator", lambda func: func)
 
         expected_response = {
-            "result": [b"mock_image_bytes", b"mock_image_bytes"], # Expecting bytes now
+            "result": [b"mock_image_bytes", b"mock_image_bytes"],  # Expecting bytes now
             "Has_NSFW_Content": [False, False],
             "Has_copyrighted_Content": None,
             "low_res_urls": [],
             "time": {"startup_time": mocker.ANY, "runtime": mocker.ANY},
-            "extension": OUTPUT_IMAGE_EXTENSION
+            "extension": OUTPUT_IMAGE_EXTENSION,
         }
-        mock_prep_resp = mocker.patch("src.utils.Globals.prepare_response", return_value=expected_response)
+        mock_prep_resp = mocker.patch(
+            "src.utils.Globals.prepare_response", return_value=expected_response
+        )
         mocker.patch("src.utils.Globals.convert_to_aspect_ratio", return_value="1:1")
 
         service = ImageGenText2Image()
-        parameters = {"prompt": "test prompt", "width": 1024, "height": 1024, "batch": 2}
+        parameters = {
+            "prompt": "test prompt",
+            "width": 1024,
+            "height": 1024,
+            "batch": 2,
+        }
         result = service.remote(parameters)
 
         assert result == expected_response
         assert mock_image_generation_model.generate_images.call_count == 2
-        mock_prep_resp.assert_called_once() # This should now pass
+        mock_prep_resp.assert_called_once()  # This should now pass
         call_args, _ = mock_prep_resp.call_args
-        assert call_args[0] == [b"mock_image_bytes", b"mock_image_bytes"] # Check results passed
-
-
-
+        assert call_args[0] == [
+            b"mock_image_bytes",
+            b"mock_image_bytes",
+        ]  # Check results passed
 
 
 # def test_remote_invalid_aspect_ratio(mocker):
@@ -181,21 +193,31 @@ def test_make_api_request_failure(mocker, mock_image_generation_model):
 import os
 import time
 import uuid
-from unittest.mock import MagicMock, patch # Ensure patch is imported if not already
+from unittest.mock import MagicMock, patch  # Ensure patch is imported if not already
 import pytest
 import requests
 import google.auth
 from google.cloud import storage
 from pydantic import ValidationError
 
-from src.data_models.ModalAppSchemas import Veo2Parameters # Import Veo2Parameters
+from src.data_models.ModalAppSchemas import Veo2Parameters  # Import Veo2Parameters
+
 # Import the new classes under test and dependencies
-from src.FastAPIServer.services.ApiServices.VertexAIService import VertexAIVeo, VeoRouterService
-from src.FastAPIServer.services.ApiServices.FalAIService import Veo2 # Needed for mocking fallback
-from src.utils.Constants import VIDEO_GENERATION_ERROR, OUTPUT_VIDEO_EXTENSION # Add necessary constants
+from src.FastAPIServer.services.ApiServices.VertexAIService import (
+    VertexAIVeo,
+    VeoRouterService,
+)
+from src.FastAPIServer.services.ApiServices.FalAIService import (
+    Veo2,
+)  # Needed for mocking fallback
+from src.utils.Constants import (
+    VIDEO_GENERATION_ERROR,
+    OUTPUT_VIDEO_EXTENSION,
+)  # Add necessary constants
 
 
 # Add these fixtures below the existing fixtures in the file
+
 
 @pytest.fixture
 def mock_vertex_credentials():
@@ -208,6 +230,7 @@ def mock_vertex_credentials():
     mock_creds.refresh = MagicMock()
     return mock_creds
 
+
 @pytest.fixture
 def mock_storage_client():
     """Mocks the GCS storage client and related objects."""
@@ -216,8 +239,8 @@ def mock_storage_client():
     mock_blob_instance.exists.return_value = True
     mock_blob_instance.download_as_bytes.return_value = b"mock_video_bytes"
     mock_blob_instance.delete = MagicMock()
-    mock_blob_instance.upload_from_string = MagicMock() # Add mock for upload
-    mock_blob_instance.name = "mock_blob_name.jpg" # Give it a name
+    mock_blob_instance.upload_from_string = MagicMock()  # Add mock for upload
+    mock_blob_instance.name = "mock_blob_name.jpg"  # Give it a name
 
     mock_bucket = MagicMock(spec=storage.Bucket)
     # Make the bucket's blob() method return our specific mock_blob_instance
@@ -225,7 +248,10 @@ def mock_storage_client():
 
     mock_client = MagicMock(spec=storage.Client)
     mock_client.bucket.return_value = mock_bucket
-    return mock_client, mock_blob_instance # Return both client and the specific blob mock
+    return (
+        mock_client,
+        mock_blob_instance,
+    )  # Return both client and the specific blob mock
 
 
 @pytest.fixture
@@ -233,10 +259,9 @@ def mock_poll_response():
     """Provides a successful poll operation response."""
     return {
         "done": True,
-        "response": {
-            "videos": [{"gcsUri": "gs://test-bucket/video.mp4"}]
-        }
+        "response": {"videos": [{"gcsUri": "gs://test-bucket/video.mp4"}]},
     }
+
 
 @pytest.fixture(autouse=True)
 def mock_env_vars(mocker):
@@ -247,15 +272,20 @@ def mock_env_vars(mocker):
         "BUCKET_NAME": "test-bucket",
         "GOOGLE_LOCATION": "us-central1",
         # Mock other potentially needed keys if IService.__init__ reads them
-        "SDXL_API_KEY": "dummy", "ELEVENLABS_API_KEY": "dummy",
-        "OPENAI_API_KEY": "dummy", "CLAUDE_API_KEY": "dummy",
-        "DID_KEY": "dummy", "MUSIC_GEN_API_KEY": "dummy",
-        "IDEOGRAM_API_KEY": "dummy", "LEONARDO_API_KEY": "dummy",
-        "AILAB_API_KEY": "dummy", "RUNWAY_API_KEY": "dummy",
+        "SDXL_API_KEY": "dummy",
+        "ELEVENLABS_API_KEY": "dummy",
+        "OPENAI_API_KEY": "dummy",
+        "CLAUDE_API_KEY": "dummy",
+        "DID_KEY": "dummy",
+        "MUSIC_GEN_API_KEY": "dummy",
+        "IDEOGRAM_API_KEY": "dummy",
+        "LEONARDO_API_KEY": "dummy",
+        "AILAB_API_KEY": "dummy",
+        "RUNWAY_API_KEY": "dummy",
         "LUMAAI_API_KEY": "dummy",
     }
     mocker.patch.dict(os.environ, test_env, clear=True)
-    yield # Run the test
+    yield  # Run the test
     # Restore original environment if necessary (optional)
     # os.environ.clear()
     # os.environ.update(original_env)
@@ -269,10 +299,14 @@ def mock_primary_provider():
     mock_service.remote.return_value = {
         "result": [b"primary_success_bytes"],
         "Has_NSFW_Content": [False],
-        "time": {"startup_time": 0, "runtime": 0}, # Mock time data if prepare_response needs it
-        "extension": OUTPUT_VIDEO_EXTENSION
+        "time": {
+            "startup_time": 0,
+            "runtime": 0,
+        },  # Mock time data if prepare_response needs it
+        "extension": OUTPUT_VIDEO_EXTENSION,
     }
-    return MagicMock(return_value=mock_service) # Returns the callable provider
+    return MagicMock(return_value=mock_service)  # Returns the callable provider
+
 
 @pytest.fixture
 def mock_fallback_provider():
@@ -282,9 +316,9 @@ def mock_fallback_provider():
         "result": [b"fallback_success_bytes"],
         "Has_NSFW_Content": [False],
         "time": {"startup_time": 0, "runtime": 0},
-        "extension": OUTPUT_VIDEO_EXTENSION
+        "extension": OUTPUT_VIDEO_EXTENSION,
     }
-    return MagicMock(return_value=mock_service) # Returns the callable provider
+    return MagicMock(return_value=mock_service)  # Returns the callable provider
 
 
 # Add these test functions below the existing test functions in the file
@@ -293,9 +327,12 @@ def mock_fallback_provider():
 
 # ... existing code ...
 
+
 def test_vertexaiveo_init_success(mocker, mock_vertex_credentials, mock_storage_client):
     """Tests successful initialization of VertexAIVeo."""
-    mocker.patch("google.auth.default", return_value=(mock_vertex_credentials, "test-project-id"))
+    mocker.patch(
+        "google.auth.default", return_value=(mock_vertex_credentials, "test-project-id")
+    )
     mocker.patch("google.cloud.storage.Client", return_value=mock_storage_client)
 
     service = VertexAIVeo()
@@ -319,13 +356,15 @@ def test_vertexaiveo_init_no_project_id(mocker, mock_vertex_credentials):
     """
     mock_vertex_credentials.project_id = None
     mocker.patch("google.auth.default", return_value=(mock_vertex_credentials, None))
-    mocker.patch.dict(os.environ, {"BUCKET_NAME": "test-bucket"}) # Keep BUCKET_NAME for this scenario
+    mocker.patch.dict(
+        os.environ, {"BUCKET_NAME": "test-bucket"}
+    )  # Keep BUCKET_NAME for this scenario
 
     # Initialize the service and expect it not to raise an unhandled error
     # (It might log warnings or succeed using discovered project ID)
     try:
         service = VertexAIVeo()
-        assert service is not None # Check service was created
+        assert service is not None  # Check service was created
         # Optionally, check the discovered project ID if needed
         # assert service.project_id == "marine-potion-404413"
     except ValueError as e:
@@ -341,43 +380,66 @@ def test_vertexaiveo_init_no_bucket(mocker, mock_vertex_credentials):
     NOTE: The mock_env_vars fixture usually ensures BUCKET_NAME is present.
     This test verifies initialization completes without error under the fixture's influence.
     """
-    mocker.patch("google.auth.default", return_value=(mock_vertex_credentials, "test-project-id"))
+    mocker.patch(
+        "google.auth.default", return_value=(mock_vertex_credentials, "test-project-id")
+    )
     # Attempt to remove BUCKET_NAME - this might be overridden by the autouse fixture
-    env_without_bucket = {k: v for k, v in os.environ.items() if k != 'BUCKET_NAME'}
+    env_without_bucket = {k: v for k, v in os.environ.items() if k != "BUCKET_NAME"}
     # Add necessary keys back if removed by clear=True previously (adjust as needed)
     env_without_bucket["GOOGLE_LOCATION"] = "us-central1"
     # Add dummy API keys if IService needs them
-    env_without_bucket.update({
-        "SDXL_API_KEY": "dummy", "ELEVENLABS_API_KEY": "dummy",
-        "OPENAI_API_KEY": "dummy", "CLAUDE_API_KEY": "dummy",
-        "DID_KEY": "dummy", "MUSIC_GEN_API_KEY": "dummy",
-        "IDEOGRAM_API_KEY": "dummy", "LEONARDO_API_KEY": "dummy",
-        "AILAB_API_KEY": "dummy", "RUNWAY_API_KEY": "dummy",
-        "LUMAAI_API_KEY": "dummy",
-    })
-    mocker.patch.dict(os.environ, env_without_bucket, clear=True) # Use clear=True to ensure BUCKET_NAME is gone
+    env_without_bucket.update(
+        {
+            "SDXL_API_KEY": "dummy",
+            "ELEVENLABS_API_KEY": "dummy",
+            "OPENAI_API_KEY": "dummy",
+            "CLAUDE_API_KEY": "dummy",
+            "DID_KEY": "dummy",
+            "MUSIC_GEN_API_KEY": "dummy",
+            "IDEOGRAM_API_KEY": "dummy",
+            "LEONARDO_API_KEY": "dummy",
+            "AILAB_API_KEY": "dummy",
+            "RUNWAY_API_KEY": "dummy",
+            "LUMAAI_API_KEY": "dummy",
+        }
+    )
+    mocker.patch.dict(
+        os.environ, env_without_bucket, clear=True
+    )  # Use clear=True to ensure BUCKET_NAME is gone
 
     # Expect a ValueError because BUCKET_NAME is required by the code
-    with pytest.raises(ValueError, match="BUCKET_NAME environment variable is required"):
-         VertexAIVeo()
+    with pytest.raises(
+        ValueError, match="BUCKET_NAME environment variable is required"
+    ):
+        VertexAIVeo()
+
+
 # ... existing code ...
 
-def test_vertexaiveo_poll_operation_timeout(mocker, mock_vertex_credentials, mock_storage_client):
+
+def test_vertexaiveo_poll_operation_timeout(
+    mocker, mock_vertex_credentials, mock_storage_client
+):
     """Tests polling timeout."""
-    mocker.patch("google.auth.default", return_value=(mock_vertex_credentials, "test-project-id"))
+    mocker.patch(
+        "google.auth.default", return_value=(mock_vertex_credentials, "test-project-id")
+    )
     mocker.patch("google.cloud.storage.Client", return_value=mock_storage_client)
-    mocker.patch.object(VertexAIVeo, '_get_access_token', return_value="mock_token")
+    mocker.patch.object(VertexAIVeo, "_get_access_token", return_value="mock_token")
     mock_post = mocker.patch("requests.post")
     pending_response = {"done": False}
     mock_post.return_value.json.return_value = pending_response
     mock_post.return_value.raise_for_status = MagicMock()
     mocker.patch("time.sleep")
     # Provide more values for time.time() to cover potential calls during init/auth and the loop
-    mocker.patch("time.time", side_effect=[0, 0, 1, 1, 2, 2, 3, 3, 700, 700, 701, 701]) # Increased values
+    mocker.patch(
+        "time.time", side_effect=[0, 0, 1, 1, 2, 2, 3, 3, 700, 700, 701, 701]
+    )  # Increased values
 
     service = VertexAIVeo()
     with pytest.raises(TimeoutError, match="timed out after 600 seconds"):
         service._poll_operation("op_name", timeout_seconds=600, poll_interval=1)
+
 
 # ... existing code ...
 
@@ -394,21 +456,29 @@ def test_vertexaiveo_poll_operation_timeout(mocker, mock_vertex_credentials, moc
 
 # ... existing code ...
 
-def test_vertexaiveo_remote_validation_error(mocker, mock_vertex_credentials, mock_storage_client):
+
+def test_vertexaiveo_remote_validation_error(
+    mocker, mock_vertex_credentials, mock_storage_client
+):
     """Tests VertexAIVeo remote method fails validation."""
-    mocker.patch("google.auth.default", return_value=(mock_vertex_credentials, "test-project-id"))
+    mocker.patch(
+        "google.auth.default", return_value=(mock_vertex_credentials, "test-project-id")
+    )
     mocker.patch("google.cloud.storage.Client", return_value=mock_storage_client)
     mocker.patch("src.utils.Globals.timing_decorator", lambda func: func)
     # Mock helper methods that shouldn't be called if validation fails early
-    mocker.patch.object(VertexAIVeo, '_prepare_api_parameters')
-    mocker.patch.object(VertexAIVeo, 'make_api_request')
-    mocker.patch.object(VertexAIVeo, '_poll_operation')
-    mocker.patch.object(VertexAIVeo, '_download_from_gcs')
-
+    mocker.patch.object(VertexAIVeo, "_prepare_api_parameters")
+    mocker.patch.object(VertexAIVeo, "make_api_request")
+    mocker.patch.object(VertexAIVeo, "_poll_operation")
+    mocker.patch.object(VertexAIVeo, "_download_from_gcs")
 
     service = VertexAIVeo()
     # Use invalid duration that the Pydantic model should catch via its validator
-    invalid_params_dict = {"prompt": "test", "duration": "10s", "aspect_ratio": "16:9"} # Invalid duration
+    invalid_params_dict = {
+        "prompt": "test",
+        "duration": "10s",
+        "aspect_ratio": "16:9",
+    }  # Invalid duration
 
     # --- FIX: Check for ValueError type ---
     with pytest.raises(ValueError) as exc_info:
@@ -418,10 +488,12 @@ def test_vertexaiveo_remote_validation_error(mocker, mock_vertex_credentials, mo
     assert "validation error for Veo2Parameters" in str(exc_info.value)
     assert "duration" in str(exc_info.value)
 
+
 # ... rest of the file ...
 
 
 # --- Tests for VeoRouterService ---
+
 
 def test_veorouter_init(mock_primary_provider, mock_fallback_provider):
     """Tests successful initialization of the router."""
@@ -438,22 +510,28 @@ def test_veorouter_init_type_error():
         VeoRouterService(MagicMock(), "not_callable")
 
 
-def test_veorouter_primary_succeeds(mocker, mock_primary_provider, mock_fallback_provider):
+def test_veorouter_primary_succeeds(
+    mocker, mock_primary_provider, mock_fallback_provider
+):
     """Tests the flow when the primary service succeeds."""
-    mocker.patch('src.FastAPIServer.services.ApiServices.VertexAIService.logger')
+    mocker.patch("src.FastAPIServer.services.ApiServices.VertexAIService.logger")
     router = VeoRouterService(mock_primary_provider, mock_fallback_provider)
     params = {"prompt": "test"}
     result = router.remote(params)
 
-    assert "result" in result # Check structure based on mocked return
+    assert "result" in result  # Check structure based on mocked return
     assert result["result"] == [b"primary_success_bytes"]
     mock_primary_provider().remote.assert_called_once_with(params)
     mock_fallback_provider().remote.assert_not_called()
 
 
-def test_veorouter_primary_validation_error(mocker, mock_primary_provider, mock_fallback_provider):
+def test_veorouter_primary_validation_error(
+    mocker, mock_primary_provider, mock_fallback_provider
+):
     """Tests the flow when the primary service fails with a validation error."""
-    mock_logger = mocker.patch('src.FastAPIServer.services.ApiServices.VertexAIService.logger')
+    mock_logger = mocker.patch(
+        "src.FastAPIServer.services.ApiServices.VertexAIService.logger"
+    )
     mocker.patch("src.utils.Globals.timing_decorator", lambda func: func)
 
     # Simulate primary service raising a ValueError typical of input validation
@@ -472,17 +550,18 @@ def test_veorouter_primary_validation_error(mocker, mock_primary_provider, mock_
     # Verify fallback was NOT called
     mock_fallback_provider().remote.assert_not_called()
     # Verify specific logging
-    mock_logger.error.assert_any_call(mocker.ANY, exc_info=False) # Check that error was logged
+    mock_logger.error.assert_any_call(
+        mocker.ANY, exc_info=False
+    )  # Check that error was logged
 
 
-
-
-
-
-
-def test_veorouter_primary_runtime_error_fallback_fails(mocker, mock_primary_provider, mock_fallback_provider):
+def test_veorouter_primary_runtime_error_fallback_fails(
+    mocker, mock_primary_provider, mock_fallback_provider
+):
     """Tests the flow when both primary and fallback fail runtime."""
-    mock_logger = mocker.patch('src.FastAPIServer.services.ApiServices.VertexAIService.logger')
+    mock_logger = mocker.patch(
+        "src.FastAPIServer.services.ApiServices.VertexAIService.logger"
+    )
     mocker.patch("src.utils.Globals.timing_decorator", lambda func: func)
 
     # Use generic Exceptions for both failures
@@ -494,15 +573,15 @@ def test_veorouter_primary_runtime_error_fallback_fails(mocker, mock_primary_pro
         "Has_NSFW_Content": [False],
         "Has_copyrighted_Content": None,
         "low_res_urls": [],
-        "time": {"startup_time": 0.0, "runtime": 0.1}, # Use valid float/int values
-        "extension": ".mp4"
+        "time": {"startup_time": 0.0, "runtime": 0.1},  # Use valid float/int values
+        "extension": ".mp4",
     }
     # --- End Fix ---
     mock_fallback_provider().remote.return_value = fallback_result
 
     router = VeoRouterService(mock_primary_provider, mock_fallback_provider)
     params = {"prompt": "test"}
-    result = router.remote(params) # Decorator will validate TaskResponse
+    result = router.remote(params)  # Decorator will validate TaskResponse
 
     # Assert relevant parts
     assert result["result"] == fallback_result["result"]
