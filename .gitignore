@@ -174,3 +174,7 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 marine-potion-404413-8dba211a3012.json
+src_dapr/
+python-sdk/
+logs/
+samples/

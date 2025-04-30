@@ -301,7 +301,8 @@ class GeminiAIImageCheck(IService):
             You must return false for any content that does not fall into the NSFW category.""",
                 get_image_from_url(image_url),
             ],
-            model="gemini-2.0-flash",
+            # model="gemini-2.0-flash",
+            model="gemini-2.0-flash-lite-001",
             config={
                 "response_mime_type": "application/json",
                 "response_schema": NSFWSchema,
