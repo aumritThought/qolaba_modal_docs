@@ -444,6 +444,7 @@ class GPTImageParameters(BaseModel):
     batch: int = Query(ge=MIN_BATCH, le=MAX_BATCH)
     prompt: str
     quality: Optional[dalle_supported_quality] = "auto"  # type: ignore
+    images: Optional[list] = []
 
 
 class OpenAITTSParameters(BaseModel):
