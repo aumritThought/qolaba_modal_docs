@@ -369,7 +369,7 @@ class GPTText2Image(IService):
                         parameters.prompt,
                         Height_width,
                         parameters.quality,
-                        parameters.images
+                        parameters.image
                     )
                     for _ in range(parameters.batch)
                 ]
@@ -389,7 +389,7 @@ class GPTText2Image(IService):
             except Exception as log_err:
                 logger.error(
                     f"Error during exception logging: {log_err}"
-                )  # Fallback log
+                )
 
             error_message = str(e)
             is_safety_block = "safety system" in error_message and (
