@@ -246,7 +246,7 @@ class GPTText2Image(IService):
     
     
 
-    def make_gpt_api_request(self, prompt: str, Height_width: str, quality: str, images: str = None) -> str:
+    def make_gpt_api_request(self, prompt: str, Height_width: str, quality: str, image: str = None) -> str:
         """
         Sends a request to OpenAI API for image generation or editing.
         
@@ -259,9 +259,9 @@ class GPTText2Image(IService):
         Returns:
             str or bytes: Resulting image data (base64 string or bytes).
         """
-        if images:
+        if image:
             # Image edit mode
-            url = images
+            url = image
             logger.info(f"Performing image edit using URL: {url}")
             
             # Download the image
