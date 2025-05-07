@@ -400,6 +400,7 @@ def task_gen(parameters: APIInput) -> dict:
         dict: Either a task ID and status (async) or complete task results (sync)
     """
     if parameters.celery == True:
+        # print(parameters.model_dump())
         task: AsyncResult = create_task.delay(parameters.model_dump())
 
         task_response = APITaskResponse(

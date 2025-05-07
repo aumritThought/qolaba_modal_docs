@@ -1,10 +1,15 @@
 import concurrent.futures
-
+import openai
 import google.auth
 import google.auth.transport.requests
 from google import genai
 from openai import OpenAI
 from loguru import logger
+import requests
+import io
+import os
+from urllib.parse import urlparse
+from typing import List, Tuple, BinaryIO
 from openai.types.images_response import ImagesResponse
 from src.data_models.ModalAppSchemas import (
     DalleParameters,
@@ -27,6 +32,112 @@ from src.utils.Globals import (
     prepare_response,
     timing_decorator,
 )
+import tempfile # <--- Add this
+
+from PIL import Image  # Already imported in other files
+
+# Add this helper function before the GPTText2Image class
+def prepare_image_for_openai(img_bytes, ext):
+    """
+    Prepares an image for OpenAI API with explicit MIME type handling.
+    
+    Args:
+        img_bytes (bytes): Raw image bytes
+        ext (str): File extension with dot (.png, .jpg, etc)
+        
+    Returns:
+        bytes-like object ready for OpenAI API
+    """
+    # Set up MIME type mapping
+    mime_map = {
+        '.png': 'image/png',
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.webp': 'image/webp'
+    }
+    
+    # Get MIME type or default to image/png
+    mime_type = mime_map.get(ext.lower(), 'image/png')
+    
+    # Write to a temporary file with the correct extension
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=ext)
+    temp_file_path = temp_file.name
+    
+    try:
+        temp_file.write(img_bytes)
+        temp_file.close()
+        
+        # Convert the temp file into an OpenAI-compatible format with correct MIME type
+        with open(temp_file_path, 'rb') as f:
+            return f, mime_type, temp_file_path  # Return the file object, MIME type, and path for cleanup
+    except Exception as e:
+        if os.path.exists(temp_file_path):
+            try:
+                os.remove(temp_file_path)
+            except:
+                pass
+        raise e
+
+def get_openai_image_param_from_urls(image_url_list: List[str]) -> Tuple[str, BinaryIO]:
+    """
+    Downloads image from first URL, prepares it as (filename, io.BytesIO object).
+
+    Intended to be called directly as the value for the 'image' parameter in
+    OpenAI API calls like images.edit.
+
+    Args:
+        image_url_list: List containing the image URL string as the first element.
+
+    Returns:
+        Tuple[str, io.BytesIO]: (filename_with_extension, open_bytesio_object)
+
+    Raises:
+        ValueError: If input is invalid or extension cannot be determined.
+        requests.exceptions.RequestException: If download fails.
+        IOError: If BytesIO creation fails.
+
+    REMINDER: The caller MUST close the returned io.BytesIO object afterwards.
+    """
+    if not image_url_list or not isinstance(image_url_list[0], str) or not image_url_list[0]:
+        logger.error("Invalid input: Requires a non-empty list with a valid URL string.")
+        raise ValueError("Requires a non-empty list with a valid URL string as the first element.")
+
+    url = image_url_list[0]
+    logger.debug(f"Processing URL for OpenAI param: {url}")
+    try:
+        # Basic filename/extension extraction
+        path = urlparse(url).path
+        filename = os.path.basename(path) if path else "image.png" # Default filename
+        ext = os.path.splitext(filename)[1].lower()
+        if ext not in ['.png', '.jpeg', '.jpg', '.webp']:
+             logger.warning(f"Could not determine valid extension from '{filename}', defaulting to .png")
+             filename = f"{os.path.splitext(filename)[0] or 'image'}.png" # Default extension
+        elif not os.path.splitext(filename)[0]: # Handle case like "/.png"
+             filename = f"image{ext}"
+        logger.debug(f"Using filename '{filename}' for API.")
+
+
+        # Download bytes
+        logger.info(f"Downloading image from {url}")
+        response = requests.get(url, timeout=30)
+        response.raise_for_status()
+        if not response.content:
+             logger.error(f"Downloaded empty content from {url}")
+             raise ValueError(f"Downloaded empty content from {url}")
+        logger.info(f"Downloaded {len(response.content)} bytes from {url}")
+
+
+        # Return the required tuple
+        bytes_io_obj = io.BytesIO(response.content)
+        logger.debug(f"Returning tuple: ({filename}, {type(bytes_io_obj)})")
+        return (filename, bytes_io_obj)
+
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Failed to download image from {url}: {e}", exc_info=True)
+        raise # Re-raise original error
+    except Exception as e:
+        logger.error(f"Failed to prepare image parameter from {url}: {e}", exc_info=True)
+        raise # Re-raise original e
 
 
 class DalleText2Image(IService):
@@ -132,49 +243,95 @@ class GPTText2Image(IService):
         """
         super().__init__()
         self.client = OpenAI(api_key=self.openai_api_key)
+    
+    
 
-    def make_gpt_api_request(self, prompt: str, Height_width: str, quality: str) -> str:
+    def make_gpt_api_request(self, prompt: str, Height_width: str, quality: str, images: list = None) -> str:
         """
-        Sends a request to the OpenAI GPT Image API for image generation.
-
-        This function constructs the appropriate API payload from the parameters,
-        sends the request to the DALL-E API endpoint, and handles the response
-        processing to extract the resulting image.
-
+        Sends a request to OpenAI API for image generation or editing.
+        
         Args:
-            prompt (str): The text prompt describing the desired image
-            Height_width (str): Dimensions of the output image (e.g., "1024x1024")
-            quality (str): Image quality setting ("standard" or "hd")
-
+            prompt: The text prompt.
+            Height_width: Target dimensions (e.g., "1024x1024").
+            quality: Quality setting.
+            images: Optional list containing the URL of the image to edit. Only the first is used.
+            
         Returns:
-            str: The generated image data as bytes
-
-        Raises:
-            Exception: If the prompt violates content policy or other API errors occur
+            str or bytes: Resulting image data (base64 string or bytes).
         """
-        try:
-            response: ImagesResponse = self.client.images.generate(
-                model="gpt-image-1",
+        if images and isinstance(images, list) and len(images) > 0 and isinstance(images[0], str) and images[0]:
+            # Image edit mode
+            url = images[0]
+            logger.info(f"Performing image edit using URL: {url}")
+            
+            # Download the image
+            logger.info(f"Downloading image from {url}")
+            response = requests.get(url, timeout=30)
+            response.raise_for_status()
+            img_bytes = response.content
+            logger.info(f"Downloaded {len(img_bytes)} bytes from {url}")
+            
+            # Get the filename and extension
+            path = urlparse(url).path
+            filename = os.path.basename(path) if path else "image.png"
+            ext = os.path.splitext(filename)[1].lower()
+            if ext not in ['.png', '.jpeg', '.jpg', '.webp']:
+                ext = ".png"
+            
+            # Process the image with PIL to PNG format
+            img = Image.open(io.BytesIO(img_bytes))
+            output_buffer = io.BytesIO()
+            img.save(output_buffer, format="PNG")
+            output_buffer.seek(0)
+            
+            # Write to temporary file and use for API call
+            with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
+                tmp_path = tmp.name
+                tmp.write(output_buffer.getvalue())
+                tmp.close()
+            
+            # Make API call with the temporary file
+            logger.info(f"Calling OpenAI images.edit API with model gpt-image-1...")
+            with open(tmp_path, "rb") as image_file:
+                response = self.client.images.edit(
+                    model="gpt-image-1",
+                    image=image_file,
+                    prompt=prompt,
+                    n=1
+                )
+            
+            # Clean up temporary file
+            os.unlink(tmp_path)
+            logger.info("OpenAI images.edit call successful")
+            
+        else:
+            # Generate image from text
+            generate_model = "gpt-image-1"
+            logger.info(f"Performing text-to-image generation using {generate_model} model")
+            response = self.client.images.generate(
+                model=generate_model,
                 prompt=prompt,
                 size=Height_width,
                 quality=quality,
                 n=1,
             )
-        except Exception as error:
-            if "content_policy_violation" in str(error):
-                raise Exception(IMAGE_GENERATION_ERROR, NSFW_CONTENT_DETECT_ERROR_MSG)
-            else:
-                raise Exception(str(error))
+            logger.info("OpenAI images.generate call successful")
 
-        if response.data and len(response.data) > 0 and response.data[0].b64_json:
-            base64_image = response.data[0].b64_json
-            # Optionally add prefix if needed by prepare_response later
-            # if not base64_image.startswith('data:image/png;base64,'):
-            #     base64_image = f'data:image/png;base64,{base64_image}'
-            return base64_image
-        response = make_request(response.data[0].url, "GET")
-        return response.content
-
+        # Process the response
+        output_data = response.data[0]
+        
+        # Return the appropriate data format
+        if output_data.b64_json:
+            logger.debug("Received b64_json response from OpenAI")
+            return output_data.b64_json
+        else:
+            logger.debug(f"Received URL response from OpenAI: {output_data.url}")
+            logger.info(f"Fetching final image from result URL: {output_data.url}")
+            final_response = requests.get(output_data.url, timeout=60)
+            final_response.raise_for_status()
+            logger.info(f"Fetched {len(final_response.content)} bytes from result URL")
+            return final_response.content
+        
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
         """
@@ -212,6 +369,7 @@ class GPTText2Image(IService):
                         parameters.prompt,
                         Height_width,
                         parameters.quality,
+                        parameters.images
                     )
                     for _ in range(parameters.batch)
                 ]
