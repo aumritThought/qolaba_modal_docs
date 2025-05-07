@@ -181,7 +181,6 @@ def create_task(parameters: dict) -> dict:
     error_details = None
     error_type = INTERNAL_ERROR
 
-    print(parameters)
     try:
         # --- Validate Input ---
         try:
@@ -401,7 +400,7 @@ def task_gen(parameters: APIInput) -> dict:
         dict: Either a task ID and status (async) or complete task results (sync)
     """
     if parameters.celery == True:
-        print(parameters.model_dump())
+        # print(parameters.model_dump())
         task: AsyncResult = create_task.delay(parameters.model_dump())
 
         task_response = APITaskResponse(
