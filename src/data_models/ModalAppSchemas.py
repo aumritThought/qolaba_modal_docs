@@ -96,7 +96,14 @@ class RunwayImage2VideoParameters(BaseModel):
     file_url: Optional[list[PromptImage]] = None
     batch: int = Query(ge=MIN_BATCH, le=MAX_BATCH)
     duration: Literal[5, 10] = 5
-    aspect_ratio: Literal["1280:768", "768:1280"] = "1280:768"
+    aspect_ratio: Literal[
+        "1280:720",
+        "720:1280",
+        "960:960",
+        "1104:832",
+        "832:1104",
+        "1584:672"
+    ] = "1280:720"
 
 
 class Kling15Video(BaseModel):
