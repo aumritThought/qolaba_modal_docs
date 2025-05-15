@@ -48,6 +48,7 @@ class LumaVideo(IService):
                 prompt=parameters.prompt,
                 aspect_ratio=parameters.aspect_ratio,
                 loop=parameters.loop,
+                model=parameters.model
             )
             completed = False
             while not completed:
@@ -83,6 +84,7 @@ class LumaVideo(IService):
                 aspect_ratio=parameters.aspect_ratio,
                 loop=parameters.loop,
                 keyframes=keyframes,
+                model=parameters.model
             )
             completed = False
             while not completed:

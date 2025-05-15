@@ -88,6 +88,7 @@ class LumaLabsVideoParameters(BaseModel):
     loop: Optional[bool] = False
     file_url: Optional[list[PromptImage]] = None
     batch: int = Query(ge=MIN_BATCH, le=MAX_BATCH)
+    model: str = "ray-2"
 
 
 class RunwayImage2VideoParameters(BaseModel):
