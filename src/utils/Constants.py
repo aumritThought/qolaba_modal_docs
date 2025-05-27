@@ -202,9 +202,6 @@ MUSIC_GEN_API = "https://api.musicfy.lol/v1/generate-music"
 
 # Ideogram url
 IDEOGRAM_GENERATE_URL = "https://api.ideogram.ai/v1/ideogram-v3/generate"
-# IDEOGRAM_EDIT_URL = "https://api.ideogram.ai/edit"
-# IDEOGRAM_REMIX_URL = "https://api.ideogram.ai/remix"
-
 IDEOGRAM_EDIT_URL = "https://api.ideogram.ai/v1/ideogram-v3/edit"
 IDEOGRAM_REMIX_URL = "https://api.ideogram.ai/v1/ideogram-v3/remix"
 
