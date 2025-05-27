@@ -348,11 +348,13 @@ def create_task(parameters: dict) -> dict:
         task_status = "FAILED"
         # Try to get specific error details if available
         if hasattr(e, "args") and len(e.args) >= 2:
+            # This handles exceptions intentionally raised as Exception(TYPE, MESSAGE)
             error_type = str(e.args[0])
             error_details = str(e.args[1])
         else:
-            error_type = type(e).__name__
-            error_details = str(e)
+            # For all other unexpected exceptions, use INTERNAL_ERROR for both type and details
+            error_type = INTERNAL_ERROR
+            error_details = INTERNAL_ERROR # Use the string value "Internal Error"
 
     # --- Construct Final Response ---
     final_output_dict = {}
