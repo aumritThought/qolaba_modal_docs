@@ -201,19 +201,30 @@ MIN_FPS = 5
 MUSIC_GEN_API = "https://api.musicfy.lol/v1/generate-music"
 
 # Ideogram url
-IDEOGRAM_GENERATE_URL = "https://api.ideogram.ai/generate"
-IDEOGRAM_EDIT_URL = "https://api.ideogram.ai/edit"
-IDEOGRAM_REMIX_URL = "https://api.ideogram.ai/remix"
+IDEOGRAM_GENERATE_URL = "https://api.ideogram.ai/v1/ideogram-v3/generate"
+# IDEOGRAM_EDIT_URL = "https://api.ideogram.ai/edit"
+# IDEOGRAM_REMIX_URL = "https://api.ideogram.ai/remix"
+
+IDEOGRAM_EDIT_URL = "https://api.ideogram.ai/v1/ideogram-v3/edit"
+IDEOGRAM_REMIX_URL = "https://api.ideogram.ai/v1/ideogram-v3/remix"
+
+
 IDEOGRAM_ASPECT_RATIO = {
-    "9:16": "ASPECT_9_16",
-    "16:9": "ASPECT_16_9",
-    "3:2": "ASPECT_3_2",
-    "2:3": "ASPECT_2_3",
-    "4:3": "ASPECT_4_3",
-    "3:4": "ASPECT_3_4",
-    "1:1": "ASPECT_1_1",
-    "1:3": "ASPECT_1_3",
-    "3:1": "ASPECT_3_1",
+    "1:3": "1x3",
+    "3:1": "3x1",
+    "1:2": "1x2",
+    "2:1": "2x1",
+    "9:16": "9x16",
+    "16:9": "16x9",
+    "10:16": "10x16",
+    "16:10": "16x10",
+    "2:3": "2x3",
+    "3:2": "3x2",
+    "3:4": "3x4",
+    "4:3": "4x3",
+    "4:5": "4x5",
+    "5:4": "5x4",
+    "1:1": "1x1",
 }
 
 # Imagegen aspect ratios

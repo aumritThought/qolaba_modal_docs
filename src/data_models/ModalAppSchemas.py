@@ -126,6 +126,7 @@ class IdeoGramText2ImageParameters(BaseModel):
     prompt: Optional[str] = " "
     negative_prompt: Optional[str] = " "
     aspect_ratio: Optional[str] = "1:1"
+    # aspect_ratio: Optional[str] = "1x1"
     style_type: Literal[
         "AUTO", "GENERAL", "REALISTIC", "DESIGN", "RENDER_3D", "ANIME"
     ] = "AUTO"
