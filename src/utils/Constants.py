@@ -758,7 +758,7 @@ STAGING_API = f"https://storage.googleapis.com/{BUCKET_NAME}/"
 
 
 # Error Configuration
-INTERNAL_ERROR = "We could not process your request, please try again after some time"
+INTERNAL_ERROR = "Internal Error"
 
 ELEVENLABS_ERROR = "Elevenlabs Error"
 VOICE_ID_ERROR_MSG = "Voice not supported. Please try a different one."
