@@ -1,11 +1,11 @@
 import concurrent.futures
 import os
+from typing import List # Added List import
 import google.auth
 import google.auth.transport.requests
 import vertexai
 from vertexai.preview.vision_models import ImageGenerationModel
-from src.data_models.ModalAppSchemas import Veo2Parameters
-from src.data_models.ModalAppSchemas import IdeoGramText2ImageParameters
+from src.data_models.ModalAppSchemas import Veo2Parameters, IdeoGramText2ImageParameters, Lyria2MusicGenerationParameters # Added Lyria2MusicGenerationParameters
 from src.FastAPIServer.services.IService import IService
 from src.utils.Constants import (
     IMAGEGEN_ASPECT_RATIOS,
@@ -15,6 +15,7 @@ from src.utils.Constants import (
     google_credentials_info,
     OUTPUT_VIDEO_EXTENSION,
     VIDEO_GENERATION_ERROR,
+    OUTPUT_AUDIO_EXTENSION, # Added OUTPUT_AUDIO_EXTENSION
 )
 from src.utils.Globals import (
     convert_to_aspect_ratio,
@@ -574,3 +575,186 @@ class VeoRouterService(IService):
                 )
                 # Raise generic error after both primary and fallback failed internally
                 raise Exception(VIDEO_GENERATION_ERROR) from fallback_error
+
+
+class Lyria2MusicGeneration(IService):
+    def __init__(self) -> None:
+        super().__init__()
+        self.project_id = None
+        self.credentials = None
+        self.location = "us-central1"  # As per notebook
+        self.model_id = "lyria-002"  # As per notebook
+        self.music_model_endpoint = None
+
+        logger.info(
+            f"Initializing Lyria2MusicGeneration Service for project and location: {self.location}..."
+        )
+        try:
+            scopes = ["https://www.googleapis.com/auth/cloud-platform"]
+            if google_credentials_info:
+                self.credentials, self.project_id = (
+                    google.auth.load_credentials_from_dict(
+                        google_credentials_info, scopes=scopes
+                    )
+                )
+            else:
+                logger.warning(
+                    "google_credentials_info not found in Constants, Lyria2MusicGeneration might fail to determine project ID automatically."
+                )
+                self.credentials, self.project_id = google.auth.default(scopes=scopes)
+            
+            if not self.project_id:
+                self.project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
+            if not self.project_id:
+                self.project_id = os.getenv("GCP_PROJECT_ID")
+            if not self.project_id:
+                # Fallback similar to ImageGenText2Image to avoid raising new ValueError
+                self.project_id = os.getenv("GCP_PROJECT_ID", "marine-potion-404413") 
+                logger.warning(f"Lyria2MusicGeneration falling back to default/env project_id: {self.project_id}")
+
+            self.music_model_endpoint = f"https://{self.location}-aiplatform.googleapis.com/v1/projects/{self.project_id}/locations/{self.location}/publishers/google/models/{self.model_id}:predict"
+            
+            # Refresh credentials if they were loaded
+            if self.credentials:
+                auth_req = google.auth.transport.requests.Request()
+                try:
+                    self.credentials.refresh(auth_req)
+                except Exception as e:
+                    # Log error but don't necessarily fail init, token fetching will handle later
+                    logger.error(f"Failed to refresh credentials during Lyria2MusicGeneration init: {e}")
+            
+            logger.info(
+                f"Lyria2MusicGeneration Initialized: Project={self.project_id}, Endpoint='{self.music_model_endpoint}'"
+            )
+        except Exception as e:
+            logger.exception("Lyria2MusicGeneration initialization failed.")
+            self.music_model_endpoint = None # Ensure endpoint is None if init fails
+            raise Exception(VIDEO_GENERATION_ERROR) from e
+
+    def _refresh_credentials(self):
+        if self.credentials and hasattr(self.credentials, "valid") and not self.credentials.valid and hasattr(self.credentials, "refresh"):
+            try:
+                auth_req = google.auth.transport.requests.Request()
+                self.credentials.refresh(auth_req)
+            except Exception as e:
+                logger.exception("Lyria2MusicGeneration: Failed to refresh credentials during operation.")
+                # Do not raise here, let _get_access_token handle failure to get token
+
+    def _get_access_token(self) -> str:
+        if not self.credentials:
+            # This case should ideally be caught by __init__ failing if creds are essential
+            logger.error("Lyria2MusicGeneration: Credentials not initialized before token fetch.")
+            raise RuntimeError("Lyria2MusicGeneration: Credentials not initialized.")
+        
+        self._refresh_credentials() # Attempt refresh before getting token
+        
+        try:
+            # Re-fetch token directly using credentials, similar to notebook's send_request_to_google_api
+            # This ensures the token is fresh if self.credentials.token was stale or None
+            if not self.credentials.token: # Or if self.credentials.expired:
+                 auth_req = google.auth.transport.requests.Request()
+                 self.credentials.refresh(auth_req)
+
+            token = self.credentials.token
+            if not token:
+                logger.error("Lyria2MusicGeneration: Failed to get access token after refresh.")
+                raise ValueError("Lyria2MusicGeneration: Failed to get access token.")
+            return token
+        except Exception as e:
+            logger.exception("Lyria2MusicGeneration: Exception during get_access_token.")
+            raise ValueError("Lyria2MusicGeneration: Failed to get access token.") from e
+
+    def make_api_request(self, parameters: Lyria2MusicGenerationParameters) -> List[bytes]:
+        if not self.music_model_endpoint:
+            # This implies __init__ failed.
+            logger.error("Lyria2MusicGeneration.make_api_request called when service not initialized.")
+            raise Exception(VIDEO_GENERATION_ERROR) 
+
+        headers = {
+            "Authorization": f"Bearer {self._get_access_token()}",
+            "Content-Type": "application/json; charset=utf-8",
+        }
+
+        instance_payload = {"prompt": parameters.prompt}
+        if parameters.negative_prompt is not None: # Check for None explicitly
+            instance_payload["negative_prompt"] = parameters.negative_prompt
+        if parameters.sample_count is not None:
+            instance_payload["sample_count"] = parameters.sample_count
+        elif parameters.seed is not None: # elif, as they are mutually exclusive per schema
+            instance_payload["seed"] = parameters.seed
+        # If neither sample_count nor seed is provided, the API might have a default (e.g., sample_count=1)
+        
+        payload = {"instances": [instance_payload], "parameters": {}} # Parameters is an empty dict for Lyria
+
+        try:
+            logger.debug(f"Lyria2MusicGeneration Request Payload: {json.dumps(payload, indent=2)}")
+            response = requests.post(
+                self.music_model_endpoint, headers=headers, json=payload, timeout=180 # Increased timeout for music gen
+            )
+            response.raise_for_status() # Raises HTTPError for bad responses (4XX or 5XX)
+            response_json = response.json()
+            
+            predictions = response_json.get("predictions") # Do not default to [], check if key exists
+            if predictions is None: # Check if 'predictions' key is missing or None
+                logger.error("Lyria2 API response missing 'predictions' key.")
+                raise Exception(VIDEO_GENERATION_ERROR) 
+            if not isinstance(predictions, list) or not predictions: # Check if it's an empty list or not a list
+                logger.error(f"Lyria2 API returned no predictions or invalid format: {predictions}")
+                raise Exception(VIDEO_GENERATION_ERROR)
+
+            audio_bytes_list = []
+            for pred_item in predictions:
+                if isinstance(pred_item, dict) and "bytesBase64Encoded" in pred_item:
+                    audio_bytes_list.append(base64.b64decode(pred_item["bytesBase64Encoded"]))
+                else:
+                    logger.warning(f"Prediction item missing bytesBase64Encoded or not a dict: {pred_item}")
+            
+            if not audio_bytes_list: # If loop completed but list is still empty
+                logger.error("No valid audio data found in predictions.")
+                raise Exception(VIDEO_GENERATION_ERROR)
+
+            return audio_bytes_list
+        except requests.exceptions.RequestException as e: # Covers network errors, timeouts, HTTPError
+            logger.exception(f"Lyria2MusicGeneration API request failed: {e}")
+            raise Exception(VIDEO_GENERATION_ERROR) from e
+        except (json.JSONDecodeError, KeyError, TypeError, base64.binascii.Error) as e: # Specific parsing/data errors
+            logger.exception(f"Error processing Lyria2MusicGeneration response: {e}")
+            raise Exception(VIDEO_GENERATION_ERROR) from e
+        except Exception as e: # Catch-all for other unexpected errors
+            logger.exception(f"Unexpected error in Lyria2MusicGeneration.make_api_request: {e}")
+            raise Exception(VIDEO_GENERATION_ERROR) from e
+
+    @timing_decorator
+    def remote(self, parameters: dict) -> dict:
+        try:
+            # Validate input parameters using the Pydantic model
+            validated_params = Lyria2MusicGenerationParameters(**parameters)
+        except ValidationError as e:
+            # Log and re-raise as a ValueError, consistent with other services
+            logger.error(f"Input validation failed for Lyria2MusicGeneration: {e}", exc_info=False) # exc_info=False for cleaner logs on validation
+            raise ValueError(f"Invalid input parameters: {e}") from e
+        
+        try:
+            # Call the internal method to make the API request
+            audio_results_bytes_list = self.make_api_request(validated_params)
+            
+            # For audio, NSFW content check might not be applicable or is handled by API; assume False
+            has_nsfw_content = [False] * len(audio_results_bytes_list)
+
+            # Use the global prepare_response utility
+            return prepare_response(
+                result=audio_results_bytes_list,
+                Has_NSFW_content=has_nsfw_content,
+                time_data=0,  # timing_decorator will populate this at a higher level if used on remote
+                runtime=0,    # timing_decorator will populate this
+                extension=OUTPUT_AUDIO_EXTENSION,
+            )
+        except ValueError as ve: # Catch validation errors re-raised from this remote or make_api_request
+            raise ve # Re-raise validation errors directly
+        except Exception as e:
+            # Log other errors and wrap them in a generic Exception
+            logger.error(
+                f"Error during Lyria2MusicGeneration processing: {type(e).__name__} - {e}",
+                exc_info=True, # Include full traceback for unexpected errors
+            )
+            raise Exception(VIDEO_GENERATION_ERROR) from e
