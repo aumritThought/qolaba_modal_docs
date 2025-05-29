@@ -1,4 +1,4 @@
-from typing import Any, List, Literal, Optional
+from typing import Any, List, Literal, Optional, Dict # Added Dict
 
 from fastapi import Query
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -660,3 +660,22 @@ class Kling2MasterParameters(BaseModel):
         raise TypeError(
             f"Duration must be an integer {allowed_ints} or string {allowed_strs}"
         )
+
+
+class Lyria2MusicGenerationParameters(BaseModel):
+    prompt: str
+    negative_prompt: Optional[str] = None
+    sample_count: Optional[int] = None
+    seed: Optional[int] = None
+
+    @model_validator(mode="after")
+    def check_exclusive_fields(self):
+        if self.sample_count is not None and self.seed is not None:
+            raise ValueError("sample_count and seed cannot be set at the same time.")
+        if self.sample_count is None and self.seed is None:
+            # Default to sample_count = 1 if neither is provided, as per notebook examples
+            # However, the notebook sometimes calls with only prompt.
+            # The API might default sample_count or handle it.
+            # For now, let's not enforce one if not present, to match notebook flexibility.
+            pass
+        return self
