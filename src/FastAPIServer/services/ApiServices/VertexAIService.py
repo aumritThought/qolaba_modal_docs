@@ -5,7 +5,7 @@ import google.auth
 import google.auth.transport.requests
 import vertexai
 from vertexai.preview.vision_models import ImageGenerationModel
-from src.data_models.ModalAppSchemas import Veo2Parameters, IdeoGramText2ImageParameters, Lyria2MusicGenerationParameters # Added Lyria2MusicGenerationParameters
+from src.data_models.ModalAppSchemas import Veo2Parameters, IdeoGramText2ImageParameters, Lyria2MusicGenerationParameters
 from src.FastAPIServer.services.IService import IService
 from src.utils.Constants import (
     IMAGEGEN_ASPECT_RATIOS,
@@ -15,7 +15,7 @@ from src.utils.Constants import (
     google_credentials_info,
     OUTPUT_VIDEO_EXTENSION,
     VIDEO_GENERATION_ERROR,
-    OUTPUT_AUDIO_EXTENSION, # Added OUTPUT_AUDIO_EXTENSION
+    OUTPUT_AUDIO_EXTENSION,
 )
 from src.utils.Globals import (
     convert_to_aspect_ratio,
