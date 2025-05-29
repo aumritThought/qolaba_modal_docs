@@ -652,6 +652,11 @@ app_dict = {
         "init_parameters": {},
         "model_name": "Elven_labs_audio",
     },
+    "ap-Z8fQpL2jT1bGcXwK9vYh": {
+        "app_id": "lyria2musicgeneration_api",
+        "init_parameters": {},
+        "model_name": "Google_Lyra_music",
+    },
     "ap-a124dfigzcUFbggGAgchrr": {
         "app_id": "musicgen_api",
         "init_parameters": {},

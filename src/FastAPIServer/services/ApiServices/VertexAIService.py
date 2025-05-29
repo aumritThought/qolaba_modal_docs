@@ -728,11 +728,11 @@ class Lyria2MusicGeneration(IService):
     def remote(self, parameters: dict) -> dict:
         try:
             # Validate input parameters using the Pydantic model
-            validated_params = Lyria2MusicGenerationParameters(**parameters)
+            validated_params = Lyria2MusicGenerationParameters(**parameters['parameters'])
         except ValidationError as e:
             # Log and re-raise as a ValueError, consistent with other services
             logger.error(f"Input validation failed for Lyria2MusicGeneration: {e}", exc_info=False) # exc_info=False for cleaner logs on validation
-            raise ValueError(f"Invalid input parameters: {e}") from e
+            # raise ValueError(f"Invalid input parameters: {e}") from e
         
         try:
             # Call the internal method to make the API request
