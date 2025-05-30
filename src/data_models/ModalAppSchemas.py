@@ -667,6 +667,7 @@ class Lyria2MusicGenerationParameters(BaseModel):
     negative_prompt: Optional[str] = None
     sample_count: Optional[int] = None
     seed: Optional[int] = None
+    batch: int = Query(ge=MIN_BATCH, le=MAX_BATCH)
 
     @model_validator(mode="after")
     def check_exclusive_fields(self):

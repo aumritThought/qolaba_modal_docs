@@ -727,34 +727,47 @@ class Lyria2MusicGeneration(IService):
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
         try:
-            # Validate input parameters using the Pydantic model
-            validated_params = Lyria2MusicGenerationParameters(**parameters['parameters'])
+            # User's fix for nested parameters, assuming 'parameters' key exists
+            # and Lyria2MusicGenerationParameters now includes a 'batch' field (e.g., batch: int = 1)
+            actual_params_for_lyria = parameters.get('parameters', parameters) 
+            validated_params = Lyria2MusicGenerationParameters(**actual_params_for_lyria)
         except ValidationError as e:
-            # Log and re-raise as a ValueError, consistent with other services
-            logger.error(f"Input validation failed for Lyria2MusicGeneration: {e}", exc_info=False) # exc_info=False for cleaner logs on validation
-            # raise ValueError(f"Invalid input parameters: {e}") from e
+            logger.error(f"Input validation failed for Lyria2MusicGeneration: {e}", exc_info=False)
+            raise ValueError(f"Invalid input parameters: {e}") from e
         
         try:
-            # Call the internal method to make the API request
-            audio_results_bytes_list = self.make_api_request(validated_params)
+            all_audio_results_bytes_list = []
             
-            # For audio, NSFW content check might not be applicable or is handled by API; assume False
-            has_nsfw_content = [False] * len(audio_results_bytes_list)
+            # Assuming validated_params.batch exists and is an int (e.g., default=1 in Pydantic model)
+            batch_count = validated_params.batch if hasattr(validated_params, 'batch') and isinstance(validated_params.batch, int) and validated_params.batch > 0 else 1
 
-            # Use the global prepare_response utility
+            if batch_count > 1:
+                with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor: # Using 8 as in ImageGen
+                    futures = [
+                        executor.submit(self.make_api_request, validated_params)
+                        for _ in range(batch_count)
+                    ]
+                    results_from_futures = [future.result() for future in futures]
+                    
+                    for single_call_results_list in results_from_futures:
+                        all_audio_results_bytes_list.extend(single_call_results_list)
+            else: # batch_count is 1
+                all_audio_results_bytes_list = self.make_api_request(validated_params)
+            
+            has_nsfw_content = [False] * len(all_audio_results_bytes_list)
+
             return prepare_response(
-                result=audio_results_bytes_list,
+                result=all_audio_results_bytes_list,
                 Has_NSFW_content=has_nsfw_content,
                 time_data=0,  # timing_decorator will populate this at a higher level if used on remote
                 runtime=0,    # timing_decorator will populate this
-                extension=OUTPUT_AUDIO_EXTENSION,
+                extension=OUTPUT_AUDIO_EXTENSION, # Ensured correct extension
             )
         except ValueError as ve: # Catch validation errors re-raised from this remote or make_api_request
-            raise ve # Re-raise validation errors directly
+            raise ve 
         except Exception as e:
-            # Log other errors and wrap them in a generic Exception
             logger.error(
                 f"Error during Lyria2MusicGeneration processing: {type(e).__name__} - {e}",
-                exc_info=True, # Include full traceback for unexpected errors
+                exc_info=True, 
             )
             raise Exception(VIDEO_GENERATION_ERROR) from e
