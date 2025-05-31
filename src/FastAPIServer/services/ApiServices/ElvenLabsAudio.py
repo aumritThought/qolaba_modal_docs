@@ -111,8 +111,11 @@ class ElvenLabsAudio(IService):
                 ),
             )
 
-            audio = self.client.generate(
-                text=parameters.prompt, voice=voice, model="eleven_multilingual_v2"
+            audio = self.client.text_to_speech.convert(
+                voice_id=voice.voice_id,
+                text=parameters.prompt,
+                model_id="eleven_multilingual_v2",
+                voice_settings=voice.settings
             )
 
         audio = b"".join(audio)
