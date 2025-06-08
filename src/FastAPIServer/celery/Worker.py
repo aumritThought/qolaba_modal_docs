@@ -352,9 +352,9 @@ def create_task(parameters: dict) -> dict:
             error_type = str(e.args[0])
             error_details = str(e.args[1])
         else:
-            # For all other unexpected exceptions, use INTERNAL_ERROR for both type and details
+            # For all other unexpected exceptions, use INTERNAL_ERROR for type and actual error for details
             error_type = INTERNAL_ERROR
-            error_details = INTERNAL_ERROR # Use the string value "Internal Error"
+            error_details = str(e) # Capture the actual error message
 
     # --- Construct Final Response ---
     final_output_dict = {}
