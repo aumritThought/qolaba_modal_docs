@@ -519,62 +519,62 @@ class VeoRouterService(IService):
         fallback_service = None
         primary_service_name = "UnknownPrimaryService"  # Default name
         fallback_service_name = "UnknownFallbackService"  # Default name
-        try:
-            primary_service = self._get_primary_service()
-            # Get name safely after ensuring instance exists
-            if primary_service:
-                primary_service_name = primary_service.__class__.__name__
-            logger.info(f"VeoRouter: Attempting primary: {primary_service_name}")
-            return primary_service.remote(parameters)
+        # try:
+        primary_service = self._get_primary_service()
+        # Get name safely after ensuring instance exists
+        if primary_service:
+            primary_service_name = primary_service.__class__.__name__
+        logger.info(f"VeoRouter: Attempting primary: {primary_service_name}")
+        return primary_service.remote(parameters)
 
-        except ValueError as validation_error:
-            # Use the captured primary_service_name
-            logger.error(
-                f"VeoRouter: Input validation failed in primary service {primary_service_name}: {validation_error}",
-                exc_info=False,
-            )
-            raise validation_error  # Re-raise validation errors directly
+        # except ValueError as validation_error:
+        #     # Use the captured primary_service_name
+        #     logger.error(
+        #         f"VeoRouter: Input validation failed in primary service {primary_service_name}: {validation_error}",
+        #         exc_info=False,
+        #     )
+        #     raise validation_error  # Re-raise validation errors directly
 
-        except Exception as primary_error:
-            # Use the captured primary_service_name
-            logger.warning(
-                f"VeoRouter: Primary service {primary_service_name} failed: {type(primary_error).__name__} - {primary_error}. Attempting fallback."
-            )
+        # except Exception as primary_error:
+        #     # Use the captured primary_service_name
+        #     logger.warning(
+        #         f"VeoRouter: Primary service {primary_service_name} failed: {type(primary_error).__name__} - {primary_error}. Attempting fallback."
+        #     )
 
-            # Check specifically if it was a validation error mistakenly caught here
-            if isinstance(
-                primary_error, ValueError
-            ) and "Invalid input parameters" in str(primary_error):
-                logger.error(
-                    f"VeoRouter: Primary service {primary_service_name} failed due to validation error, not falling back: {primary_error}"
-                )
-                raise primary_error  # Re-raise the validation error
+        #     # Check specifically if it was a validation error mistakenly caught here
+        #     if isinstance(
+        #         primary_error, ValueError
+        #     ) and "Invalid input parameters" in str(primary_error):
+        #         logger.error(
+        #             f"VeoRouter: Primary service {primary_service_name} failed due to validation error, not falling back: {primary_error}"
+        #         )
+        #         raise primary_error  # Re-raise the validation error
 
-            # Proceed with fallback for other exceptions
-            try:
-                fallback_service = self._get_fallback_service()
-                # Get name safely after ensuring instance exists
-                if fallback_service:
-                    fallback_service_name = fallback_service.__class__.__name__
-                logger.info(f"VeoRouter: Attempting fallback: {fallback_service_name}")
-                return fallback_service.remote(parameters)
+        #     # Proceed with fallback for other exceptions
+        #     try:
+        #         fallback_service = self._get_fallback_service()
+        #         # Get name safely after ensuring instance exists
+        #         if fallback_service:
+        #             fallback_service_name = fallback_service.__class__.__name__
+        #         logger.info(f"VeoRouter: Attempting fallback: {fallback_service_name}")
+        #         return fallback_service.remote(parameters)
 
-            except ValueError as fallback_validation_error:
-                # Use the captured fallback_service_name
-                logger.error(
-                    f"VeoRouter: Input validation failed in fallback service {fallback_service_name}: {fallback_validation_error}",
-                    exc_info=False,
-                )
-                raise fallback_validation_error  # Re-raise fallback validation errors directly
+        #     except ValueError as fallback_validation_error:
+        #         # Use the captured fallback_service_name
+        #         logger.error(
+        #             f"VeoRouter: Input validation failed in fallback service {fallback_service_name}: {fallback_validation_error}",
+        #             exc_info=False,
+        #         )
+        #         raise fallback_validation_error  # Re-raise fallback validation errors directly
 
-            except Exception as fallback_error:
-                # Use the captured fallback_service_name
-                logger.error(
-                    f"VeoRouter: Fallback service {fallback_service_name} also failed: {type(fallback_error).__name__} - {fallback_error}",
-                    exc_info=True,
-                )
-                # Raise generic error after both primary and fallback failed internally
-                raise Exception(VIDEO_GENERATION_ERROR) from fallback_error
+        #     except Exception as fallback_error:
+        #         # Use the captured fallback_service_name
+        #         logger.error(
+        #             f"VeoRouter: Fallback service {fallback_service_name} also failed: {type(fallback_error).__name__} - {fallback_error}",
+        #             exc_info=True,
+        #         )
+        #         # Raise generic error after both primary and fallback failed internally
+        #         raise Exception(VIDEO_GENERATION_ERROR) from fallback_error
 
 
 class Lyria2MusicGeneration(IService):
