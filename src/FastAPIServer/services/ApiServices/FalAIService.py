@@ -17,6 +17,7 @@ from src.data_models.ModalAppSchemas import (
     RecraftV3Text2ImageParameters,
     SDXLText2ImageParameters,
     Veo2Parameters,
+    FluxKontextMaxMultiInputParameters
 )
 
 from src.FastAPIServer.services.IService import IService
@@ -1474,3 +1475,90 @@ class Kling2Master(IService):
             runtime=0,
             extension=OUTPUT_VIDEO_EXTENSION,
         )
+
+
+class FalAIFluxProKontextMaxMulti(IService):
+    def __init__(self) -> None:
+        super().__init__()
+        logger.info("FalAIFluxProKontextMaxMulti Service Initialized")
+
+    def make_api_request(self, parameters: FluxKontextMaxMultiInputParameters) -> bytes:
+        payload = {
+            "prompt": parameters.prompt,
+            "image_urls": parameters.image_urls,
+            "num_images": 1,
+            "output_format": "jpeg",
+            "sync_mode": True,
+            "safety_tolerance": "2",
+            "guidance_scale": 3.5, 
+        }
+        if parameters.aspect_ratio:
+            payload["aspect_ratio"] = parameters.aspect_ratio
+        
+        logger.debug(f"FalAIFluxProKontextMaxMulti sending to Fal AI: {payload}")
+        try:
+            result = fal_client.subscribe(
+                "fal-ai/flux-pro/kontext/max/multi",
+                arguments=payload,
+                with_logs=False,
+            )
+            logger.debug(f"FalAIFluxProKontextMaxMulti received from Fal AI: {result}")
+        except Exception as e:
+            logger.error(f"Fal AI API request failed for flux-pro/kontext/max/multi: {str(e)}")
+            raise Exception(IMAGE_GENERATION_ERROR, f"Fal AI API request failed: {str(e)}") from e
+        
+        if not result or not result.get("images") or not isinstance(result["images"], list) or not result["images"]:
+            logger.error(f"Invalid or empty 'images' list in Fal AI response: {result}")
+            raise Exception(IMAGE_GENERATION_ERROR, "Fal AI returned no valid image information.")
+
+        image_info = result["images"][0]
+        image_url = image_info.get("url")
+
+        if not image_url:
+            logger.error(f"No URL in image info from Fal AI: {image_info}")
+            raise Exception(IMAGE_GENERATION_ERROR, "Fal AI image info missing URL.")
+
+        if image_url.startswith("data:image"):
+            try:
+                header, encoded = image_url.split(",", 1)
+                image_data = base64.b64decode(encoded)
+            except Exception as e:
+                logger.error(f"Failed to decode base64 image from Fal AI: {str(e)}")
+                raise Exception(IMAGE_GENERATION_ERROR, "Failed to decode base64 image.") from e
+        else:
+            try:
+                image_response = make_request(image_url, "GET", timeout=60)
+                image_response.raise_for_status()
+                image_data = image_response.content
+            except Exception as e:
+                logger.error(f"Failed to download image from URL {image_url}: {str(e)}")
+                raise Exception(IMAGE_GENERATION_ERROR, f"Failed to download image from URL: {image_url}") from e
+        
+        return image_data
+
+    @timing_decorator
+    def remote(self, parameters: dict) -> dict:
+        try:
+            validated_model_params = FluxKontextMaxMultiInputParameters(**parameters)
+        except ValidationError as e:
+            logger.error(f"Input validation failed for FalAIFluxProKontextMaxMulti model parameters: {str(e)}")
+            raise Exception("Input Validation Error for model parameters", str(e)) from e
+
+        results_data = []
+        with concurrent.futures.ThreadPoolExecutor(max_workers=validated_model_params.batch) as executor:
+            futures = [
+                executor.submit(self.make_api_request, validated_model_params)
+                for _ in range(validated_model_params.batch)
+            ]
+            for future in concurrent.futures.as_completed(futures):
+                try:
+                    results_data.append(future.result())
+                except Exception as e:
+                    logger.error(f"Error in FalAIFluxProKontextMaxMulti batch processing: {str(e)}")
+                    raise 
+
+        has_nsfw_content = [False] * len(results_data)
+        current_output_extension = ".jpeg"
+
+        return prepare_response(results_data, has_nsfw_content, 0, 0, current_output_extension)
+

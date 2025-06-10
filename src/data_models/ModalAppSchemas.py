@@ -680,3 +680,26 @@ class Lyria2MusicGenerationParameters(BaseModel):
             # For now, let's not enforce one if not present, to match notebook flexibility.
             pass
         return self
+
+
+class FluxKontextMaxMultiInputParameters(BaseModel):
+    prompt: str = Field(...)
+    image_urls: List[str] = Field(
+        ...,
+        min_length=1,
+        max_length=4
+    )
+    batch: int = Field(default=1, ge=MIN_BATCH, le=MAX_BATCH)
+    aspect_ratio: Optional[str] = Field(default="1:1")
+
+    class Config:
+        schema_extra = {
+            "examples": [
+                {
+                    "prompt": "A majestic lion in the savannah, blended with a starry night sky.",
+                    "image_urls": ["https://example.com/lion.jpg", "https://example.com/sky.jpg"],
+                    "batch": 1,
+                    "aspect_ratio": "16:9"
+                }
+            ]
+        }

@@ -722,6 +722,11 @@ app_dict = {
         "init_parameters": {},
         "model_name": "OOTDiffusion_image2image",
     },
+    "ap-tK7gR4jP9sWbC1mNfE8uVzH2": {
+        "app_id": "falaifluxprokontextmaxmulti_api",
+        "init_parameters": {},
+        "model_name": "falaifluxprokontextmaxmulti_image2image",
+    },
 }
 
 COPYRIGHT_DETECTION_FUNCTION_CALLING_SCHEMA = {
