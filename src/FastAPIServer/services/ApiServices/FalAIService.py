@@ -17,7 +17,8 @@ from src.data_models.ModalAppSchemas import (
     RecraftV3Text2ImageParameters,
     SDXLText2ImageParameters,
     Veo2Parameters,
-    FluxKontextMaxMultiInputParameters
+    FluxKontextMaxMultiInputParameters,
+    Veo3Parameters
 )
 
 from src.FastAPIServer.services.IService import IService
@@ -1228,16 +1229,102 @@ class Veo2(IService):
             logger.error(f"Veo2 service technical error: {e}")
 
             raise Exception(VIDEO_GENERATION_ERROR, error_msg)
+        
+class Veo3(IService):
+    def __init__(self) -> None:
+        super().__init__()
+        logger.info("Veo3 Service Initialized")
+
+    def make_api_request(self, parameters: Veo3Parameters) -> bytes:
+        """Sends a request to the Fal AI Veo3 API and retrieves the result."""
+        logger.info(f"Veo3 Parameters received: {parameters}")
+
+        
+        model_id = "fal-ai/veo3"  # Check Fal docs for exact ID
+        arguments = {
+            "prompt": parameters.prompt,
+            "duration": parameters.duration,
+            "aspect_ratio": parameters.aspect_ratio,
+            "negative_prompt": parameters.negative_prompt,
+            "generate_audio": parameters.generate_audio,
+        }
+        logger.warning("Veo3 called without file_url, attempting text-to-video.")
+
+        logger.info(f"Calling Fal API [{model_id}] with payload: {arguments}")
+
+        try:
+            # Submit the request and get the handle
+            request_handle = fal_client.submit(model_id, arguments=arguments)
+            logger.info(
+                f"Fal Veo3 API request submitted. Handle type: {type(request_handle)}"
+            )
+
+            # --- Fetch the final result from the handle ---
+            final_response = request_handle.get()
+
+            logger.info(
+                f"Fal Veo3 API final result fetched. Type: {type(final_response)}"
+            )
+            logger.debug(
+                f"Fal Veo3 API final result content: {final_response}"
+            )  # Log the actual result
+
+            # --- Process the final_response dictionary ---
+            if not isinstance(final_response, dict):
+                logger.error(
+                    f"Expected dict result from Fal Veo3 API handle, but got: {type(final_response)}"
+                )
+                raise Exception(
+                    "Video generation failed", "Unexpected result type from API handle"
+                )
+
+            video_info = final_response.get(
+                "video"
+            )  # Access the key from the result dict
+            if video_info and isinstance(video_info, dict) and "url" in video_info:
+                video_url = video_info["url"]
+                logger.info(f"Found video URL in result['video']['url']: {video_url}")
+
+                # Download the video content
+                logger.info(f"Attempting to download video from: {video_url}")
+                # Increased timeout for potentially large video files
+                video_response = requests.get(video_url, timeout=180)
+                logger.info(f"Video download status code: {video_response.status_code}")
+                video_response.raise_for_status()  # Raise HTTPError for bad responses (4xx or 5xx)
+                video_content = video_response.content
+                logger.info(
+                    f"Video content type: {type(video_content)}, length: {len(video_content)}"
+                )
+                return video_content
+            else:
+                # Log the structure if it's unexpected
+                logger.error(
+                    f"Unexpected response structure or missing video URL from Fal Veo3 API: {final_response}"
+                )
+                raise Exception(
+                    "Video generation failed",
+                    "Unexpected API response structure or missing video URL",
+                )
+
+        except Exception as e:
+            # Log the full exception trace for better debugging
+            logger.exception(
+                f"Fal AI Veo3 API call, result fetching, or download failed: {e}"
+            )
+            error_msg = "We couldn't create your video. Please try again later."
+            logger.error(f"Veo3 service technical error: {e}")
+
+            raise Exception(VIDEO_GENERATION_ERROR, error_msg)
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
         """
-        Entry point for the Veo2 service. Handles parameter processing and API call.
+        Entry point for the Veo3 service. Handles parameter processing and API call.
         """
-        logger.info(f"Veo2 Raw parameters received in remote: {parameters}")
+        logger.info(f"Veo3 Raw parameters received in remote: {parameters}")
 
         # --- Pre-process parameters before validation ---
-        processed_params = parameters.copy()  # Work on a copy
+        processed_params = parameters['parameters'].copy()  # Work on a copy
 
         # Extract file_url string if it's passed as a list/dict
         file_url_input = processed_params.get("file_url")
@@ -1295,8 +1382,8 @@ class Veo2(IService):
         # Validate the *processed* parameters
         try:
             # Pydantic now validates against the "Xs" string format
-            params: Veo2Parameters = Veo2Parameters(**processed_params)
-            logger.info(f"Veo2 Parsed parameters: {params}")
+            params: Veo3Parameters = Veo3Parameters(**processed_params)
+            logger.info(f"Veo3 Parsed parameters: {params}")
         except ValidationError as e:
             logger.error(
                 f"Pydantic validation failed for Veo2 parameters after processing: {e}"
@@ -1476,89 +1563,201 @@ class Kling2Master(IService):
             extension=OUTPUT_VIDEO_EXTENSION,
         )
 
+# class FalAIFluxProKontextMaxMulti(IService):
+#     def __init__(self) -> None:
+#         super().__init__()
+#         logger.info("FalAIFluxProKontextMaxMulti Service Initialized")
+
+#     def make_api_request(
+#         self, parameters: FluxKontextMaxMultiInputParameters
+#     ) -> dict:
+#         payload = {
+#             "prompt": parameters.prompt,
+#             "image_urls": parameters.image_urls,
+#             "num_images": 1,
+#             "output_format": parameters.output_format,
+#             "sync_mode": True,
+#             "safety_tolerance": parameters.safety_tolerance,
+#             "guidance_scale": parameters.guidance_scale,
+#             "aspect_ratio": parameters.aspect_ratio,
+#         }
+#         if parameters.seed is not None:
+#             payload["seed"] = parameters.seed
+
+#         logger.debug(f"FalAIFluxProKontextMaxMulti sending to Fal AI: {payload}")
+#         try:
+#             result = fal_client.subscribe(
+#                 "fal-ai/flux-pro/kontext/max/multi",
+#                 arguments=payload,
+#                 with_logs=False,
+#             )
+#             logger.debug(f"FalAIFluxProKontextMaxMulti received from Fal AI: {result}")
+#         except Exception as e:
+#             logger.error(
+#                 f"Fal AI API request failed for flux-pro/kontext/max/multi: {str(e)}"
+#             )
+#             raise Exception(
+#                 IMAGE_GENERATION_ERROR, f"Fal AI API request failed: {str(e)}"
+#             ) from e
+
+#         if (
+#             not result
+#             or not result.get("images")
+#             or not isinstance(result["images"], list)
+#             or not result["images"]
+#         ):
+#             logger.error(f"Invalid or empty 'images' list in Fal AI response: {result}")
+#             raise Exception(
+#                 IMAGE_GENERATION_ERROR, "Fal AI returned no valid image information."
+#             )
+
+#         images_data = []
+#         for image_info in result["images"]:
+#             image_url = image_info.get("url")
+
+#             if not image_url:
+#                 logger.error(f"No URL in image info from Fal AI: {image_info}")
+#                 raise Exception(IMAGE_GENERATION_ERROR, "Fal AI image info missing URL.")
+
+#             if image_url.startswith("data:image"):
+#                 try:
+#                     header, encoded = image_url.split(",", 1)
+#                     image_data = base64.b64decode(encoded)
+#                 except Exception as e:
+#                     logger.error(f"Failed to decode base64 image from Fal AI: {str(e)}")
+#                     raise Exception(
+#                         IMAGE_GENERATION_ERROR, "Failed to decode base64 image."
+#                     ) from e
+#             else:
+#                 try:
+#                     image_response = make_request(image_url, "GET", timeout=60)
+#                     image_response.raise_for_status()
+#                     image_data = image_response.content
+#                 except Exception as e:
+#                     logger.error(
+#                         f"Failed to download image from URL {image_url}: {str(e)}"
+#                     )
+#                     raise Exception(
+#                         IMAGE_GENERATION_ERROR,
+#                         f"Failed to download image from URL: {image_url}",
+#                     ) from e
+#             images_data.append(image_data)
+
+#         has_nsfw_concepts = result.get(
+#             "has_nsfw_concepts", [False] * len(result["images"])
+#         )
+
+#         return {"images": images_data, "nsfw": has_nsfw_concepts}
+
+#     @timing_decorator
+#     def remote(self, parameters: dict) -> dict:
+#         try:
+#             model_params = parameters.get("parameters", parameters)
+#             parameters = FluxKontextMaxMultiInputParameters(
+#                 **model_params
+#             )
+#         except ValidationError as e:
+#             logger.error(
+#                 f"Input validation failed for FalAIFluxProKontextMaxMulti model parameters: {str(e)}"
+#             )
+#             raise Exception(
+#                 "Input Validation Error for model parameters", str(e)
+#             ) from e
+        
+#         with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+#             futures = []
+#             for i in range(parameters.batch):
+#                 future = executor.submit(self.make_api_request, parameters)
+#                 futures.append(future)
+
+#             results = [future.result() for future in futures]
+
+#         Has_NSFW_Content = [False] * parameters.batch
+
+#         return prepare_response(results, Has_NSFW_Content, 0, 0, 'png')
+
+#         # api_result = self.make_api_request(validated_model_params)
+#         # results_data = api_result["images"]
+#         # has_nsfw_content = api_result["nsfw"]
+
+#         # # current_output_extension = f"image/{validated_model_params.output_format}"
+#         # current_output_extension = validated_model_params.output_format
+
+#         # return prepare_response(
+#         #     results_data, has_nsfw_content, 0, 0, current_output_extension
+#         # )
+
 
 class FalAIFluxProKontextMaxMulti(IService):
     def __init__(self) -> None:
         super().__init__()
-        logger.info("FalAIFluxProKontextMaxMulti Service Initialized")
 
-    def make_api_request(self, parameters: FluxKontextMaxMultiInputParameters) -> bytes:
-        payload = {
+    def make_api_request(self, parameters: FluxKontextMaxMultiInputParameters) -> str:
+        """
+        Sends a request to the Fal.AI.
+
+        This function constructs the appropriate API payload from the parameters,
+        sends the request to the Flux Pro API endpoint, and handles the response
+        processing including base64 decoding of the resulting image.
+
+        Returns:
+            str: The generated image data as bytes
+
+        Raises:
+            Exception: If the generated content is flagged as NSFW
+        """
+        input = {
+            "image_urls": [parameters.file_url],
             "prompt": parameters.prompt,
-            "image_urls": parameters.image_urls,
-            "num_images": 1,
-            "output_format": "jpeg",
-            "sync_mode": True,
             "safety_tolerance": "2",
-            "guidance_scale": 3.5, 
+            "sync_mode": True,
+            "enable_safety_checker": True,
+            "guidance_scale": parameters.guidance_scale,
+            "aspect_ratio": parameters.aspect_ratio,
+            "seed": parameters.seed,
         }
-        if parameters.aspect_ratio:
-            payload["aspect_ratio"] = parameters.aspect_ratio
-        
-        logger.debug(f"FalAIFluxProKontextMaxMulti sending to Fal AI: {payload}")
-        try:
-            result = fal_client.subscribe(
-                "fal-ai/flux-pro/kontext/max/multi",
-                arguments=payload,
-                with_logs=False,
-            )
-            logger.debug(f"FalAIFluxProKontextMaxMulti received from Fal AI: {result}")
-        except Exception as e:
-            logger.error(f"Fal AI API request failed for flux-pro/kontext/max/multi: {str(e)}")
-            raise Exception(IMAGE_GENERATION_ERROR, f"Fal AI API request failed: {str(e)}") from e
-        
-        if not result or not result.get("images") or not isinstance(result["images"], list) or not result["images"]:
-            logger.error(f"Invalid or empty 'images' list in Fal AI response: {result}")
-            raise Exception(IMAGE_GENERATION_ERROR, "Fal AI returned no valid image information.")
+        result = fal_client.subscribe(
+            "fal-ai/flux-pro/kontext/max/multi",
+            arguments=input,
+            with_logs=False,
+        )
+        if sum(result["has_nsfw_concepts"]) == 1:
+            raise Exception(IMAGE_GENERATION_ERROR, NSFW_CONTENT_DETECT_ERROR_MSG)
 
-        image_info = result["images"][0]
-        image_url = image_info.get("url")
+        header, encoded = str(result["images"][0]["url"]).split(",", 1)
 
-        if not image_url:
-            logger.error(f"No URL in image info from Fal AI: {image_info}")
-            raise Exception(IMAGE_GENERATION_ERROR, "Fal AI image info missing URL.")
+        data = base64.b64decode(encoded)
 
-        if image_url.startswith("data:image"):
-            try:
-                header, encoded = image_url.split(",", 1)
-                image_data = base64.b64decode(encoded)
-            except Exception as e:
-                logger.error(f"Failed to decode base64 image from Fal AI: {str(e)}")
-                raise Exception(IMAGE_GENERATION_ERROR, "Failed to decode base64 image.") from e
-        else:
-            try:
-                image_response = make_request(image_url, "GET", timeout=60)
-                image_response.raise_for_status()
-                image_data = image_response.content
-            except Exception as e:
-                logger.error(f"Failed to download image from URL {image_url}: {str(e)}")
-                raise Exception(IMAGE_GENERATION_ERROR, f"Failed to download image from URL: {image_url}") from e
-        
-        return image_data
+        return data
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
-        try:
-            validated_model_params = FluxKontextMaxMultiInputParameters(**parameters)
-        except ValidationError as e:
-            logger.error(f"Input validation failed for FalAIFluxProKontextMaxMulti model parameters: {str(e)}")
-            raise Exception("Input Validation Error for model parameters", str(e)) from e
+        """
+        Entry point for the service that handles batch processing of requests.
 
-        results_data = []
-        with concurrent.futures.ThreadPoolExecutor(max_workers=validated_model_params.batch) as executor:
-            futures = [
-                executor.submit(self.make_api_request, validated_model_params)
-                for _ in range(validated_model_params.batch)
-            ]
-            for future in concurrent.futures.as_completed(futures):
-                try:
-                    results_data.append(future.result())
-                except Exception as e:
-                    logger.error(f"Error in FalAIFluxProKontextMaxMulti batch processing: {str(e)}")
-                    raise 
+        This method processes the input parameters, creates multiple parallel
+        generation tasks based on the batch size, and aggregates the results.
+        The @timing_decorator tracks and adds execution time to the response.
 
-        has_nsfw_content = [False] * len(results_data)
-        current_output_extension = ".jpeg"
+        Args:
+            parameters (dict): Request parameters for image generation
 
-        return prepare_response(results_data, has_nsfw_content, 0, 0, current_output_extension)
+        Returns:
+            dict: Standardized response containing generated images, NSFW flags,
+                timing information, and file format
+        """
 
+        model_params = parameters.get("parameters", parameters)
+        parameters: FluxKontextMaxMultiInputParameters = FluxKontextMaxMultiInputParameters(**model_params)
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+            futures = []
+            for i in range(parameters.batch):
+                future = executor.submit(self.make_api_request, parameters)
+                futures.append(future)
+
+            results = [future.result() for future in futures]
+
+        Has_NSFW_Content = [False] * parameters.batch
+
+        return prepare_response(results, Has_NSFW_Content, 0, 0, OUTPUT_IMAGE_EXTENSION)
