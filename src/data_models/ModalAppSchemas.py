@@ -613,6 +613,31 @@ class Veo2Parameters(BaseModel):
             f"Duration must be an integer {allowed_ints} or string {allowed_strs}"
         )
 
+class Veo3Parameters(BaseModel):
+    prompt: str
+    aspect_ratio: Literal["16:9", "9:16", "1:1"] = "16:9"
+    duration: Literal["8s"] = "8s"
+    negative_prompt: Optional[str] = None
+    enhance_prompt: bool = True
+    seed: Optional[int] = None
+    generate_audio: bool = True
+
+    @field_validator("duration", mode="before")
+    @classmethod
+    def format_duration(cls, v):
+        if isinstance(v, int):
+            if v == 8:
+                return "8s"
+            else:
+                raise ValueError("Duration must be 8 seconds")
+        elif isinstance(v, str):
+            if v == "8s":
+                return v
+            elif v.isdigit() and int(v) == 8:
+                return "8s"
+            else:
+                raise ValueError("Duration must be '8s'")
+        raise TypeError("Duration must be an integer 8 or string '8s'")
 
 class Kling2MasterParameters(BaseModel):
     prompt: str | None = (
@@ -680,3 +705,23 @@ class Lyria2MusicGenerationParameters(BaseModel):
             # For now, let's not enforce one if not present, to match notebook flexibility.
             pass
         return self
+
+
+class FluxKontextMaxMultiInputParameters(BaseModel):
+    prompt: str = Field(...)
+    # image_urls: List[str] = Field(
+    #     ...,
+    #     min_length=1,
+    # )
+    seed: Optional[int] = Field(default=None)
+    guidance_scale: Optional[float] = Field(default=3.5)
+    sync_mode: Optional[bool] = Field(default=None)
+    num_images: Optional[int] = Field(default=1)
+    safety_tolerance: Optional[str] = Field(default="2")
+    output_format: Optional[str] = Field(default="png")
+    aspect_ratio: Literal["21:9", "16:9", "4:3", "3:2", "1:1", "2:3", "3:4", "9:16", "9:21"] = "16:9"
+    batch: int = Query(ge=MIN_BATCH, le=MAX_BATCH)
+    file_url: Optional[str] = None
+    # file_url: Optional[list[PromptImage]] = None
+
+
