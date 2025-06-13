@@ -38,6 +38,7 @@ from src.utils.Globals import (
     simple_boundary_blur,
     timing_decorator,
     upload_data_gcp,
+    convert_to_aspect_ratio
 )
 
 
@@ -1581,16 +1582,23 @@ class FalAIFluxProKontextMaxMulti(IService):
         Raises:
             Exception: If the generated content is flagged as NSFW
         """
+        aspect_ratio = convert_to_aspect_ratio(parameters.width, parameters.height)
+        if aspect_ratio == "3:7":
+            aspect_ratio = "9:21"
+        if aspect_ratio == "7:3":
+            aspect_ratio = "21:9"
+
         input = {
-            "image_urls": [parameters.file_url],
-            "prompt": parameters.prompt,
-            "safety_tolerance": "2",
-            "sync_mode": True,
-            "enable_safety_checker": True,
-            "guidance_scale": parameters.guidance_scale,
-            "aspect_ratio": parameters.aspect_ratio,
-            "seed": parameters.seed,
-        }
+                "image_urls": parameters.file_urls,
+                "prompt": parameters.prompt,
+                "safety_tolerance": "2",
+                "sync_mode": True,
+                "enable_safety_checker": True,
+                "guidance_scale": parameters.guidance_scale,
+                "aspect_ratio": aspect_ratio,
+                "seed": parameters.seed,
+            }
+
         result = fal_client.subscribe(
             "fal-ai/flux-pro/kontext/max/multi",
             arguments=input,

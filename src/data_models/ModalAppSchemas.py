@@ -709,10 +709,6 @@ class Lyria2MusicGenerationParameters(BaseModel):
 
 class FluxKontextMaxMultiInputParameters(BaseModel):
     prompt: str = Field(...)
-    # image_urls: List[str] = Field(
-    #     ...,
-    #     min_length=1,
-    # )
     seed: Optional[int] = Field(default=None)
     guidance_scale: Optional[float] = Field(default=3.5)
     sync_mode: Optional[bool] = Field(default=None)
@@ -721,7 +717,8 @@ class FluxKontextMaxMultiInputParameters(BaseModel):
     output_format: Optional[str] = Field(default="png")
     aspect_ratio: Literal["21:9", "16:9", "4:3", "3:2", "1:1", "2:3", "3:4", "9:16", "9:21"] = "16:9"
     batch: int = Query(ge=MIN_BATCH, le=MAX_BATCH)
-    file_url: Optional[str] = None
-    # file_url: Optional[list[PromptImage]] = None
+    file_urls: List[str] = None
+    height: int = Query(default=1024, ge=MIN_HEIGHT, le=MAX_HEIGHT)
+    width: int = Query(default=1024, ge=MIN_HEIGHT, le=MAX_HEIGHT)
 
 
