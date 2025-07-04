@@ -916,6 +916,65 @@ class FalAIFluxProCanny(IService):
 
         return prepare_response(results, Has_NSFW_Content, 0, 0, OUTPUT_IMAGE_EXTENSION)
 
+class FalAIBriaBackgroundRemove(IService):
+    def __init__(self) -> None:
+        super().__init__()
+
+    def make_api_request(self, parameters: FluxImage2ImageParameters) -> str:
+        """
+        Sends a request to the Fal.AI.
+
+        This function constructs the appropriate API payload from the parameters,
+        sends the request to the Flux Pro API endpoint, and handles the response
+        processing including base64 decoding of the resulting image.
+
+        Returns:
+            str: The generated image data as bytes
+
+        Raises:
+            Exception: If the generated content is flagged as NSFW
+        """
+
+        result = fal_client.subscribe(
+            "fal-ai/bria/background/remove",
+            arguments={"image_url": parameters.file_url},
+            with_logs=False,
+        )
+        if sum(result["has_nsfw_concepts"]) == 1:
+            raise Exception(IMAGE_GENERATION_ERROR, NSFW_CONTENT_DETECT_ERROR_MSG)
+
+        response = make_request(result["images"][0]["url"], "GET")
+        return response.content
+
+    @timing_decorator
+    def remote(self, parameters: dict) -> dict:
+        """
+        Entry point for the service that handles batch processing of requests.
+
+        This method processes the input parameters, creates multiple parallel
+        generation tasks based on the batch size, and aggregates the results.
+        The @timing_decorator tracks and adds execution time to the response.
+
+        Args:
+            parameters (dict): Request parameters for image generation
+
+        Returns:
+            dict: Standardized response containing generated images, NSFW flags,
+                timing information, and file format
+        """
+        parameters: FluxImage2ImageParameters = FluxImage2ImageParameters(**parameters)
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+            futures = []
+            for i in range(parameters.batch):
+                future = executor.submit(self.make_api_request, parameters)
+                futures.append(future)
+
+            results = [future.result() for future in futures]
+
+        Has_NSFW_Content = [False] * parameters.batch
+
+        return prepare_response(results, Has_NSFW_Content, 0, 0, OUTPUT_IMAGE_EXTENSION)
 
 class FalAIFluxProDepth(IService):
     def __init__(self) -> None:
