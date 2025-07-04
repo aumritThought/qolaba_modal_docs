@@ -940,8 +940,8 @@ class FalAIBriaBackgroundRemove(IService):
             arguments={"image_url": parameters.file_url},
             with_logs=False,
         )
-        if sum(result["has_nsfw_concepts"]) == 1:
-            raise Exception(IMAGE_GENERATION_ERROR, NSFW_CONTENT_DETECT_ERROR_MSG)
+        # if sum(result["has_nsfw_concepts"]) == 1:
+        #     raise Exception(IMAGE_GENERATION_ERROR, NSFW_CONTENT_DETECT_ERROR_MSG)
 
         response = make_request(result["images"][0]["url"], "GET")
         return response.content
