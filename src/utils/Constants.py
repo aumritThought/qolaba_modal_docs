@@ -18,7 +18,8 @@ BASE_IMAGE_COMMANDS = [
     "pip3 install torch torchvision torchaudio",
 ]
 
-REQUIREMENT_FILE_PATH = "req_docker_deploy.txt"
+# REQUIREMENT_FILE_PATH = "req_docker_deploy.txt"
+REQUIREMENT_FILE_PATH = "requirements.txt"
 SECRET_NAME = "environment_configuration"
 
 SDXL_ANIME_MODEL = "/SDXL_models/Animagine.safetensors"
@@ -681,6 +682,11 @@ app_dict = {
         "init_parameters": {},
         "model_name": "Replace_background_image2image",
     },
+    "ap-BqGPXzKdWmPviGwfVvplfiI": {
+        "app_id": "falaibriabackgroundremove_api",
+        "init_parameters": {},
+        "model_name": "Remove_background_image2image",
+    },
     "ap-lpocU0cB9szyuvta9lZ83B": {
         "app_id": "Illusion_Diffusion_modal",
         "init_parameters": {},
@@ -697,11 +703,11 @@ app_dict = {
         "model_name": "face_consistent_FRND_image2image",
     },
     # current
-    "ap-kV3kwXL9QXJxYS6jV1VtkT": {
-        "app_id": "BackGround_Removal_modal",
-        "init_parameters": {},
-        "model_name": "Background_removal_image2image",
-    },
+    # "ap-kV3kwXL9QXJxYS6jV1VtkT": {
+    #     "app_id": "BackGround_Removal_modal",
+    #     "init_parameters": {},
+    #     "model_name": "Background_removal_image2image",
+    # },
     # current
     "ap-NFDMz1Rn9UlpS6zMl2FNpm": {
         "app_id": "Ultrasharp_Upscaler_modal",
@@ -801,6 +807,7 @@ RUNWAY_ERROR = "Runway Error"
 RUNWAY_ERROR_MSG = "At least one image is required to generate your video"
 RUNWAY_POSITION_ERROR_MSG = "Please use different positions for two images: One image at the beginning, another at the end"
 VIDEO_GENERATION_ERROR = "Video Generation Error"
+MUSIC_GENERATION_ERROR = "Music Generation Error"
 
 VIDEO_API_ERROR_MSG = "Video generation failed due to an API error or timeout."  # For general API/timeout issues
 VIDEO_PERMISSION_ERROR_MSG = "Video generation failed due to insufficient permissions or required features not being enabled."  # For 403, allowlisting etc.
