@@ -920,7 +920,7 @@ class FalAIBriaBackgroundRemove(IService):
     def __init__(self) -> None:
         super().__init__()
 
-    def make_api_request(self, parameters: FluxImage2ImageParameters) -> str:
+    def make_api_request(self, parameters: IdeoGramText2ImageParameters) -> str:
         """
         Sends a request to the Fal.AI.
 
@@ -962,7 +962,7 @@ class FalAIBriaBackgroundRemove(IService):
             dict: Standardized response containing generated images, NSFW flags,
                 timing information, and file format
         """
-        parameters: FluxImage2ImageParameters = FluxImage2ImageParameters(**parameters)
+        parameters: IdeoGramText2ImageParameters = IdeoGramText2ImageParameters(**parameters)
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
             futures = []
