@@ -15,7 +15,7 @@ PYTHON_VERSION = "3.11.8"
 BASE_IMAGE_COMMANDS = [
     "apt-get update && apt-get install ffmpeg libsm6 libxext6 git curl wget pkg-config libssl-dev openssl git-lfs clang -y",
     "git lfs install",
-    "pip3 install torch torchvision torchaudio",
+    "pip3 install torch>=2.6",
 ]
 
 # REQUIREMENT_FILE_PATH = "req_docker_deploy.txt"
@@ -703,11 +703,11 @@ app_dict = {
         "model_name": "face_consistent_FRND_image2image",
     },
     # current
-    # "ap-kV3kwXL9QXJxYS6jV1VtkT": {
-    #     "app_id": "BackGround_Removal_modal",
-    #     "init_parameters": {},
-    #     "model_name": "Background_removal_image2image",
-    # },
+    "ap-kV3kwXL9QXJxYS6jV1VtkT": {
+        "app_id": "BackGround_Removal_modal",
+        "init_parameters": {},
+        "model_name": "Background_removal_image2image",
+    },
     # current
     "ap-NFDMz1Rn9UlpS6zMl2FNpm": {
         "app_id": "Ultrasharp_Upscaler_modal",
