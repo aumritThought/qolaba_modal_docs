@@ -80,7 +80,7 @@ class ImageGenText2Image(IService):
         vertexai.init(project=self.project_id, credentials=self.credentials)
         # Ensure model name is correct
         self.generation_model = ImageGenerationModel.from_pretrained(
-            "imagen-4.0-ultra-generate-preview-06-06"
+            "imagen-4.0-generate-preview-06-06"
         )
         logger.info(f"ImageGenText2Image Initialized with project: {self.project_id}")
 
