@@ -80,7 +80,7 @@ class ImageGenText2Image(IService):
         vertexai.init(project=self.project_id, credentials=self.credentials)
         # Ensure model name is correct
         self.generation_model = ImageGenerationModel.from_pretrained(
-            "imagen-4.0-generate-preview-05-20"
+            "imagen-4.0-ultra-generate-preview-06-06"
         )
         logger.info(f"ImageGenText2Image Initialized with project: {self.project_id}")
 
@@ -503,6 +503,24 @@ class VertexAIVeo(IService):
                 exc_info=True,
             )
             raise Exception(VIDEO_GENERATION_ERROR) from e  # Updated
+
+
+class VertexAIVeo3Fast(VertexAIVeo):
+    def __init__(self) -> None:
+        super().__init__()
+        self.model_id = "veo-3.0-fast-generate-preview"
+        self.predict_url = f"{self.api_endpoint}/v1/projects/{self.project_id}/locations/{self.location}/publishers/google/models/{self.model_id}:predictLongRunning"
+        self.fetch_url = f"{self.api_endpoint}/v1/projects/{self.project_id}/locations/{self.location}/publishers/google/models/{self.model_id}:fetchPredictOperation"
+        logger.info(f"VertexAIVeo3Fast Initialized with model: {self.model_id}")
+
+
+class VertexAIVeo3(VertexAIVeo):
+    def __init__(self) -> None:
+        super().__init__()
+        self.model_id = "veo-3.0-generate-preview"
+        self.predict_url = f"{self.api_endpoint}/v1/projects/{self.project_id}/locations/{self.location}/publishers/google/models/{self.model_id}:predictLongRunning"
+        self.fetch_url = f"{self.api_endpoint}/v1/projects/{self.project_id}/locations/{self.location}/publishers/google/models/{self.model_id}:fetchPredictOperation"
+        logger.info(f"VertexAIVeo3 Initialized with model: {self.model_id}")
 
 
 class VeoRouterService(IService):

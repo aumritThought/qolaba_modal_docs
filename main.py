@@ -44,7 +44,7 @@ def generate_content(
 ):
     check_token(api_key)
     api_parameters = APIInput(**parameters)
-    api_parameters.parameters = parameters
+    # api_parameters.parameters = parameters
     api_parameters.init_parameters = app_dict[api_parameters.app_id]["init_parameters"]
     api_parameters.app_id = app_dict[api_parameters.app_id]["app_id"]
 
