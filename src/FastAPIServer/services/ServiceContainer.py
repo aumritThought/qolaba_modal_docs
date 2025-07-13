@@ -47,12 +47,15 @@ from src.FastAPIServer.services.ApiServices.SDXLService import SDXL3Text2Image
 from src.FastAPIServer.services.ApiServices.VertexAIService import (
     ImageGenText2Image,
     VertexAIVeo,
+    VertexAIVeo3Fast,
+    VertexAIVeo3,
     VeoRouterService,
 )
 
 
 from src.FastAPIServer.services.IService import IService
 from src.utils.Globals import get_clean_name
+from loguru import logger
 
 
 class ServiceContainer(containers.DeclarativeContainer):
@@ -61,6 +64,10 @@ class ServiceContainer(containers.DeclarativeContainer):
     # --- Explicit Providers for Router Dependencies ---
     vertexaiveo_api = providers.Singleton(VertexAIVeo)
     veo2_api = providers.Singleton(Veo2)  # This is Fal Veo2
+    
+    # --- Explicit Providers for New Vertex AI Veo Models ---
+    vertexaiveo3fast_api = providers.Singleton(VertexAIVeo3Fast)
+    vertexaiveo3_api = providers.Singleton(VertexAIVeo3)
 
     # --- {{ CORRECTED Router Factory Definition }} ---
     # Define the router factory, injecting the PROVIDERS using .provider
@@ -139,14 +146,25 @@ class ServiceRegistry:
         This automatic discovery approach allows new services to be added with minimal
         configuration changes. Explicit providers in ServiceContainer override registrations here.
         """
+        logger.info("Starting service registration...")
+        
         # --- {{ Keep Original IService Loop }} ---
-        for cls in IService.__subclasses__():
+        discovered_classes = IService.__subclasses__()
+        logger.info(f"Discovered {len(discovered_classes)} IService subclasses: {[cls.__name__ for cls in discovered_classes]}")
+        
+        # Check specifically for our Vertex AI classes
+        vertex_classes = [cls for cls in discovered_classes if 'Vertex' in cls.__name__]
+        logger.info(f"Vertex AI classes found: {[cls.__name__ for cls in vertex_classes]}")
+        
+        for cls in discovered_classes:
             # Skip the router class if found here, it's handled explicitly above
             if cls == VeoRouterService:
+                logger.info(f"Skipping {cls.__name__} (handled explicitly)")
                 continue
 
             service_name = get_clean_name(cls.__name__)
             service_name_api = f"{service_name}_api"
+            logger.info(f"Processing class {cls.__name__} -> {service_name_api}")
 
             # Check if this provider was already explicitly defined in ServiceContainer
             if not hasattr(self.container, service_name_api):
@@ -155,10 +173,12 @@ class ServiceRegistry:
                 # Add to list only if registered here
                 if service_name_api not in self.api_services:
                     self.api_services.append(service_name_api)
+                logger.info(f"Successfully registered {service_name_api} for class {cls.__name__}")
             elif service_name_api not in self.api_services:
                 # If it *was* explicitly defined but not in the list yet, add it.
                 # Handles cases like veo2_api which is explicit but needs to be listed.
                 self.api_services.append(service_name_api)
+                logger.info(f"Added existing service {service_name_api} to api_services list")
 
         # --- {{ Keep Original Modal Loop }} ---
         for cls_name in list_apps():
@@ -185,7 +205,16 @@ class ServiceRegistry:
         router_service_name = "veorouterservice_api"
         if router_service_name not in self.api_services:
             self.api_services.append(router_service_name)
+            
+        # Add our new explicitly defined Vertex AI services
+        new_vertex_services = ["vertexaiveo2_api", "vertexaiveo3fast_api", "vertexaiveo3_api"]
+        for service_name in new_vertex_services:
+            if service_name not in self.api_services:
+                self.api_services.append(service_name)
         # --- End Minimal Addition ---
+        
+        logger.info(f"Service registration complete. API services: {self.api_services}")
+        logger.info(f"Modal services: {self.modal_services}")
 
     def register_new_modal_service(self, app_name):
         """

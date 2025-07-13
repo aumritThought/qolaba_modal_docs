@@ -505,6 +505,24 @@ class VertexAIVeo(IService):
             raise Exception(VIDEO_GENERATION_ERROR) from e  # Updated
 
 
+class VertexAIVeo3Fast(VertexAIVeo):
+    def __init__(self) -> None:
+        super().__init__()
+        self.model_id = "veo-3.0-fast-generate-preview"
+        self.predict_url = f"{self.api_endpoint}/v1/projects/{self.project_id}/locations/{self.location}/publishers/google/models/{self.model_id}:predictLongRunning"
+        self.fetch_url = f"{self.api_endpoint}/v1/projects/{self.project_id}/locations/{self.location}/publishers/google/models/{self.model_id}:fetchPredictOperation"
+        logger.info(f"VertexAIVeo3Fast Initialized with model: {self.model_id}")
+
+
+class VertexAIVeo3(VertexAIVeo):
+    def __init__(self) -> None:
+        super().__init__()
+        self.model_id = "veo-3.0-generate-preview"
+        self.predict_url = f"{self.api_endpoint}/v1/projects/{self.project_id}/locations/{self.location}/publishers/google/models/{self.model_id}:predictLongRunning"
+        self.fetch_url = f"{self.api_endpoint}/v1/projects/{self.project_id}/locations/{self.location}/publishers/google/models/{self.model_id}:fetchPredictOperation"
+        logger.info(f"VertexAIVeo3 Initialized with model: {self.model_id}")
+
+
 class VeoRouterService(IService):
     def __init__(self, vertex_veo_provider: callable, fal_veo_provider: callable):
         super().__init__()
