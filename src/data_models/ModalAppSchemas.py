@@ -574,7 +574,7 @@ class NSFWSchema(BaseModel):
 
 
 class Veo2Parameters(BaseModel):
-    prompt: str# | None = "A lego chef cooking eggs"
+    prompt: str | None = "A lego chef cooking eggs"
     file_url: Optional[str | None] = None  # Changed default to None for clarity
     # Keep the Literal type for the final validated field
     duration: Literal["5s", "6s", "7s", "8s"] = "5s"
