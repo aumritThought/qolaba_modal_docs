@@ -360,16 +360,6 @@ class VertexAIVeo(IService):
             "aspectRatio": parameters.aspect_ratio,
         }
 
-        # Image handling needs to check parameters.file_url, which was removed in remote()
-        # This block needs adjustment if image-to-video path is ever re-enabled here
-        # if parameters.file_url:
-        #     try:
-        #         image_bytes = self._get_bytes_from_url(parameters.file_url)
-        #         if not image_bytes: raise ValueError("Downloaded image bytes are empty.")
-        #         encoded_image = base64.b64encode(image_bytes).decode("utf-8"); mime_type = "image/jpeg"
-        #         instance["image"] = {"bytesBase64Encoded": encoded_image, "mimeType": mime_type}
-        #     except Exception as e: raise Exception(VIDEO_GENERATION_ERROR) from e # Updated
-
         payload = {"instances": [instance], "parameters": api_parameters}
         op_name = None
         try:
@@ -379,8 +369,7 @@ class VertexAIVeo(IService):
                         {
                             "prompt": instance.get("prompt"),
                             "image_present": "image" in instance,
-                            "gcsUri":"gs://cloud-samples-data/generative-ai/image/flowers.png",
-                             "mime_type":"image/png",
+                            "image": instance.get("image"),
                         }
                     ],
                     "parameters": api_parameters,
@@ -466,10 +455,11 @@ class VertexAIVeo(IService):
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
         params_for_validation = parameters.copy()
-        if "file_url" in params_for_validation:
-            del params_for_validation["file_url"]
+        file_url = params_for_validation.pop("file_url", None)  # Extract file_url but keep reference
         try:
             params: Veo2Parameters = Veo2Parameters(**params_for_validation)
+            # Add file_url back to the params object for use in make_api_request
+            params.file_url = file_url
             duration_int = int(params.duration.replace("s", ""))
             if not (5 <= duration_int <= 8):
                 raise ValueError(
