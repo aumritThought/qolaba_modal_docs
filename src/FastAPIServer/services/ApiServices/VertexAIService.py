@@ -454,12 +454,8 @@ class VertexAIVeo(IService):
 
     @timing_decorator
     def remote(self, parameters: dict) -> dict:
-        params_for_validation = parameters.copy()
-        file_url = params_for_validation.pop("file_url", None)  # Extract file_url but keep reference
         try:
-            params: Veo2Parameters = Veo2Parameters(**params_for_validation)
-            # Add file_url back to the params object for use in make_api_request
-            params.file_url = file_url
+            params: Veo2Parameters = Veo2Parameters(**parameters)  # Include file_url in validation
             duration_int = int(params.duration.replace("s", ""))
             if not (5 <= duration_int <= 8):
                 raise ValueError(
