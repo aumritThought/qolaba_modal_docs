@@ -345,11 +345,11 @@ class VertexAIVeo(IService):
             "Content-Type": "application/json; charset=utf-8",
         }
         instance = {"prompt": parameters.prompt}
-        if parameters.file_url:
+        if parameters.image:
             instance["image"] = (
-                {"gcsUri": parameters.file_url, "mimeType": "image/png"}
-                if parameters.file_url.startswith("gs://")
-                else {"bytesBase64Encoded": base64.b64encode(self._get_bytes_from_url(parameters.file_url)).decode(), "mimeType": "image/png"}
+                {"gcsUri": parameters.image, "mimeType": "image/png"}
+                if parameters.image.startswith("gs://")
+                else {"bytesBase64Encoded": base64.b64encode(self._get_bytes_from_url(parameters.image)).decode(), "mimeType": "image/png"}
             )
 
         # API parameters might need restructuring depending on the exact payload VEO expects
