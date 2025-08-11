@@ -1504,9 +1504,9 @@ class Kling2Master(IService):
         }
         if parameters.file_url:
             input_args["image_url"] = parameters.file_url
-            model_id = "fal-ai/kling-video/v2/master/image-to-video"
+            model_id = "fal-ai/kling-video/v2.1/master/image-to-video"
         else:
-            model_id = "fal-ai/kling-video/v2/master/text-to-video"
+            model_id = "fal-ai/kling-video/v2.1/master/text-to-video"
 
         logger.debug(f"Calling Fal API [{model_id}]")
         try:
