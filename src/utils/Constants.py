@@ -720,7 +720,7 @@ app_dict = {
     },
     # current
     "ap-NFDMz1Rn9UlpS6zMl2FNpm": {
-        "app_id": "Ultrasharp_Upscaler_modal",
+        "app_id": "falaiclarityupscaler_api",
         "init_parameters": {},
         "model_name": "upscaling_image2image",
     },
