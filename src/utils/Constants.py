@@ -598,26 +598,26 @@ app_dict = {
         "init_parameters": {},
         "model_name": "minimax_video",
     },
-    "ap-9mRnTycbyjwDlWFn8CLJlo": {
-        "app_id": "veorouterservice_api",
-        "init_parameters": {},
-        "model_name": "GoogleVeo2_image2video",
-    },
-    "ap-Veo3FastPreviewModel": {
-        "app_id": "vertexaiveo3fast_api",
-        "init_parameters": {},
-        "model_name": "GoogleVeo3Fast_text2video",
-    },
-    "ap-Veo3GeneratePreviewModel": {
-        "app_id": "vertexaiveo3_api",
-        "init_parameters": {},
-        "model_name": "GoogleVeo3_text2video",
-    },
-    "ap-tZ5pL7eR9hK3mS8vB6cJ2w": {
-        "app_id": "veo3_api",
-        "init_parameters": {},
-        "model_name": "FalVeo3_text2video",
-    },
+    # "ap-9mRnTycbyjwDlWFn8CLJlo": {
+    #     "app_id": "veorouterservice_api",
+    #     "init_parameters": {},
+    #     "model_name": "GoogleVeo2_image2video",
+    # },
+    # "ap-Veo3FastPreviewModel": {
+    #     "app_id": "vertexaiveo3fast_api",
+    #     "init_parameters": {},
+    #     "model_name": "GoogleVeo3Fast_text2video",
+    # },
+    # "ap-Veo3GeneratePreviewModel": {
+    #     "app_id": "vertexaiveo3_api",
+    #     "init_parameters": {},
+    #     "model_name": "GoogleVeo3_text2video",
+    # },
+    # "ap-tZ5pL7eR9hK3mS8vB6cJ2w": {
+    #     "app_id": "veo3_api",
+    #     "init_parameters": {},
+    #     "model_name": "FalVeo3_text2video",
+    # },
     "ap-8lQmSxbaxhvCyWFn2CLJlM": {
         "app_id": "kling2master_api",
         "init_parameters": {},
