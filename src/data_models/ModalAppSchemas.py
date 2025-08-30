@@ -256,11 +256,8 @@ class SDXLControlNetParameters(SDXLImage2ImageParameters):
     num_inference_steps: int = Query(ge=MIN_INFERENCE_STEPS, le=MAX_INFERENCE_STEPS)
 
 
-class UpscaleParameters(BaseModel):
-    file_url: str | Any
-    scale: Literal[2, 4, 8]
-    check_nsfw: Optional[bool] = True
-    strength: float = Query(default=0.5, gt=MIN_STRENGTH, le=MAX_STRENGTH)
+class UpscaleParameters(FluxImage2ImageParameters):
+    scale: Literal[2, 4]
 
 
 class VariationParameters(SDXLControlNetParameters):

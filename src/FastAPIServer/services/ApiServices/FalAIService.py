@@ -18,7 +18,8 @@ from src.data_models.ModalAppSchemas import (
     SDXLText2ImageParameters,
     Veo2Parameters,
     FluxKontextMaxMultiInputParameters,
-    Veo3Parameters
+    Veo3Parameters,
+    UpscaleParameters
 )
 
 from src.FastAPIServer.services.IService import IService
@@ -850,7 +851,7 @@ class FalAIClarityUpscaler(IService):
     def __init__(self) -> None:
         super().__init__()
 
-    def make_api_request(self, parameters: FluxImage2ImageParameters) -> str:
+    def make_api_request(self, parameters: UpscaleParameters) -> str:
         """
         Sends a request to the Fal.AI.
 
@@ -867,7 +868,7 @@ class FalAIClarityUpscaler(IService):
         input = {
                 "image_url": parameters.file_url,
                 "prompt": "masterpiece, best quality, highres",
-                "upscale_factor": 2,
+                "upscale_factor": parameters.scale,
                 "negative_prompt": "(worst quality, low quality, normal quality:2)",
                 "creativity": 0.35,
                 "resemblance": 0.6,
@@ -881,10 +882,8 @@ class FalAIClarityUpscaler(IService):
             arguments=input,
             with_logs=False,
         )
-        if sum(result["has_nsfw_concepts"]) == 1:
-            raise Exception(IMAGE_GENERATION_ERROR, NSFW_CONTENT_DETECT_ERROR_MSG)
 
-        response = make_request(result["images"][0]["url"], "GET")
+        response = make_request(result["image"]["url"], "GET")
         return response.content
 
     @timing_decorator
@@ -903,7 +902,7 @@ class FalAIClarityUpscaler(IService):
             dict: Standardized response containing generated images, NSFW flags,
                 timing information, and file format
         """
-        parameters: FluxImage2ImageParameters = FluxImage2ImageParameters(**parameters)
+        parameters: UpscaleParameters = UpscaleParameters(**parameters)
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
             futures = []
