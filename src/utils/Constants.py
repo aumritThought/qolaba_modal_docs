@@ -228,6 +228,15 @@ IDEOGRAM_ASPECT_RATIO = {
 # Imagegen aspect ratios
 IMAGEGEN_ASPECT_RATIOS = ["9:16", "16:9", "4:3", "3:4", "1:1"]
 
+# Gemini aspect ratio reference images
+GEMINI_ASPECT_RATIO_REFERENCE_IMAGES = {
+    (800, 1000): "https://cdn.qolaba.app/20250829184335_0623067c-7326-4cef-97fb-786942659daf.webp",    # Portrait 4:5
+    (720, 1280): "https://cdn.qolaba.app/20250829183739_6a3f4942-9595-4b61-b9d8-3c73001740eb.webp",    # Portrait 9:16
+    (1024, 1024): "https://cdn.qolaba.app/20250829183817_6ef01208-77cc-483f-8aa8-2a7b1cdeb628.webp",   # Square 1:1
+    (1280, 720): "https://cdn.qolaba.app/20250829184028_73b4bf09-2a41-4a8a-a88a-5a8f50f461f3.webp",    # Landscape 16:9
+    (1600, 676): "https://cdn.qolaba.app/20250829183951_fcc11067-9c7d-474e-9e91-ce4cc5dd8559.webp"     # Ultra-wide 2.37:1
+}
+
 # Leonardo Image generation Url
 LEONARDO_IMAGE_GEN_URL = "https://cloud.leonardo.ai/api/rest/v1/generations"
 LEONARDO_IMAGE_STATUS_URL = "https://cloud.leonardo.ai/api/rest/v1/generations/"
@@ -566,6 +575,16 @@ app_dict = {
         "app_id": "imagegentext2image_api",
         "init_parameters": {},
         "model_name": "imagegen_text2image",
+    },
+    "ap-GeminiFlashText2Image": {
+        "app_id": "geminiflashtext2imageservice_api",
+        "init_parameters": {},
+        "model_name": "gemini_flash_text2image",
+    },
+    "ap-GeminiFlashImage2Image": {
+        "app_id": "geminiflashimage2imageservice_api",
+        "init_parameters": {},
+        "model_name": "gemini_flash_image2image",
     },
     # current
     "ap-x7q8hj9kltmNoPqRzabc": {

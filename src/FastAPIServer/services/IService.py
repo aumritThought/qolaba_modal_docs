@@ -74,6 +74,9 @@ class IService(ABC):
         # Luma
         self.lumalabs_api_key = os.environ["LUMAAI_API_KEY"]
 
+        # Gemini API
+        self.gemini_api_key = os.environ["GEMINIAI_API_KEY"]
+
     @abstractmethod
     def remote(self, data):
         """
