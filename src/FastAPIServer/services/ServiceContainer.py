@@ -50,6 +50,8 @@ from src.FastAPIServer.services.ApiServices.VertexAIService import (
     VertexAIVeo3Fast,
     VertexAIVeo3,
     VeoRouterService,
+    GeminiFlashText2ImageService,
+    GeminiFlashImage2ImageService,
 )
 
 

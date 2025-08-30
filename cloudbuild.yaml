@@ -64,6 +64,7 @@ steps:
         gcloud secrets versions access $$_SECRET_ALIAS --secret="RUNWAY_API_KEY" > /workspace/RUNWAY_API_KEY.txt
         gcloud secrets versions access $$_SECRET_ALIAS --secret="LUMAAI_API_KEY" > /workspace/LUMAAI_API_KEY.txt
         gcloud secrets versions access $$_SECRET_ALIAS --secret="DEEPGRAP_API_KEY" > /workspace/DEEPGRAP_API_KEY.txt
+        gcloud secrets versions access $$_SECRET_ALIAS --secret="GEMINIAI_API_KEY" > /workspace/GEMINIAI_API_KEY.txt
 
   - name: 'gcr.io/cloud-builders/docker'
     entrypoint: 'bash'
@@ -105,6 +106,7 @@ steps:
           --build-arg RUNWAY_API_KEY="$(cat /workspace/RUNWAY_API_KEY.txt)" \
           --build-arg LUMAAI_API_KEY="$(cat /workspace/LUMAAI_API_KEY.txt)" \
           --build-arg DEEPGRAP_API_KEY="$(cat /workspace/DEEPGRAP_API_KEY.txt)" \
+          --build-arg GEMINIAI_API_KEY="$(cat /workspace/GEMINIAI_API_KEY.txt)" \
           .
   
   - name: gcr.io/cloud-builders/docker

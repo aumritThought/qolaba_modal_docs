@@ -4,25 +4,30 @@ from typing import List # Added List import
 import google.auth
 import google.auth.transport.requests
 import vertexai
-from vertexai.preview.vision_models import ImageGenerationModel
+from vertexai.preview.vision_models import Image, ImageGenerationModel
+import google.genai as genai
+from google.genai import types
+from PIL import Image as PILImage
+import io
 from src.data_models.ModalAppSchemas import Veo2Parameters, IdeoGramText2ImageParameters, Lyria2MusicGenerationParameters
 from src.FastAPIServer.services.IService import IService
 from src.utils.Constants import (
     IMAGEGEN_ASPECT_RATIOS,
     IMAGEGEN_ERROR,
+    IMAGE_GENERATION_ERROR,
     IMAGEGEN_ERROR_MSG,
     OUTPUT_IMAGE_EXTENSION,
     google_credentials_info,
     OUTPUT_VIDEO_EXTENSION,
     VIDEO_GENERATION_ERROR,
     OUTPUT_AUDIO_EXTENSION,
+    GEMINI_ASPECT_RATIO_REFERENCE_IMAGES,
 )
 from src.utils.Globals import (
     convert_to_aspect_ratio,
     prepare_response,
     timing_decorator,
 )
-from loguru import logger
 from google.cloud import storage
 import base64
 import os
@@ -30,7 +35,6 @@ import time
 import uuid
 from urllib.parse import urlparse
 import requests
-from google.cloud import storage
 from loguru import logger
 from pydantic import ValidationError
 import json
@@ -784,3 +788,276 @@ class Lyria2MusicGeneration(IService):
                 exc_info=True, 
             )
             raise Exception(VIDEO_GENERATION_ERROR) from e
+
+
+class GeminiFlashText2ImageService(IService):
+    def __init__(self) -> None:
+        """
+        Initializes the Gemini service using the new google-genai Client SDK.
+        """
+        super().__init__()
+
+        # Initialize the client with the API key
+        self.client = genai.Client(api_key=self.gemini_api_key)
+
+        # Store the model name as a string
+        self.model_name = "gemini-2.5-flash-image-preview"
+        
+        logger.info(f"GeminiFlashText2ImageService Initialized with model {self.model_name}.")
+
+    # Helper function to load image from URL for aspect ratio reference
+    def _load_image_from_url(self, url: str) -> PILImage.Image:
+        try:
+            response = requests.get(url, timeout=30)
+            response.raise_for_status()
+            image = PILImage.open(io.BytesIO(response.content))
+            return image
+        except Exception as e:
+            logger.error(f"Failed to load reference image from URL {url}: {e}")
+            raise IOError(f"Could not load reference image from URL: {url}") from e
+
+    def make_api_request(
+        self, parameters: IdeoGramText2ImageParameters
+    ) -> bytes:
+        logger.debug(f"Generating image with prompt: {parameters.prompt}")
+        try:
+            # Get reference image for aspect ratio if dimensions are provided
+            reference_image_url = None
+            if parameters.width and parameters.height:
+                reference_image_url = GEMINI_ASPECT_RATIO_REFERENCE_IMAGES.get((parameters.width, parameters.height))
+            
+            parts = []
+            
+            # Add reference image if available
+            if reference_image_url:
+                # Load and convert reference image
+                reference_image_pil = self._load_image_from_url(reference_image_url)
+                img_byte_arr = io.BytesIO()
+                reference_image_pil.save(img_byte_arr, format='JPEG')
+                img_byte_arr = img_byte_arr.getvalue()
+                
+                reference_image_part = types.Part.from_bytes(
+                    data=img_byte_arr,
+                    mime_type='image/jpeg'
+                )
+                parts.append(reference_image_part)
+                
+                # Update prompt to reference the aspect ratio image
+                prompt_with_reference = f"{parameters.prompt}. Please refer to the reference image for the desired aspect ratio and generate the output in the same dimensions."
+            else:
+                prompt_with_reference = parameters.prompt
+            
+            # Add text prompt
+            text_part = types.Part.from_text(text=prompt_with_reference)
+            parts.append(text_part)
+            
+            contents = [
+                types.Content(
+                    role="user",
+                    parts=parts,
+                )
+            ]
+            
+            generate_content_config = types.GenerateContentConfig(
+                response_modalities=["IMAGE"], # Only need IMAGE for the response
+            )
+
+         
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=contents,
+                config=generate_content_config,
+            )
+            
+            # Extract image data from the new response structure
+            # The response may contain multiple parts (text + image), so we need to find the image part
+            image_data = None
+            for part in response.candidates[0].content.parts:
+                if hasattr(part, 'inline_data') and part.inline_data and part.inline_data.data:
+                    image_data = part.inline_data.data
+                    break
+            
+            if not image_data:
+                logger.error("Gemini API returned no inline image data in any part.")
+                logger.error(f"Response parts: {[str(part) for part in response.candidates[0].content.parts]}")
+                raise Exception(IMAGEGEN_ERROR)
+                 
+            return image_data
+
+        except Exception as e:
+            logger.error(
+                f"Error during Gemini API call: {e}", exc_info=True
+            )
+            raise Exception(IMAGEGEN_ERROR) from e
+
+    @timing_decorator
+    def remote(self, parameters: dict) -> dict:
+        validated_params: IdeoGramText2ImageParameters = None
+        try:
+
+            actual_params = parameters.get('parameters', parameters)
+            validated_params = IdeoGramText2ImageParameters(
+                **actual_params
+            )
+        except (ValidationError, ValueError) as e:
+            logger.error(
+                f"Input validation failed for GeminiFlashText2ImageService: {e}", exc_info=False
+            )
+            raise ValueError(f"Invalid input parameters: {e}") from e
+
+        try:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+                futures = [
+                    executor.submit(self.make_api_request, validated_params)
+                    for _ in range(validated_params.batch)
+                ]
+                results = [future.result() for future in futures]
+
+            Has_NSFW_Content = [False] * validated_params.batch
+
+            return prepare_response(
+                results, Has_NSFW_Content, 0, 0, OUTPUT_IMAGE_EXTENSION
+            )
+
+        except Exception as e:
+            logger.error(
+                f"Error during GeminiFlashText2ImageService processing: {type(e).__name__} - {e}",
+                exc_info=True,
+            )
+            raise Exception(IMAGE_GENERATION_ERROR) from e
+
+
+class GeminiFlashImage2ImageService(IService):
+    def __init__(self) -> None:
+        """
+        Initializes the Gemini service for image-to-image tasks using the new Client SDK.
+        """
+        super().__init__()
+
+        # Initialize the client with the API key
+        self.client = genai.Client(api_key=self.gemini_api_key)
+        
+        self.model_name = "gemini-2.5-flash-image-preview"
+        
+        logger.info(f"GeminiFlashImage2ImageService Initialized with model {self.model_name}.")
+    
+
+    # Helper function to load image from URL for the new Gemini SDK
+    def _load_image_from_url(self, url: str) -> PILImage.Image:
+        try:
+            response = requests.get(url, timeout=30)
+            response.raise_for_status()
+            image = PILImage.open(io.BytesIO(response.content))
+            return image
+        except Exception as e:
+            logger.error(f"Failed to load image from URL {url}: {e}")
+            raise IOError(f"Could not load image from URL: {url}") from e    
+
+    def make_api_request(
+        self, parameters: IdeoGramText2ImageParameters
+    ) -> bytes:
+        logger.debug(f"Generating image with prompt: {parameters.prompt}")
+        try:
+            if not parameters.file_url:
+                raise ValueError("file_url is required for image-to-image generation.")
+            
+            # Load the reference image using your helper
+            # Handle both string URL and list of dict formats
+            if isinstance(parameters.file_url, str):
+                image_url = parameters.file_url
+            elif isinstance(parameters.file_url, list) and len(parameters.file_url) > 0:
+                # Handle list format like [{'uri': 'url', 'mime_type': 'type'}]
+                if isinstance(parameters.file_url[0], dict):
+                    image_url = parameters.file_url[0].get('uri', parameters.file_url[0])
+                else:
+                    image_url = parameters.file_url[0]
+            else:
+                raise ValueError("file_url must be either a string URL or a list with at least one item.")
+            
+            reference_image_pil = self._load_image_from_url(image_url)
+
+            # Create the image part for the API request - convert PIL to bytes
+            img_byte_arr = io.BytesIO()
+            reference_image_pil.save(img_byte_arr, format='JPEG')
+            img_byte_arr = img_byte_arr.getvalue()
+            
+            image_part = types.Part.from_bytes(
+                data=img_byte_arr,
+                mime_type='image/jpeg'
+            )
+            
+           
+            text_part = types.Part.from_text(text=f"{parameters.prompt}")
+
+            # CHANGED: Structure the contents list with both image and text parts
+            contents = [
+                types.Content(role="user", parts=[image_part, text_part])
+            ]
+
+            generate_content_config = types.GenerateContentConfig(
+                response_modalities=["IMAGE"],
+            )
+
+        
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=contents,
+                config=generate_content_config,
+            )
+
+            image_data = None
+            for part in response.candidates[0].content.parts:
+                if hasattr(part, 'inline_data') and part.inline_data and part.inline_data.data:
+                    image_data = part.inline_data.data
+                    break
+            
+            if not image_data:
+                logger.error("Gemini API returned no inline image data in any part.")
+                logger.error(f"Response parts: {[str(part) for part in response.candidates[0].content.parts]}")
+                raise Exception(IMAGEGEN_ERROR)
+                 
+            return image_data
+        
+        except Exception as e:
+            logger.error(
+                f"Error during Gemini API call for image-to-image: {e}", exc_info=True
+            )
+            raise Exception(IMAGEGEN_ERROR) from e
+            
+    @timing_decorator
+    def remote(self, parameters: dict) -> dict:
+        validated_params: IdeoGramText2ImageParameters = None
+        try:
+            # Handle potentially nested parameters from main.py
+            actual_params = parameters.get('parameters', parameters)
+            validated_params = IdeoGramText2ImageParameters(
+                **actual_params
+            )
+        except (ValidationError, ValueError) as e:
+            logger.error(
+                f"Input validation failed for GeminiFlashImage2ImageService: {e}", exc_info=False
+            )
+            raise ValueError(f"Invalid input parameters: {e}") from e
+
+        try:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+                futures = [
+                    executor.submit(self.make_api_request, validated_params)
+                    for _ in range(validated_params.batch)
+                ]
+                results = [future.result() for future in futures]
+
+            Has_NSFW_Content = [False] * validated_params.batch
+
+            return prepare_response(
+                results, Has_NSFW_Content, 0, 0, OUTPUT_IMAGE_EXTENSION
+            )
+
+        except Exception as e:
+            logger.error(
+                f"Error during GeminiFlashImage2ImageService processing: {type(e).__name__} - {e}",
+                exc_info=True,
+            )
+            raise Exception(IMAGE_GENERATION_ERROR) from e
+
+
