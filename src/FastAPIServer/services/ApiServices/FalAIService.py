@@ -881,10 +881,8 @@ class FalAIClarityUpscaler(IService):
             arguments=input,
             with_logs=False,
         )
-        if sum(result["has_nsfw_concepts"]) == 1:
-            raise Exception(IMAGE_GENERATION_ERROR, NSFW_CONTENT_DETECT_ERROR_MSG)
 
-        response = make_request(result["images"][0]["url"], "GET")
+        response = make_request(result["image"]["url"], "GET")
         return response.content
 
     @timing_decorator
