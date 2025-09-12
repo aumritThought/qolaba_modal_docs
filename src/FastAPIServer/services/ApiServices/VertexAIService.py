@@ -806,12 +806,12 @@ class GeminiFlashText2ImageService(IService):
         logger.info(f"GeminiFlashText2ImageService Initialized with model {self.model_name}.")
 
     # Helper function to load image from URL for aspect ratio reference
-    def _load_image_from_url(self, url: str) -> PILImage.Image:
+    def _get_image_data_from_url(self, url: str) -> tuple[bytes, str]:
         try:
-            response = requests.get(url, timeout=30)
+            response = requests.get(url, timeout=60)
             response.raise_for_status()
-            image = PILImage.open(io.BytesIO(response.content))
-            return image
+            content_type = response.headers.get('Content-Type', 'image/jpeg') # Default to jpeg if not found
+            return response.content, content_type
         except Exception as e:
             logger.error(f"Failed to load reference image from URL {url}: {e}")
             raise IOError(f"Could not load reference image from URL: {url}") from e
@@ -830,15 +830,12 @@ class GeminiFlashText2ImageService(IService):
             
             # Add reference image if available
             if reference_image_url:
-                # Load and convert reference image
-                reference_image_pil = self._load_image_from_url(reference_image_url)
-                img_byte_arr = io.BytesIO()
-                reference_image_pil.save(img_byte_arr, format='JPEG')
-                img_byte_arr = img_byte_arr.getvalue()
+                # Load reference image data and mime type
+                img_bytes, mime_type = self._get_image_data_from_url(reference_image_url)
                 
                 reference_image_part = types.Part.from_bytes(
-                    data=img_byte_arr,
-                    mime_type='image/jpeg'
+                    data=img_bytes,
+                    mime_type=mime_type
                 )
                 parts.append(reference_image_part)
                 
@@ -943,12 +940,12 @@ class GeminiFlashImage2ImageService(IService):
     
 
     # Helper function to load image from URL for the new Gemini SDK
-    def _load_image_from_url(self, url: str) -> PILImage.Image:
+    def _get_image_data_from_url(self, url: str) -> tuple[bytes, str]:
         try:
-            response = requests.get(url, timeout=30)
+            response = requests.get(url, timeout=60)
             response.raise_for_status()
-            image = PILImage.open(io.BytesIO(response.content))
-            return image
+            content_type = response.headers.get('Content-Type', 'image/jpeg') # Default to jpeg if not found
+            return response.content, content_type
         except Exception as e:
             logger.error(f"Failed to load image from URL {url}: {e}")
             raise IOError(f"Could not load image from URL: {url}") from e    
@@ -974,16 +971,13 @@ class GeminiFlashImage2ImageService(IService):
             else:
                 raise ValueError("file_url must be either a string URL or a list with at least one item.")
             
-            reference_image_pil = self._load_image_from_url(image_url)
+            # Get the raw image data and its mime type from the URL
+            img_bytes, mime_type = self._get_image_data_from_url(image_url)
 
-            # Create the image part for the API request - convert PIL to bytes
-            img_byte_arr = io.BytesIO()
-            reference_image_pil.save(img_byte_arr, format='JPEG')
-            img_byte_arr = img_byte_arr.getvalue()
-            
+            # Create the image part for the API request
             image_part = types.Part.from_bytes(
-                data=img_byte_arr,
-                mime_type='image/jpeg'
+                data=img_bytes,
+                mime_type=mime_type
             )
             
            
