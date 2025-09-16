@@ -642,6 +642,11 @@ app_dict = {
         "init_parameters": {},
         "model_name": "Kling2Master_image2video",
     },
+    "ap-Wanv22_14B": {
+        "app_id": "wanv22_api",
+        "init_parameters": {},
+        "model_name": "Wanv22_image2video",
+    },
     # current
     "ap-fGhKl3mfkdlpqrshuwwabc": {
         "app_id": "falaifluxdevimage2image_api",

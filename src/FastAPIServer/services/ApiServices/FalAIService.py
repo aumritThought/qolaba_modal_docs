@@ -13,6 +13,7 @@ from src.data_models.ModalAppSchemas import (
     FluxText2ImageParameters,
     IdeoGramText2ImageParameters,
     Kling2MasterParameters,
+    Wanv22_14BParameters,
     OmnigenParameters,
     RecraftV3Text2ImageParameters,
     SDXLText2ImageParameters,
@@ -1675,6 +1676,166 @@ class Kling2Master(IService):
         try:
             # Ensure duration is validated correctly ('5' or '10' as string)
             params: Kling2MasterParameters = Kling2MasterParameters(**processed_params)
+        except ValidationError as e:
+            logger.error(f"Pydantic validation failed for Kling2Master parameters: {e}")
+            raise e  # Re-raise the validation error
+
+        video_bytes = self.make_api_request(params)
+
+        result_list = [video_bytes] if isinstance(video_bytes, bytes) else []
+        if not result_list and isinstance(video_bytes, list):
+            result_list = video_bytes
+
+        return prepare_response(
+            result=result_list,
+            Has_NSFW_content=[False] * len(result_list),
+            time_data=0,
+            runtime=0,
+            extension=OUTPUT_VIDEO_EXTENSION,
+        )
+
+class Wanv22(IService):
+    def __init__(self) -> None:
+        super().__init__()
+        logger.info("Wanv22_14B Service Initialized")
+
+    def make_api_request(self, parameters: Wanv22_14BParameters) -> bytes:
+        try:
+            duration_float = float(parameters.duration)
+        except ValueError:
+            # If duration isn't strictly '5' the API will likely fail anyway.
+            # Let the API call handle the error for invalid duration strings.
+            logger.error(
+                f"Invalid duration format received: {parameters.duration}. Expected '5'"
+            )
+            raise ValueError(f"Invalid duration format: {parameters.duration}")
+
+        input_args = {
+            "prompt": parameters.prompt,
+            "duration": parameters.duration,  # Pass the validated string '5' or '10'
+            "aspect_ratio": parameters.aspect_ratio,
+            "enable_safety_checker": True,
+        }
+        if parameters.file_url:
+            input_args["image_url"] = parameters.file_url
+            model_id = "fal-ai/wan/v2.2-a14b/image-to-video/turbo"
+        else:
+            model_id = "fal-ai/wan/v2.2-a14b/text-to-video/turbo"
+
+        # Add end_image_url if provided
+        if parameters.end_image_url:
+            input_args["end_image_url"] = parameters.end_image_url
+
+        logger.debug(f"Calling Fal API [{model_id}]")
+        try:
+            request_handle = fal_client.submit(model_id, arguments=input_args)
+            final_response = request_handle.get()
+            logger.debug("Wanv2.2 14B API final result fetched.")
+
+            if not isinstance(final_response, dict):
+                logger.error(
+                    f"Expected dict result from Wanv2.2 14B API handle, but got: {type(final_response)}"
+                )
+                raise Exception(
+                    "Video generation failed", "Unexpected result type from API handle"
+                )
+
+            video_info = final_response.get("video")
+            video_url = None
+
+            if video_info and isinstance(video_info, dict) and "url" in video_info:
+                video_url = video_info["url"]
+            else:
+                for key, value in final_response.items():
+                    if (
+                        isinstance(value, dict)
+                        and "url" in value
+                        and isinstance(value["url"], str)
+                    ):
+                        video_url = value["url"]
+                        logger.info(f"Found potential video URL in key '{key}'")
+                        break
+                if not video_url:
+                    logger.error(
+                        f"Could not find any video URL in API response. Keys: {final_response.keys()}"
+                    )
+                    raise KeyError("Video URL not found in API response")
+
+            video_response = requests.get(video_url, timeout=180)
+            video_response.raise_for_status()
+            return video_response.content
+
+        except Exception as e:
+            logger.exception(f"Fal AI Wanv2.2 14B API interaction failed: {e}")
+            error_msg = "We couldn't create your video. Please try again later."
+            logger.error(f"Wanv2.2 14B service technical error: {e}")
+
+            if isinstance(e, fal_client.client.FalClientError):
+                try:
+                    details = e.args[0]
+                    if (
+                        isinstance(details, list)
+                        and len(details) > 0
+                        and isinstance(details[0], dict)
+                    ):
+                        logger.error(
+                            f"Fal API detailed error: {details[0].get('msg', 'Unknown error')}"
+                        )
+                except Exception:
+                    pass
+
+            raise Exception(VIDEO_GENERATION_ERROR, error_msg)
+
+    @timing_decorator
+    def remote(self, parameters: dict) -> dict:
+        logger.info(
+            f"Wanv2.2 14B Raw parameters received: {parameters.get('prompt', 'No prompt found')[:50]}..."
+        )  # Log start with partial prompt
+        processed_params = parameters.copy()
+
+        file_url_input = processed_params.get("file_url")
+        if (
+            isinstance(file_url_input, list)
+            and len(file_url_input) > 0
+            and isinstance(file_url_input[0], dict)
+        ):
+            processed_params["file_url"] = file_url_input[0].get("uri")
+        elif isinstance(file_url_input, dict):
+            processed_params["file_url"] = file_url_input.get("uri")
+        if not isinstance(
+            processed_params.get("file_url"), str
+        ) or not processed_params.get("file_url"):
+            processed_params["file_url"] = None
+
+        end_image_input = processed_params.get("end_image_url") or processed_params.get("uploaded2ndImage")
+        if (
+            isinstance(end_image_input, list)
+            and len(end_image_input) > 0
+            and isinstance(end_image_input[0], dict)
+        ):
+            processed_params["end_image_url"] = end_image_input[0].get("uri")
+        elif isinstance(end_image_input, dict):
+            processed_params["end_image_url"] = end_image_input.get("uri")
+        elif isinstance(end_image_input, str) and end_image_input.strip():
+            processed_params["end_image_url"] = end_image_input
+        else:
+            processed_params["end_image_url"] = None
+
+        duration_input = processed_params.get("duration")
+        if isinstance(duration_input, (int, float)):
+            if int(duration_input) in [5]:
+                processed_params["duration"] = str(int(duration_input))
+            else:
+                pass
+        elif isinstance(duration_input, str) and duration_input.isdigit():
+            if duration_input not in ["5"]:
+
+                pass
+        
+
+        try:
+            # Ensure duration is validated correctly ('5' as string)
+            params: Wanv22_14BParameters = Wanv22_14BParameters(**processed_params)
         except ValidationError as e:
             logger.error(f"Pydantic validation failed for Kling2Master parameters: {e}")
             raise e  # Re-raise the validation error
