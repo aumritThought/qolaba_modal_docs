@@ -31,6 +31,7 @@ from src.FastAPIServer.services.ApiServices.FalAIService import (
     FalAIFluxPulID,
     Veo2,
     Kling2Master,
+    Wanv22,
 )
 from src.FastAPIServer.services.ApiServices.IdeogramService import (
     IdeoGramText2Image,
